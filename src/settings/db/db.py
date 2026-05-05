@@ -3,7 +3,7 @@ from settings.base import Settings
 
 class DBSettings(Settings):
     DB_HOST: str
-    DB_PORT: str
+    DB_PORT: int
     DB_NAME: str
     DB_USERNAME: str
     DB_PASSWORD: str
@@ -13,6 +13,6 @@ class DBSettings(Settings):
 
     def dsn(self) -> str:
         return (
-            f"oracle+oracledb://{self.DB_USERNAME}:{self.DB_PASSWORD}@"
-            f"{self.DB_HOST}:{self.DB_PORT}/?service_name={self.DB_NAME}"
+            f"postgresql+asyncpg://{self.DB_USERNAME}:{self.DB_PASSWORD}@"
+            f"{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
