@@ -8,9 +8,9 @@ from domain.enums.task import TaskCompletionStatus
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.task import Task
-    from infrastructure.database.models.transaction import Transaction
-    from infrastructure.database.models.user import User
+    from infrastructure.database.models.tasks import Task
+    from infrastructure.database.models.transactions import Transaction
+    from infrastructure.database.models.users import User
 
 
 class TaskCompletion(BaseModel, table=True):
@@ -26,9 +26,9 @@ class TaskCompletion(BaseModel, table=True):
     __table_args__ = (
         UniqueConstraint(
             "users_id",
-            "task_id",
+            "tasks_id",
             "completion_key",
-            name="uq_task_completions_users_task_key",
+            name="uq_task_completions_users_tasks_key",
         ),
     )
 
@@ -39,8 +39,8 @@ class TaskCompletion(BaseModel, table=True):
         index=True,
         description="ID пользователя, для которого зафиксировано выполнение задания",
     )
-    task_id: int = Field(
-        foreign_key="task.task_id",
+    tasks_id: int = Field(
+        foreign_key="tasks.tasks_id",
         nullable=False,
         index=True,
         description="ID задания, выполнение которого проверяется",

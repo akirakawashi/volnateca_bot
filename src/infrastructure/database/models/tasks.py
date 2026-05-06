@@ -8,8 +8,8 @@ from domain.enums.task import TaskRepeatPolicy, TaskType
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.task_completion import TaskCompletion
-    from infrastructure.database.models.transaction import Transaction
+    from infrastructure.database.models.task_completions import TaskCompletion
+    from infrastructure.database.models.transactions import Transaction
 
 
 class Task(BaseModel, table=True):
@@ -20,7 +20,7 @@ class Task(BaseModel, table=True):
     подписку, лайк, репост, комментарий, опрос, упоминание в истории или викторину.
     """
 
-    __tablename__ = "task"
+    __tablename__ = "tasks"
     __table_args__ = (
         CheckConstraint("points > 0", name="points_positive"),
         CheckConstraint(
@@ -33,7 +33,7 @@ class Task(BaseModel, table=True):
         ),
     )
 
-    task_id: int | None = Field(default=None, primary_key=True)
+    tasks_id: int | None = Field(default=None, primary_key=True)
     code: str = Field(
         nullable=False,
         unique=True,

@@ -8,10 +8,10 @@ from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.prize import Prize
-    from infrastructure.database.models.prize_promo_code import PrizePromoCode
-    from infrastructure.database.models.transaction import Transaction
-    from infrastructure.database.models.user import User
+    from infrastructure.database.models.prize_promo_codes import PrizePromoCode
+    from infrastructure.database.models.prizes import Prize
+    from infrastructure.database.models.transactions import Transaction
+    from infrastructure.database.models.users import User
 
 
 class PrizeRedemption(BaseModel, table=True):
@@ -34,8 +34,8 @@ class PrizeRedemption(BaseModel, table=True):
         index=True,
         description="ID пользователя, который запросил или получил приз",
     )
-    prize_id: int = Field(
-        foreign_key="prize.prize_id",
+    prizes_id: int = Field(
+        foreign_key="prizes.prizes_id",
         nullable=False,
         index=True,
         description="ID приза, который пользователь запросил или получил",

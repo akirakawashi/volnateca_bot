@@ -12,7 +12,6 @@ from domain.enums.task import (
 )
 from domain.enums.transaction import (
     TransactionSource,
-    TransactionStatus,
     TransactionType,
 )
 
@@ -26,6 +25,5 @@ __all__ = [
     "TaskRepeatPolicy",
     "TaskType",
     "TransactionSource",
-    "TransactionStatus",
     "TransactionType",
 ]

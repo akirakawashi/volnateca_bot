@@ -8,8 +8,8 @@ from domain.enums.prize import PromoCodeStatus
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.prize import Prize
-    from infrastructure.database.models.prize_redemption import PrizeRedemption
+    from infrastructure.database.models.prize_redemptions import PrizeRedemption
+    from infrastructure.database.models.prizes import Prize
 
 
 class PrizePromoCode(BaseModel, table=True):
@@ -23,8 +23,8 @@ class PrizePromoCode(BaseModel, table=True):
     __tablename__ = "prize_promo_codes"
 
     prize_promo_codes_id: int | None = Field(default=None, primary_key=True)
-    prize_id: int = Field(
-        foreign_key="prize.prize_id",
+    prizes_id: int = Field(
+        foreign_key="prizes.prizes_id",
         nullable=False,
         index=True,
         description="ID приза, к которому относится этот промокод",

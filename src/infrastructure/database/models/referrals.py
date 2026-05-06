@@ -7,8 +7,8 @@ from sqlmodel import Column, Field, Relationship
 from infrastructure.database.base import BaseModel
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.transaction import Transaction
-    from infrastructure.database.models.user import User
+    from infrastructure.database.models.transactions import Transaction
+    from infrastructure.database.models.users import User
 
 
 class Referral(BaseModel, table=True):

@@ -7,7 +7,7 @@ from sqlmodel import Column, Field, Relationship
 from infrastructure.database.base import BaseModel
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.user import User
+    from infrastructure.database.models.users import User
 
 
 class UserDailyActivity(BaseModel, table=True):

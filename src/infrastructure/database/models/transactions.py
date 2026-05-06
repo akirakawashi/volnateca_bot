@@ -6,18 +6,17 @@ from sqlmodel import Column, Field, Relationship
 
 from domain.enums.transaction import (
     TransactionSource,
-    TransactionStatus,
     TransactionType,
 )
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.prize import Prize
-    from infrastructure.database.models.prize_redemption import PrizeRedemption
-    from infrastructure.database.models.referral import Referral
-    from infrastructure.database.models.task import Task
-    from infrastructure.database.models.task_completion import TaskCompletion
-    from infrastructure.database.models.user import User
+    from infrastructure.database.models.prize_redemptions import PrizeRedemption
+    from infrastructure.database.models.prizes import Prize
+    from infrastructure.database.models.referrals import Referral
+    from infrastructure.database.models.task_completions import TaskCompletion
+    from infrastructure.database.models.tasks import Task
+    from infrastructure.database.models.users import User
 
 
 class Transaction(BaseModel, table=True):
@@ -42,15 +41,15 @@ class Transaction(BaseModel, table=True):
         index=True,
         description="ID пользователя, чей баланс изменяется этой операцией",
     )
-    task_id: int | None = Field(
+    tasks_id: int | None = Field(
         default=None,
-        foreign_key="task.task_id",
+        foreign_key="tasks.tasks_id",
         index=True,
         description="ID задания, если операция является начислением или корректировкой по заданию",
     )
-    prize_id: int | None = Field(
+    prizes_id: int | None = Field(
         default=None,
-        foreign_key="prize.prize_id",
+        foreign_key="prizes.prizes_id",
         index=True,
         description="ID приза, если операция является списанием за приз или возвратом очков по призу",
     )
@@ -73,18 +72,6 @@ class Transaction(BaseModel, table=True):
             nullable=False,
         ),
         description="Бизнес-причина появления операции: регистрация, задание, приз, реферал или ручная корректировка",
-    )
-    transaction_status: TransactionStatus = Field(
-        default=TransactionStatus.COMPLETED,
-        sa_column=Column(
-            SAEnum(
-                TransactionStatus,
-                name="transaction_status",
-                values_callable=enum_values,
-            ),
-            nullable=False,
-        ),
-        description="Статус применения операции к балансу пользователя",
     )
     amount: int = Field(
         nullable=False,

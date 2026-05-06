@@ -18,16 +18,7 @@ class TransactionSource(str, Enum):
     ADJUSTMENT = "adjustment"  # Ручная корректировка баланса администратором
 
 
-class TransactionStatus(str, Enum):
-    """Статус применения транзакции к балансу."""
-
-    PENDING = "pending"  # Операция ожидает обработки
-    COMPLETED = "completed"  # Операция применена к балансу
-    CANCELED = "canceled"  # Операция отменена
-
-
 __all__ = [
     "TransactionSource",
-    "TransactionStatus",
     "TransactionType",
 ]

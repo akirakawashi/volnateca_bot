@@ -7,11 +7,11 @@ from sqlmodel import Column, Field, Relationship
 from infrastructure.database.base import BaseModel
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.referral import Referral
-    from infrastructure.database.models.user_daily_activity import UserDailyActivity
-    from infrastructure.database.models.prize_redemption import PrizeRedemption
-    from infrastructure.database.models.task_completion import TaskCompletion
-    from infrastructure.database.models.transaction import Transaction
+    from infrastructure.database.models.prize_redemptions import PrizeRedemption
+    from infrastructure.database.models.referrals import Referral
+    from infrastructure.database.models.task_completions import TaskCompletion
+    from infrastructure.database.models.transactions import Transaction
+    from infrastructure.database.models.user_daily_activities import UserDailyActivity
 
 
 class User(BaseModel, table=True):

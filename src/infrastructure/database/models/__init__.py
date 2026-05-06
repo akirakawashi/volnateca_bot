@@ -8,19 +8,18 @@ from domain.enums import (
     TaskRepeatPolicy,
     TaskType,
     TransactionSource,
-    TransactionStatus,
     TransactionType,
 )
 from infrastructure.database.base import BaseModel
-from infrastructure.database.models.prize import Prize
-from infrastructure.database.models.prize_promo_code import PrizePromoCode
-from infrastructure.database.models.prize_redemption import PrizeRedemption
-from infrastructure.database.models.referral import Referral
-from infrastructure.database.models.task import Task
-from infrastructure.database.models.task_completion import TaskCompletion
-from infrastructure.database.models.transaction import Transaction
-from infrastructure.database.models.user import User
-from infrastructure.database.models.user_daily_activity import UserDailyActivity
+from infrastructure.database.models.prize_promo_codes import PrizePromoCode
+from infrastructure.database.models.prize_redemptions import PrizeRedemption
+from infrastructure.database.models.prizes import Prize
+from infrastructure.database.models.referrals import Referral
+from infrastructure.database.models.task_completions import TaskCompletion
+from infrastructure.database.models.tasks import Task
+from infrastructure.database.models.transactions import Transaction
+from infrastructure.database.models.user_daily_activities import UserDailyActivity
+from infrastructure.database.models.users import User
 
 __all__ = [
     "BaseModel",
@@ -40,7 +39,6 @@ __all__ = [
     "TaskType",
     "Transaction",
     "TransactionSource",
-    "TransactionStatus",
     "TransactionType",
     "User",
     "UserDailyActivity",

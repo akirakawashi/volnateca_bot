@@ -8,9 +8,9 @@ from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.prize_promo_code import PrizePromoCode
-    from infrastructure.database.models.prize_redemption import PrizeRedemption
-    from infrastructure.database.models.transaction import Transaction
+    from infrastructure.database.models.prize_promo_codes import PrizePromoCode
+    from infrastructure.database.models.prize_redemptions import PrizeRedemption
+    from infrastructure.database.models.transactions import Transaction
 
 
 class Prize(BaseModel, table=True):
@@ -21,7 +21,7 @@ class Prize(BaseModel, table=True):
     представлены тем же справочником, но с ограниченным количеством.
     """
 
-    __tablename__ = "prize"
+    __tablename__ = "prizes"
     __table_args__ = (
         CheckConstraint("cost_points > 0", name="cost_points_positive"),
         CheckConstraint(
@@ -33,7 +33,7 @@ class Prize(BaseModel, table=True):
         ),
     )
 
-    prize_id: int | None = Field(default=None, primary_key=True)
+    prizes_id: int | None = Field(default=None, primary_key=True)
     code: str = Field(
         nullable=False,
         unique=True,
