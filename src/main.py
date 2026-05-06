@@ -1,8 +1,11 @@
 from dishka import AsyncContainer, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from di.providers import make_providers
+from presentation.http.exception_handlers import setup_exception_handlers
 from presentation.http.routers import healthcheck_router, vk_callback_router
 from settings.factory import ConfigFactory
 
@@ -26,11 +29,22 @@ def create_fastapi_app() -> FastAPI:
         openapi_url=config.docs.OPENAPI_URL,
     )
     include_routers(application)
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=config.cors.CORS_ALLOW_ORIGINS,
+        allow_credentials=config.cors.CORS_ALLOW_CREDENTIALS,
+        allow_methods=config.cors.CORS_ALLOW_METHODS,
+        allow_headers=config.cors.CORS_ALLOW_HEADERS,
+    )
+    application.add_middleware(TrustedHostMiddleware, allowed_hosts=config.app.TRUSTED_HOSTS)
+
     return application
 
 
 def create_app() -> FastAPI:
     application = create_fastapi_app()
+    setup_exception_handlers(application)
     setup_dishka(create_di_container(), application)
     return application
 
