@@ -1,34 +1,15 @@
 from datetime import datetime
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Enum as SAEnum, Text, func
 from sqlmodel import Column, Field, Relationship
 
+from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
+    from infrastructure.database.models.prize_redemption import PrizeRedemption
     from infrastructure.database.models.transaction import Transaction
-
-
-class PrizeType(str, Enum):
-    MERCH = "merch"
-    PROMO_CODE = "promo_code"
-    SUPER_PRIZE = "super_prize"
-    PARTNER = "partner"
-
-
-class PrizeReceiveType(str, Enum):
-    PICKUP = "pickup"
-    DELIVERY = "delivery"
-    PROMO_CODE = "promo_code"
-    MANAGER_CONTACT = "manager_contact"
-
-
-class PrizeStatus(str, Enum):
-    AVAILABLE = "available"
-    SOLD_OUT = "sold_out"
-    HIDDEN = "hidden"
 
 
 class Prize(BaseModel, table=True):
@@ -48,7 +29,7 @@ class Prize(BaseModel, table=True):
         index=True,
         description="Стабильный уникальный код приза для seed-данных, логики приложения и админки",
     )
-    title: str = Field(nullable=False, description="Название приза для пользователя")
+    prize_name: str = Field(nullable=False, description="Название приза для пользователя")
     description: str | None = Field(
         default=None,
         sa_column=Column(Text),
@@ -90,7 +71,7 @@ class Prize(BaseModel, table=True):
         nullable=False,
         description="Количество единиц приза, уже выданных или зарезервированных пользователями",
     )
-    sort_order: int = Field(
+    sort_order: int = Field( #TODO уточнить у влада нужно ли
         default=0, nullable=False, description="Порядок отображения в магазине"
     )
     is_active: bool = Field(
@@ -113,4 +94,5 @@ class Prize(BaseModel, table=True):
         ),
     )
 
+    prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="prize")
     transactions: list["Transaction"] = Relationship(back_populates="prize")

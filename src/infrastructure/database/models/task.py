@@ -1,26 +1,15 @@
 from datetime import datetime
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Enum as SAEnum, Text, func
 from sqlmodel import Column, Field, Relationship
 
+from domain.enums.task import TaskRepeatPolicy, TaskType
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
     from infrastructure.database.models.task_completion import TaskCompletion
     from infrastructure.database.models.transaction import Transaction
-
-
-class TaskType(str, Enum):
-    VK_SUBSCRIBE = "vk_subscribe"  # Подписка на группу ВКонтакте
-    VK_LIKE = "vk_like"  # Лайк поста ВКонтакте
-    VK_REPOST = "vk_repost"  # Репост поста ВКонтакте
-    VK_COMMENT = "vk_comment"  # Комментарий под постом ВКонтакте
-    VK_POLL = "vk_poll"  # Участие в опросе ВКонтакте
-    VK_STORY_MENTION = "vk_story_mention"  # Упоминание в истории ВКонтакте
-    QUIZ = "quiz"  # Викторина с вопросами и вариантами ответов
-    CUSTOM = "custom"  # Другое задание, не попадающее в перечисленные категории
 
 
 class Task(BaseModel, table=True):
@@ -82,10 +71,13 @@ class Task(BaseModel, table=True):
         sa_column=Column(DateTime(timezone=True)),
         description="Дата и время, после которых задание недоступно; NULL означает отсутствие отдельного ограничения",
     )
-    is_repeatable: bool = Field(
-        default=False,
-        nullable=False,
-        description="Можно ли одному пользователю выполнять это задание повторно и получать повторные начисления",
+    repeat_policy: TaskRepeatPolicy = Field(
+        default=TaskRepeatPolicy.ONCE,
+        sa_column=Column(
+            SAEnum(TaskRepeatPolicy, name="task_repeat_policy", values_callable=enum_values),
+            nullable=False,
+        ),
+        description="Правило повторного выполнения задания одним пользователем",
     )
     is_active: bool = Field(
         default=True,

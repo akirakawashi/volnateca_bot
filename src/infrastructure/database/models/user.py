@@ -7,6 +7,7 @@ from sqlmodel import Column, Field, Relationship
 from infrastructure.database.base import BaseModel
 
 if TYPE_CHECKING:
+    from infrastructure.database.models.prize_redemption import PrizeRedemption
     from infrastructure.database.models.task_completion import TaskCompletion
     from infrastructure.database.models.transaction import Transaction
 
@@ -65,5 +66,6 @@ class User(BaseModel, table=True):
         ),
     )
 
+    prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="user")
     task_completions: list["TaskCompletion"] = Relationship(back_populates="user")
     transactions: list["Transaction"] = Relationship(back_populates="user")

@@ -1,38 +1,22 @@
 from datetime import datetime
-from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Text, func
 from sqlmodel import Column, Field, Relationship
 
+from domain.enums.transaction import (
+    TransactionSource,
+    TransactionStatus,
+    TransactionType,
+)
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
     from infrastructure.database.models.prize import Prize
+    from infrastructure.database.models.prize_redemption import PrizeRedemption
     from infrastructure.database.models.task import Task
     from infrastructure.database.models.task_completion import TaskCompletion
     from infrastructure.database.models.user import User
-
-
-class TransactionType(str, Enum):
-    ACCRUAL = "accrual"  # Начисление очков пользователю
-    SPEND = "spend"  # Списание очков с баланса пользователя
-
-
-class TransactionSource(str, Enum):
-    REGISTRATION = "registration"  # Начисление за регистрацию в боте
-    TASK = "task"  # Начисление за выполнение задания или списание за невыполнение
-    PRIZE = "prize"  # Списание за покупку приза или возврат очков при отмене приза
-    REFERRAL = "referral"  # Начисление за приглашенного друга, который зарегистрировался и выполнил условия
-    ADJUSTMENT = "adjustment"  # Ручная корректировка баланса администратором
-
-
-class TransactionStatus(str, Enum):
-    PENDING = (
-        "pending"  # Операция ожидает обработки (например, проверка выполнения задания)
-    )
-    COMPLETED = "completed"  # Операция успешно завершена и баланс обновлен
-    CANCELED = "canceled"  # Операция отменена (например, задание не выполнено в срок или приз отменен)
 
 
 class Transaction(BaseModel, table=True):
@@ -128,3 +112,4 @@ class Transaction(BaseModel, table=True):
         back_populates="transaction"
     )
     prize: Optional["Prize"] = Relationship(back_populates="transactions")
+    prize_redemption: Optional["PrizeRedemption"] = Relationship(back_populates="transaction")

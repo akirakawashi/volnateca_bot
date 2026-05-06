@@ -1,23 +1,16 @@
 from datetime import datetime
-from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime, Enum as SAEnum, Text, UniqueConstraint, func
 from sqlmodel import Column, Field, Relationship
 
+from domain.enums.task import TaskCompletionStatus
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
     from infrastructure.database.models.task import Task
     from infrastructure.database.models.transaction import Transaction
     from infrastructure.database.models.user import User
-
-
-class TaskCompletionStatus(str, Enum):
-    PENDING = "pending"  # Задание ожидает проверки
-    COMPLETED = "completed"  # Задание выполнено и подтверждено
-    REJECTED = "rejected"  # Задание проверено, но не выполнено
-    CANCELED = "canceled"  # Выполнение отменено администратором или системой
 
 
 class TaskCompletion(BaseModel, table=True):
@@ -31,7 +24,7 @@ class TaskCompletion(BaseModel, table=True):
 
     __tablename__ = "task_completions"
     __table_args__ = (
-        UniqueConstraint("user_id", "task_id", name="uq_task_completions_user_task"),
+        UniqueConstraint("user_id", "task_id", "completion_key", name="uq_task_completions_user_task_key"),
     )
 
     task_completions_id: int | None = Field(default=None, primary_key=True)
@@ -46,6 +39,15 @@ class TaskCompletion(BaseModel, table=True):
         nullable=False,
         index=True,
         description="ID задания, выполнение которого проверяется",
+    )
+    completion_key: str = Field(
+        nullable=False,
+        index=True,
+        description=(
+            "Ключ периода выполнения задания для ограничения повторов. "
+            "Для once используется 'once', для daily дата вида 'YYYY-MM-DD', "
+            "для weekly ключ недели вида 'week_01'."
+        ),
     )
     transaction_id: int | None = Field(
         default=None,
@@ -78,7 +80,7 @@ class TaskCompletion(BaseModel, table=True):
             "Используется для идемпотентности и расследования повторных событий VK."
         ),
     )
-    rejection_reason: str | None = Field(
+    rejected_reason: str | None = Field(
         default=None,
         sa_column=Column(Text),
         description="Причина отклонения, если задание проверено и не засчитано",
