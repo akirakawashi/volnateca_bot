@@ -3,7 +3,7 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 from di.providers import make_providers
-from presentation.http.routers.healthcheck import healthcheck_router
+from presentation.http.routers import healthcheck_router, vk_callback_router
 from settings.factory import ConfigFactory
 
 config = ConfigFactory()
@@ -11,6 +11,7 @@ config = ConfigFactory()
 
 def include_routers(application: FastAPI) -> None:
     application.include_router(healthcheck_router)
+    application.include_router(vk_callback_router)
 
 
 def create_di_container() -> AsyncContainer:
