@@ -89,9 +89,7 @@ class User(BaseModel, table=True):
             "uselist": False,
         },
     )
-    daily_activities: list["UserDailyActivity"] = Relationship(
-        back_populates="user"
-    )
+    daily_activities: list["UserDailyActivity"] = Relationship(back_populates="user")
     user_achievements: list["UserAchievement"] = Relationship(back_populates="user")
     prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="user")
     task_completions: list["TaskCompletion"] = Relationship(back_populates="user")

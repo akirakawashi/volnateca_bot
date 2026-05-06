@@ -25,9 +25,7 @@ class Referral(BaseModel, table=True):
         UniqueConstraint(
             "bonus_transactions_id", name="uq_referrals_bonus_transactions_id"
         ),
-        CheckConstraint(
-            "inviter_users_id <> invited_users_id", name="different_users"
-        ),
+        CheckConstraint("inviter_users_id <> invited_users_id", name="different_users"),
     )
 
     referrals_id: int | None = Field(default=None, primary_key=True)

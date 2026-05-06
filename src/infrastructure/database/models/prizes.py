@@ -24,9 +24,7 @@ class Prize(BaseModel, table=True):
     __tablename__ = "prizes"
     __table_args__ = (
         CheckConstraint("cost_points > 0", name="cost_points_positive"),
-        CheckConstraint(
-            "quantity_claimed >= 0", name="quantity_claimed_non_negative"
-        ),
+        CheckConstraint("quantity_claimed >= 0", name="quantity_claimed_non_negative"),
         CheckConstraint(
             "quantity_total IS NULL OR quantity_claimed <= quantity_total",
             name="quantity_claimed_lte_quantity_total",

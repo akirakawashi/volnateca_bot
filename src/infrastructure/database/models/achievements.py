@@ -20,9 +20,7 @@ class Achievement(BaseModel, table=True):
     """
 
     __tablename__ = "achievements"
-    __table_args__ = (
-        CheckConstraint("points > 0", name="points_positive"),
-    )
+    __table_args__ = (CheckConstraint("points > 0", name="points_positive"),)
 
     achievements_id: int | None = Field(default=None, primary_key=True)
     code: str = Field(
