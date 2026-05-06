@@ -1,3 +1,5 @@
+from enum import Enum
+
 from sqlalchemy import MetaData
 from sqlmodel import SQLModel
 
@@ -12,3 +14,7 @@ CONVENTION = {
 
 class BaseModel(SQLModel):
     metadata = MetaData(naming_convention=CONVENTION)
+
+
+def enum_values(enum_cls: type[Enum]) -> list[str]:
+    return [item.value for item in enum_cls]
