@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SAEnum, Text, func
+from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Text, func
 from sqlmodel import Column, Field, Relationship
 
 from domain.enums.task import TaskRepeatPolicy, TaskType
@@ -21,6 +21,17 @@ class Task(BaseModel, table=True):
     """
 
     __tablename__ = "task"
+    __table_args__ = (
+        CheckConstraint("points > 0", name="points_positive"),
+        CheckConstraint(
+            "week_number IS NULL OR week_number BETWEEN 1 AND 12",
+            name="week_number_between_1_and_12",
+        ),
+        CheckConstraint(
+            "starts_at IS NULL OR ends_at IS NULL OR starts_at < ends_at",
+            name="starts_before_ends",
+        ),
+    )
 
     task_id: int | None = Field(default=None, primary_key=True)
     code: str = Field(
@@ -45,7 +56,8 @@ class Task(BaseModel, table=True):
         description="Тип задания, по которому приложение выбирает способ автоматической проверки",
     )
     points: int = Field(
-        nullable=False, description="Количество очков, начисляемое после подтверждения выполнения задания"
+        nullable=False,
+        description="Количество очков, начисляемое после подтверждения выполнения задания",
     )
     week_number: int | None = Field(
         default=None,
@@ -74,7 +86,11 @@ class Task(BaseModel, table=True):
     repeat_policy: TaskRepeatPolicy = Field(
         default=TaskRepeatPolicy.ONCE,
         sa_column=Column(
-            SAEnum(TaskRepeatPolicy, name="task_repeat_policy", values_callable=enum_values),
+            SAEnum(
+                TaskRepeatPolicy,
+                name="task_repeat_policy",
+                values_callable=enum_values,
+            ),
             nullable=False,
         ),
         description="Правило повторного выполнения задания одним пользователем",

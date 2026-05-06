@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import CheckConstraint, DateTime, func
 from sqlmodel import Column, Field, Relationship
 
 from infrastructure.database.base import BaseModel
@@ -20,9 +20,18 @@ class User(BaseModel, table=True):
     текущий баланс и агрегаты по заработанным/потраченным очкам.
     """
 
-    __tablename__ = "user"
+    __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint("balance_points >= 0", name="balance_points_non_negative"),
+        CheckConstraint(
+            "earned_points_total >= 0", name="earned_points_total_non_negative"
+        ),
+        CheckConstraint(
+            "spent_points_total >= 0", name="spent_points_total_non_negative"
+        ),
+    )
 
-    user_id: int | None = Field(default=None, primary_key=True)
+    users_id: int | None = Field(default=None, primary_key=True)
     vk_user_id: int = Field(
         nullable=False,
         unique=True,

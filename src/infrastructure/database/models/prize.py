@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SAEnum, Text, func
+from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Text, func
 from sqlmodel import Column, Field, Relationship
 
 from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
@@ -21,6 +21,16 @@ class Prize(BaseModel, table=True):
     """
 
     __tablename__ = "prize"
+    __table_args__ = (
+        CheckConstraint("cost_points > 0", name="cost_points_positive"),
+        CheckConstraint(
+            "quantity_claimed >= 0", name="quantity_claimed_non_negative"
+        ),
+        CheckConstraint(
+            "quantity_total IS NULL OR quantity_claimed <= quantity_total",
+            name="quantity_claimed_lte_quantity_total",
+        ),
+    )
 
     prize_id: int | None = Field(default=None, primary_key=True)
     code: str = Field(
@@ -29,7 +39,9 @@ class Prize(BaseModel, table=True):
         index=True,
         description="Стабильный уникальный код приза для seed-данных, логики приложения и админки",
     )
-    prize_name: str = Field(nullable=False, description="Название приза для пользователя")
+    prize_name: str = Field(
+        nullable=False, description="Название приза для пользователя"
+    )
     description: str | None = Field(
         default=None,
         sa_column=Column(Text),
@@ -71,7 +83,7 @@ class Prize(BaseModel, table=True):
         nullable=False,
         description="Количество единиц приза, уже выданных или зарезервированных пользователями",
     )
-    sort_order: int = Field( #TODO уточнить у влада нужно ли
+    sort_order: int = Field(  # TODO уточнить у Влада нужно ли
         default=0, nullable=False, description="Порядок отображения в магазине"
     )
     is_active: bool = Field(

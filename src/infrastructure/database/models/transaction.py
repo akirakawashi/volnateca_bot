@@ -27,16 +27,16 @@ class Transaction(BaseModel, table=True):
     был проверяемым и восстанавливаемым по истории операций.
     """
 
-    __tablename__ = "transaction"
+    __tablename__ = "transactions"
     __table_args__ = (
         CheckConstraint("amount > 0", name="amount_positive"),
         CheckConstraint("balance_before >= 0", name="balance_before_non_negative"),
         CheckConstraint("balance_after >= 0", name="balance_after_non_negative"),
     )
 
-    transaction_id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(
-        foreign_key="user.user_id",
+    transactions_id: int | None = Field(default=None, primary_key=True)
+    users_id: int = Field(
+        foreign_key="users.users_id",
         nullable=False,
         index=True,
         description="ID пользователя, чей баланс изменяется этой операцией",
@@ -112,4 +112,6 @@ class Transaction(BaseModel, table=True):
         back_populates="transaction"
     )
     prize: Optional["Prize"] = Relationship(back_populates="transactions")
-    prize_redemption: Optional["PrizeRedemption"] = Relationship(back_populates="transaction")
+    prize_redemption: Optional["PrizeRedemption"] = Relationship(
+        back_populates="transaction"
+    )

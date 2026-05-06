@@ -24,12 +24,17 @@ class TaskCompletion(BaseModel, table=True):
 
     __tablename__ = "task_completions"
     __table_args__ = (
-        UniqueConstraint("user_id", "task_id", "completion_key", name="uq_task_completions_user_task_key"),
+        UniqueConstraint(
+            "users_id",
+            "task_id",
+            "completion_key",
+            name="uq_task_completions_users_task_key",
+        ),
     )
 
     task_completions_id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(
-        foreign_key="user.user_id",
+    users_id: int = Field(
+        foreign_key="users.users_id",
         nullable=False,
         index=True,
         description="ID пользователя, для которого зафиксировано выполнение задания",
@@ -49,9 +54,9 @@ class TaskCompletion(BaseModel, table=True):
             "для weekly ключ недели вида 'week_01'."
         ),
     )
-    transaction_id: int | None = Field(
+    transactions_id: int | None = Field(
         default=None,
-        foreign_key="transaction.transaction_id",
+        foreign_key="transactions.transactions_id",
         unique=True,
         description="ID транзакции начисления очков, созданной после подтверждения выполнения задания",
     )

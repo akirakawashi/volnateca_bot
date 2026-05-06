@@ -27,8 +27,8 @@ class PrizeRedemption(BaseModel, table=True):
     )
 
     prize_redemptions_id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(
-        foreign_key="user.user_id",
+    users_id: int = Field(
+        foreign_key="users.users_id",
         nullable=False,
         index=True,
         description="ID пользователя, который запросил или получил приз",
@@ -39,9 +39,9 @@ class PrizeRedemption(BaseModel, table=True):
         index=True,
         description="ID приза, который пользователь запросил или получил",
     )
-    transaction_id: int | None = Field(
+    transactions_id: int | None = Field(
         default=None,
-        foreign_key="transaction.transaction_id",
+        foreign_key="transactions.transactions_id",
         unique=True,
         description="ID транзакции списания очков за получение приза",
     )
@@ -59,7 +59,11 @@ class PrizeRedemption(BaseModel, table=True):
     )
     receive_type: PrizeReceiveType = Field(
         sa_column=Column(
-            SAEnum(PrizeReceiveType, name="prize_receive_type", values_callable=enum_values),
+            SAEnum(
+                PrizeReceiveType,
+                name="prize_receive_type",
+                values_callable=enum_values,
+            ),
             nullable=False,
         ),
         description="Фактический способ получения приза на момент заявки",
@@ -94,4 +98,6 @@ class PrizeRedemption(BaseModel, table=True):
 
     user: "User" = Relationship(back_populates="prize_redemptions")
     prize: "Prize" = Relationship(back_populates="prize_redemptions")
-    transaction: Optional["Transaction"] = Relationship(back_populates="prize_redemption")
+    transaction: Optional["Transaction"] = Relationship(
+        back_populates="prize_redemption"
+    )
