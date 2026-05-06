@@ -14,6 +14,7 @@ from infrastructure.database.base import BaseModel, enum_values
 if TYPE_CHECKING:
     from infrastructure.database.models.prize import Prize
     from infrastructure.database.models.prize_redemption import PrizeRedemption
+    from infrastructure.database.models.referral import Referral
     from infrastructure.database.models.task import Task
     from infrastructure.database.models.task_completion import TaskCompletion
     from infrastructure.database.models.user import User
@@ -114,4 +115,7 @@ class Transaction(BaseModel, table=True):
     prize: Optional["Prize"] = Relationship(back_populates="transactions")
     prize_redemption: Optional["PrizeRedemption"] = Relationship(
         back_populates="transaction"
+    )
+    referral_bonus: Optional["Referral"] = Relationship(
+        back_populates="bonus_transaction"
     )

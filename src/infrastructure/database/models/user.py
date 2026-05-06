@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import CheckConstraint, DateTime, func
 from sqlmodel import Column, Field, Relationship
@@ -7,6 +7,8 @@ from sqlmodel import Column, Field, Relationship
 from infrastructure.database.base import BaseModel
 
 if TYPE_CHECKING:
+    from infrastructure.database.models.referral import Referral
+    from infrastructure.database.models.user_daily_activity import UserDailyActivity
     from infrastructure.database.models.prize_redemption import PrizeRedemption
     from infrastructure.database.models.task_completion import TaskCompletion
     from infrastructure.database.models.transaction import Transaction
@@ -75,6 +77,20 @@ class User(BaseModel, table=True):
         ),
     )
 
+    sent_referrals: list["Referral"] = Relationship(
+        back_populates="inviter",
+        sa_relationship_kwargs={"foreign_keys": "Referral.inviter_users_id"},
+    )
+    received_referral: Optional["Referral"] = Relationship(
+        back_populates="invited",
+        sa_relationship_kwargs={
+            "foreign_keys": "Referral.invited_users_id",
+            "uselist": False,
+        },
+    )
+    daily_activities: list["UserDailyActivity"] = Relationship(
+        back_populates="user"
+    )
     prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="user")
     task_completions: list["TaskCompletion"] = Relationship(back_populates="user")
     transactions: list["Transaction"] = Relationship(back_populates="user")

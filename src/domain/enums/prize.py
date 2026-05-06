@@ -35,7 +35,17 @@ class PrizeRedemptionStatus(str, Enum):
     CANCELED = "canceled"  # Заявка отменена
 
 
+class PromoCodeStatus(str, Enum):
+    """Статус конкретного промокода партнёрского приза."""
+
+    AVAILABLE = "available"  # Можно выдать пользователю
+    RESERVED = "reserved"  # Временно закреплён за заявкой
+    ISSUED = "issued"  # Отправлен пользователю
+    DISABLED = "disabled"  # Отключён и не должен выдаваться
+
+
 __all__ = [
+    "PromoCodeStatus",
     "PrizeReceiveType",
     "PrizeRedemptionStatus",
     "PrizeStatus",

@@ -1,4 +1,5 @@
 from domain.enums.prize import (
+    PromoCodeStatus,
     PrizeReceiveType,
     PrizeRedemptionStatus,
     PrizeStatus,
@@ -16,6 +17,7 @@ from domain.enums.transaction import (
 )
 
 __all__ = [
+    "PromoCodeStatus",
     "PrizeReceiveType",
     "PrizeRedemptionStatus",
     "PrizeStatus",

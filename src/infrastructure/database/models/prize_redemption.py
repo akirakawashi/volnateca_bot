@@ -9,6 +9,7 @@ from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
     from infrastructure.database.models.prize import Prize
+    from infrastructure.database.models.prize_promo_code import PrizePromoCode
     from infrastructure.database.models.transaction import Transaction
     from infrastructure.database.models.user import User
 
@@ -98,6 +99,9 @@ class PrizeRedemption(BaseModel, table=True):
 
     user: "User" = Relationship(back_populates="prize_redemptions")
     prize: "Prize" = Relationship(back_populates="prize_redemptions")
+    promo_code: Optional["PrizePromoCode"] = Relationship(
+        back_populates="prize_redemption"
+    )
     transaction: Optional["Transaction"] = Relationship(
         back_populates="prize_redemption"
     )
