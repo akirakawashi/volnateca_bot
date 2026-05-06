@@ -15,6 +15,7 @@ class TransactionSource(str, Enum):
     TASK = "task"  # Начисление или корректировка по заданию
     PRIZE = "prize"  # Списание за приз или возврат очков по призу
     REFERRAL = "referral"  # Бонус за приглашенного пользователя
+    ACHIEVEMENT = "achievement"  # Бонус за достижение или игровое правило
     ADJUSTMENT = "adjustment"  # Ручная корректировка баланса администратором
 
 

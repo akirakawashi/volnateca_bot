@@ -7,6 +7,7 @@ from sqlmodel import Column, Field, Relationship
 from infrastructure.database.base import BaseModel
 
 if TYPE_CHECKING:
+    from infrastructure.database.models.user_achievements import UserAchievement
     from infrastructure.database.models.prize_redemptions import PrizeRedemption
     from infrastructure.database.models.referrals import Referral
     from infrastructure.database.models.task_completions import TaskCompletion
@@ -91,6 +92,7 @@ class User(BaseModel, table=True):
     daily_activities: list["UserDailyActivity"] = Relationship(
         back_populates="user"
     )
+    user_achievements: list["UserAchievement"] = Relationship(back_populates="user")
     prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="user")
     task_completions: list["TaskCompletion"] = Relationship(back_populates="user")
     transactions: list["Transaction"] = Relationship(back_populates="user")

@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from infrastructure.database.models.referrals import Referral
     from infrastructure.database.models.task_completions import TaskCompletion
     from infrastructure.database.models.tasks import Task
+    from infrastructure.database.models.user_achievements import UserAchievement
     from infrastructure.database.models.users import User
 
 
@@ -105,4 +106,7 @@ class Transaction(BaseModel, table=True):
     )
     referral_bonus: Optional["Referral"] = Relationship(
         back_populates="bonus_transaction"
+    )
+    user_achievement: Optional["UserAchievement"] = Relationship(
+        back_populates="transaction"
     )
