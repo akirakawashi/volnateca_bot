@@ -56,9 +56,7 @@ class Transaction(BaseModel, table=True):
     )
     transaction_type: TransactionType = Field(
         sa_column=Column(
-            SAEnum(
-                TransactionType, name="transaction_type", values_callable=enum_values
-            ),
+            SAEnum(TransactionType, name="transaction_type", values_callable=enum_values),
             nullable=False,
         ),
         description="Направление движения баланса: начисление увеличивает баланс, списание уменьшает",
@@ -78,9 +76,7 @@ class Transaction(BaseModel, table=True):
         nullable=False,
         description="Положительная сумма операции без знака; направление задаётся полем transaction_type",
     )
-    balance_before: int = Field(
-        nullable=False, description="Баланс пользователя до применения этой операции"
-    )
+    balance_before: int = Field(nullable=False, description="Баланс пользователя до применения этой операции")
     balance_after: int = Field(
         nullable=False, description="Баланс пользователя после применения этой операции"
     )
@@ -90,23 +86,13 @@ class Transaction(BaseModel, table=True):
         description="Пояснение операции для аудита, админки и расследования ручных корректировок",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
 
     user: "User" = Relationship(back_populates="transactions")
     task: Optional["Task"] = Relationship(back_populates="transactions")
-    task_completion: Optional["TaskCompletion"] = Relationship(
-        back_populates="transaction"
-    )
+    task_completion: Optional["TaskCompletion"] = Relationship(back_populates="transaction")
     prize: Optional["Prize"] = Relationship(back_populates="transactions")
-    prize_redemption: Optional["PrizeRedemption"] = Relationship(
-        back_populates="transaction"
-    )
-    referral_bonus: Optional["Referral"] = Relationship(
-        back_populates="bonus_transaction"
-    )
-    user_achievement: Optional["UserAchievement"] = Relationship(
-        back_populates="transaction"
-    )
+    prize_redemption: Optional["PrizeRedemption"] = Relationship(back_populates="transaction")
+    referral_bonus: Optional["Referral"] = Relationship(back_populates="bonus_transaction")
+    user_achievement: Optional["UserAchievement"] = Relationship(back_populates="transaction")

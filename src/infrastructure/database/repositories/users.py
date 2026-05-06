@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlmodel import col
 
 from application.common.dto.user import VKUserRegistrationDTO
 from application.interface.repositories.users import IUserRepository
@@ -14,7 +15,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         vk_user_id: int,
     ) -> VKUserRegistrationDTO | None:
         result = await self._session.execute(
-            select(User).where(User.vk_user_id == vk_user_id),
+            select(User).where(col(User.vk_user_id) == vk_user_id),
         )
         user = result.scalar_one_or_none()
         if user is None:

@@ -23,9 +23,7 @@ class PrizeRedemption(BaseModel, table=True):
     """
 
     __tablename__ = "prize_redemptions"
-    __table_args__ = (
-        CheckConstraint("points_spent >= 0", name="points_spent_non_negative"),
-    )
+    __table_args__ = (CheckConstraint("points_spent >= 0", name="points_spent_non_negative"),)
 
     prize_redemptions_id: int | None = Field(default=None, primary_key=True)
     users_id: int = Field(
@@ -84,9 +82,7 @@ class PrizeRedemption(BaseModel, table=True):
         description="Дата и время фактической выдачи приза или отправки промокода",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     updated_at: datetime = Field(
         sa_column=Column(
@@ -99,9 +95,5 @@ class PrizeRedemption(BaseModel, table=True):
 
     user: "User" = Relationship(back_populates="prize_redemptions")
     prize: "Prize" = Relationship(back_populates="prize_redemptions")
-    promo_code: Optional["PrizePromoCode"] = Relationship(
-        back_populates="prize_redemption"
-    )
-    transaction: Optional["Transaction"] = Relationship(
-        back_populates="prize_redemption"
-    )
+    promo_code: Optional["PrizePromoCode"] = Relationship(back_populates="prize_redemption")
+    transaction: Optional["Transaction"] = Relationship(back_populates="prize_redemption")

@@ -59,8 +59,11 @@ async def app_error_handler(
 
 async def pydantic_validation_error_handler(
     request: Request,
-    err: RequestValidationError | ValidationError,
+    err: Exception,
 ) -> JSONResponse:
+    if not isinstance(err, RequestValidationError | ValidationError):
+        raise err
+
     logger.warning("Validation error: %s", err)
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

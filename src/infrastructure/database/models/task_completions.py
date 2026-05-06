@@ -96,9 +96,7 @@ class TaskCompletion(BaseModel, table=True):
         description="Дата и время последней проверки выполнения задания",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     updated_at: datetime = Field(
         sa_column=Column(
@@ -111,6 +109,4 @@ class TaskCompletion(BaseModel, table=True):
 
     user: "User" = Relationship(back_populates="task_completions")
     task: "Task" = Relationship(back_populates="task_completions")
-    transaction: Optional["Transaction"] = Relationship(
-        back_populates="task_completion"
-    )
+    transaction: Optional["Transaction"] = Relationship(back_populates="task_completion")

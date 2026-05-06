@@ -69,9 +69,7 @@ class UserAchievement(BaseModel, table=True):
         description="Служебный комментарий по выдаче достижения",
     )
     awarded_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
 
     user: "User" = Relationship(back_populates="user_achievements")

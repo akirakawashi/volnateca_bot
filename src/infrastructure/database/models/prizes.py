@@ -38,9 +38,7 @@ class Prize(BaseModel, table=True):
         index=True,
         description="Стабильный уникальный код приза для seed-данных, логики приложения и админки",
     )
-    prize_name: str = Field(
-        nullable=False, description="Название приза для пользователя"
-    )
+    prize_name: str = Field(nullable=False, description="Название приза для пользователя")
     description: str | None = Field(
         default=None,
         sa_column=Column(Text),
@@ -55,9 +53,7 @@ class Prize(BaseModel, table=True):
     )
     receive_type: PrizeReceiveType = Field(
         sa_column=Column(
-            SAEnum(
-                PrizeReceiveType, name="prize_receive_type", values_callable=enum_values
-            ),
+            SAEnum(PrizeReceiveType, name="prize_receive_type", values_callable=enum_values),
             nullable=False,
         ),
         description="Сценарий выдачи приза: самовывоз, доставка, промокод или связь с менеджером",
@@ -70,9 +66,7 @@ class Prize(BaseModel, table=True):
         ),
         description="Статус доступности приза для отображения и покупки в магазине",
     )
-    cost_points: int = Field(
-        nullable=False, index=True, description="Стоимость получения приза в очках"
-    )
+    cost_points: int = Field(nullable=False, index=True, description="Стоимость получения приза в очках")
     quantity_total: int | None = Field(
         default=None,
         description="Общее количество доступных единиц приза; NULL означает, что остаток не ограничивается системой",
@@ -92,9 +86,7 @@ class Prize(BaseModel, table=True):
         description="Показывать ли приз в магазине",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     updated_at: datetime = Field(
         sa_column=Column(

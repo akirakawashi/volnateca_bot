@@ -26,12 +26,8 @@ class User(BaseModel, table=True):
     __tablename__ = "users"
     __table_args__ = (
         CheckConstraint("balance_points >= 0", name="balance_points_non_negative"),
-        CheckConstraint(
-            "earned_points_total >= 0", name="earned_points_total_non_negative"
-        ),
-        CheckConstraint(
-            "spent_points_total >= 0", name="spent_points_total_non_negative"
-        ),
+        CheckConstraint("earned_points_total >= 0", name="earned_points_total_non_negative"),
+        CheckConstraint("spent_points_total >= 0", name="spent_points_total_non_negative"),
     )
 
     users_id: int | None = Field(default=None, primary_key=True)
@@ -65,9 +61,7 @@ class User(BaseModel, table=True):
         description="Активен ли пользователь в боте; неактивные пользователи не участвуют в новых начислениях",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     updated_at: datetime = Field(
         sa_column=Column(

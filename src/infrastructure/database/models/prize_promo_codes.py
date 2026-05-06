@@ -60,9 +60,7 @@ class PrizePromoCode(BaseModel, table=True):
         description="Дата и время отправки промокода пользователю",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     updated_at: datetime = Field(
         sa_column=Column(
@@ -74,6 +72,4 @@ class PrizePromoCode(BaseModel, table=True):
     )
 
     prize: "Prize" = Relationship(back_populates="promo_codes")
-    prize_redemption: Optional["PrizeRedemption"] = Relationship(
-        back_populates="promo_code"
-    )
+    prize_redemption: Optional["PrizeRedemption"] = Relationship(back_populates="promo_code")

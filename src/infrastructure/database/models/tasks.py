@@ -40,9 +40,7 @@ class Task(BaseModel, table=True):
         index=True,
         description="Стабильный уникальный код задания для seed-данных, логики приложения и админки",
     )
-    task_name: str = Field(
-        nullable=False, description="Название задания для пользователя"
-    )
+    task_name: str = Field(nullable=False, description="Название задания для пользователя")
     description: str | None = Field(
         default=None,
         sa_column=Column(Text),
@@ -101,9 +99,7 @@ class Task(BaseModel, table=True):
         description="Участвует ли задание в выдаче пользователям и автоматических проверках",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     updated_at: datetime = Field(
         sa_column=Column(

@@ -22,9 +22,7 @@ class Referral(BaseModel, table=True):
     __tablename__ = "referrals"
     __table_args__ = (
         UniqueConstraint("invited_users_id", name="uq_referrals_invited_users_id"),
-        UniqueConstraint(
-            "bonus_transactions_id", name="uq_referrals_bonus_transactions_id"
-        ),
+        UniqueConstraint("bonus_transactions_id", name="uq_referrals_bonus_transactions_id"),
         CheckConstraint("inviter_users_id <> invited_users_id", name="different_users"),
     )
 
@@ -47,9 +45,7 @@ class Referral(BaseModel, table=True):
         description="ID транзакции начисления реферального бонуса пригласившему пользователю",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
 
     inviter: "User" = Relationship(
@@ -60,6 +56,4 @@ class Referral(BaseModel, table=True):
         back_populates="received_referral",
         sa_relationship_kwargs={"foreign_keys": "Referral.invited_users_id"},
     )
-    bonus_transaction: Optional["Transaction"] = Relationship(
-        back_populates="referral_bonus"
-    )
+    bonus_transaction: Optional["Transaction"] = Relationship(back_populates="referral_bonus")

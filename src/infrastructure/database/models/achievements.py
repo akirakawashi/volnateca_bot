@@ -29,9 +29,7 @@ class Achievement(BaseModel, table=True):
         index=True,
         description="Стабильный уникальный код достижения для seed-данных и логики приложения",
     )
-    achievement_name: str = Field(
-        nullable=False, description="Название достижения для пользователя"
-    )
+    achievement_name: str = Field(nullable=False, description="Название достижения для пользователя")
     description: str | None = Field(
         default=None,
         sa_column=Column(Text),
@@ -71,9 +69,7 @@ class Achievement(BaseModel, table=True):
         description="Участвует ли достижение в автоматической проверке и выдаче",
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        ),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     updated_at: datetime = Field(
         sa_column=Column(
@@ -84,6 +80,4 @@ class Achievement(BaseModel, table=True):
         ),
     )
 
-    user_achievements: list["UserAchievement"] = Relationship(
-        back_populates="achievement"
-    )
+    user_achievements: list["UserAchievement"] = Relationship(back_populates="achievement")
