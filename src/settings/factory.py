@@ -3,6 +3,7 @@ from settings.app.cors import CorsSettings
 from settings.app.docs import DocsSettings
 from settings.app.logger import LoggingSettings
 from settings.db.db import DBSettings
+from settings.vk import VKSettings
 
 
 class ConfigFactory:
@@ -12,3 +13,4 @@ class ConfigFactory:
         self.docs = DocsSettings()
         self.cors = CorsSettings()
         self.logging = LoggingSettings()
+        self.vk = VKSettings()

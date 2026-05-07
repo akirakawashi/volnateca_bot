@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from loguru import logger
+
 from application.base_interactor import Interactor
 from application.common.dto.user import VKUserRegistrationDTO
 from application.interface.repositories.users import IUserRepository
@@ -38,6 +40,11 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
                 last_name=command_data.last_name,
             )
             await self.uow.commit()
+            logger.info(
+                "TEMP VK user profile updated: vk_user_id={}, users_id={}",
+                command_data.vk_user_id,
+                user.users_id,
+            )
             return user
 
         user = await self.repository.create_registered_user(
@@ -47,4 +54,10 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
             bonus_points=REGISTRATION_BONUS_POINTS,
         )
         await self.uow.commit()
+        logger.info(
+            "TEMP VK user registered: vk_user_id={}, users_id={}, bonus_points={}",
+            command_data.vk_user_id,
+            user.users_id,
+            REGISTRATION_BONUS_POINTS,
+        )
         return user

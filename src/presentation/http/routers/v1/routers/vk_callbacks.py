@@ -1,6 +1,8 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import PlainTextResponse
+from loguru import logger
 
 from application.command.register_vk_user import (
     RegisterVKUserCommand,
@@ -9,6 +11,7 @@ from application.command.register_vk_user import (
 from application.common.dto.user import VKUserRegistrationDTO
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.dto.response import OkResponse
+from settings.vk import VKSettings
 
 vk_callback_router = APIRouter(
     prefix="/vk",
@@ -20,12 +23,25 @@ vk_callback_router = APIRouter(
 @vk_callback_router.post(
     path="/callback",
     name="Обработка события VK Callback API",
+    response_model=None,
     responses={200: {"model": OkResponse[VKUserRegistrationDTO]}},
 )
 async def vk_callback(
     data: VKCallbackSchema,
     interactor: FromDishka[RegisterVKUserHandler],
-) -> OkResponse[VKUserRegistrationDTO]:
+    vk_settings: FromDishka[VKSettings],
+) -> OkResponse[VKUserRegistrationDTO] | PlainTextResponse:
+    if data.is_confirmation():
+        return PlainTextResponse(vk_settings.CONFIRMATION_CODE)
+
+    if data.is_like():
+        logger.info(
+            "TEMP VK like callback received: event_type={}, liker_id={}",
+            data.type,
+            data.get_like_user_id(),
+        )
+        return OkResponse[VKUserRegistrationDTO]()
+
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
         raise HTTPException(

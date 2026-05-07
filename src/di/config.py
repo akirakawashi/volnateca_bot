@@ -6,6 +6,7 @@ from settings.app.docs import DocsSettings
 from settings.app.logger import LoggingSettings
 from settings.db.db import DBSettings
 from settings.factory import ConfigFactory
+from settings.vk import VKSettings
 
 
 class ConfigProvider(Provider):
@@ -32,3 +33,7 @@ class ConfigProvider(Provider):
     @provide(scope=Scope.APP)
     def get_logging_config(self, cfg_factory: ConfigFactory) -> LoggingSettings:
         return cfg_factory.logging
+
+    @provide(scope=Scope.APP)
+    def get_vk_config(self, cfg_factory: ConfigFactory) -> VKSettings:
+        return cfg_factory.vk
