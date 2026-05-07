@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
+from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_repost_task_from_wall_post import (
     CreateVKRepostTaskFromWallPostHandler,
 )
@@ -30,6 +31,7 @@ async def vk_callback(
     data: VKCallbackSchema,
     register_vk_user_interactor: FromDishka[RegisterVKUserHandler],
     complete_vk_repost_task_interactor: FromDishka[CompleteVKRepostTaskHandler],
+    complete_vk_subscription_task_interactor: FromDishka[CompleteVKSubscriptionTaskHandler],
     create_vk_repost_task_interactor: FromDishka[CreateVKRepostTaskFromWallPostHandler],
     vk_settings: FromDishka[VKSettings],
 ) -> PlainTextResponse:
@@ -37,6 +39,7 @@ async def vk_callback(
         vk_settings=vk_settings,
         register_vk_user_interactor=register_vk_user_interactor,
         complete_vk_repost_task_interactor=complete_vk_repost_task_interactor,
+        complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
         create_vk_repost_task_interactor=create_vk_repost_task_interactor,
     )
     return await dispatcher.handle(data=data)

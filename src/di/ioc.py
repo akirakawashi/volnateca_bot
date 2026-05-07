@@ -1,5 +1,6 @@
 from dishka import Provider, Scope, provide
 
+from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.create_vk_repost_task_from_wall_post import (
     CreateVKRepostTaskFromWallPostHandler,
@@ -35,6 +36,21 @@ class InteractorProvider(Provider):
         vk_settings: VKSettings,
     ) -> CompleteVKRepostTaskHandler:
         return CompleteVKRepostTaskHandler(
+            repository=repository,
+            uow=uow,
+            vk_user_client=vk_user_client,
+            required_subscription_group_id=vk_settings.required_subscription_group_id,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_complete_vk_subscription_task_handler(
+        self,
+        repository: ITaskCompletionRepository,
+        uow: IUnitOfWork,
+        vk_user_client: IVKUserClient,
+        vk_settings: VKSettings,
+    ) -> CompleteVKSubscriptionTaskHandler:
+        return CompleteVKSubscriptionTaskHandler(
             repository=repository,
             uow=uow,
             vk_user_client=vk_user_client,

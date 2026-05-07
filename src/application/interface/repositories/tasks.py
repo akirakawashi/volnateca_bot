@@ -4,6 +4,8 @@ from application.common.dto.task import (
     VKRepostTaskCompletionDTO,
     VKRepostTaskCreationDTO,
     VKRepostTaskDTO,
+    VKSubscriptionTaskCompletionDTO,
+    VKSubscriptionTaskDTO,
 )
 from domain.enums.task import TaskRepeatPolicy
 
@@ -51,4 +53,40 @@ class ITaskCompletionRepository(ABC):
         evidence_external_id: str | None,
         rejected_reason: str,
     ) -> VKRepostTaskCompletionDTO:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_or_create_subscription_task(
+        self,
+        code: str,
+        task_name: str,
+        description: str,
+        external_id: str,
+        points: int,
+        week_number: int | None,
+        repeat_policy: TaskRepeatPolicy,
+    ) -> VKSubscriptionTaskDTO:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def complete_subscription_task_for_vk_user(
+        self,
+        vk_user_id: int,
+        task: VKSubscriptionTaskDTO,
+        completion_key: str,
+        event_id: str | None,
+        evidence_external_id: str | None,
+    ) -> VKSubscriptionTaskCompletionDTO:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def reject_subscription_task_for_vk_user(
+        self,
+        vk_user_id: int,
+        task: VKSubscriptionTaskDTO,
+        completion_key: str,
+        event_id: str | None,
+        evidence_external_id: str | None,
+        rejected_reason: str,
+    ) -> VKSubscriptionTaskCompletionDTO:
         raise NotImplementedError

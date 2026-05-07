@@ -5,6 +5,7 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger
 
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
+from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_repost_task_from_wall_post import (
     CreateVKRepostTaskFromWallPostHandler,
 )
@@ -16,6 +17,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_like_callback,
     handle_registration_callback,
     handle_repost_callback,
+    handle_subscription_callback,
     handle_wall_post_new_callback,
 )
 from settings.vk import VKSettings
@@ -26,6 +28,7 @@ class VKCallbackDispatcher:
     vk_settings: VKSettings
     register_vk_user_interactor: RegisterVKUserHandler
     complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
+    complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     create_vk_repost_task_interactor: CreateVKRepostTaskFromWallPostHandler
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
@@ -52,10 +55,17 @@ class VKCallbackDispatcher:
                 interactor=self.complete_vk_repost_task_interactor,
             )
 
+        if data.is_subscription_event():
+            return await handle_subscription_callback(
+                data=data,
+                interactor=self.complete_vk_subscription_task_interactor,
+            )
+
         if data.is_registration_event():
             return await handle_registration_callback(
                 data=data,
                 interactor=self.register_vk_user_interactor,
+                subscription_interactor=self.complete_vk_subscription_task_interactor,
             )
 
         return handle_ignored_callback(data=data)

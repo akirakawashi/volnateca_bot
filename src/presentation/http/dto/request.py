@@ -8,6 +8,7 @@ VK_CONFIRMATION_EVENT_TYPE = "confirmation"
 VK_LIKE_EVENT_TYPES = frozenset(("like_add", "like_remove"))
 VK_REGISTRATION_EVENT_TYPES = frozenset(("message_new", "message_allow"))
 VK_REPOST_EVENT_TYPES = frozenset(("wall_repost",))
+VK_SUBSCRIPTION_EVENT_TYPES = frozenset(("group_join",))
 VK_WALL_POST_EVENT_TYPES = frozenset(("wall_post_new",))
 
 
@@ -76,6 +77,9 @@ class VKCallbackSchema(BaseModel):
     def is_repost(self) -> bool:
         return self.type in VK_REPOST_EVENT_TYPES
 
+    def is_subscription_event(self) -> bool:
+        return self.type in VK_SUBSCRIPTION_EVENT_TYPES
+
     def is_wall_post_new(self) -> bool:
         return self.type in VK_WALL_POST_EVENT_TYPES
 
@@ -85,9 +89,7 @@ class VKCallbackSchema(BaseModel):
     def is_expected_group(self, expected_group_id: int) -> bool:
         return self.group_id == expected_group_id
 
-    def has_valid_secret(self, expected_secret: str | None) -> bool:
-        if not expected_secret:
-            return True
+    def has_valid_secret(self, expected_secret: str) -> bool:
         return self.secret == expected_secret
 
     def get_like_user_id(self) -> int | None:

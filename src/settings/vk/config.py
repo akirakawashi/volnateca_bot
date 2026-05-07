@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import SettingsConfigDict
 
 from settings.base import Settings
@@ -14,7 +15,7 @@ class VKSettings(Settings):
     GROUP_ID: int
     GROUP_ACCESS_TOKEN: str
     CONFIRMATION_CODE: str
-    SECRET_KEY: str | None = None
+    SECRET_KEY: str = Field(min_length=1)
     API_VERSION: str = "5.199"
     API_BASE_URL: str = "https://api.vk.com/method"
     REQUEST_TIMEOUT_SECONDS: float = 5.0
