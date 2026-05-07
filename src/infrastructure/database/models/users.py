@@ -39,7 +39,11 @@ class User(BaseModel, table=True):
     )
     first_name: str | None = Field(default=None, description="Имя пользователя")
     last_name: str | None = Field(default=None, description="Фамилия пользователя")
-    mid_name: str | None = Field(default=None, description="Отчество пользователя")
+    vk_screen_name: str | None = Field(
+        default=None,
+        index=True,
+        description="Короткий адрес профиля ВКонтакте, например akirakawashii",
+    )
     balance_points: int = Field(
         default=0,
         nullable=False,

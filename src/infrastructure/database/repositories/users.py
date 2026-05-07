@@ -28,12 +28,14 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         vk_user_id: int,
         first_name: str | None,
         last_name: str | None,
+        vk_screen_name: str | None,
         bonus_points: int,
     ) -> VKUserRegistrationDTO:
         user = User(
             vk_user_id=vk_user_id,
             first_name=first_name,
             last_name=last_name,
+            vk_screen_name=vk_screen_name,
             balance_points=bonus_points,
             earned_points_total=bonus_points,
         )
@@ -61,15 +63,18 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         users_id: int,
         first_name: str | None,
         last_name: str | None,
+        vk_screen_name: str | None,
     ) -> VKUserRegistrationDTO:
         user = await self._session.get(User, users_id)
         if user is None:
             raise RuntimeError(f"User with users_id={users_id} was not found")
 
-        if first_name:
+        if first_name is not None:
             user.first_name = first_name
-        if last_name:
+        if last_name is not None:
             user.last_name = last_name
+        if vk_screen_name is not None:
+            user.vk_screen_name = vk_screen_name
 
         return self._to_registration_dto(user=user, created=False)
 
@@ -84,6 +89,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         return VKUserRegistrationDTO(
             users_id=user.users_id,
             vk_user_id=user.vk_user_id,
+            vk_screen_name=user.vk_screen_name,
             balance_points=user.balance_points,
             created=created,
         )

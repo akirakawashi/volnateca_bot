@@ -17,6 +17,7 @@ class IUserRepository(ABC):
         vk_user_id: int,
         first_name: str | None,
         last_name: str | None,
+        vk_screen_name: str | None,
         bonus_points: int,
     ) -> VKUserRegistrationDTO:
         raise NotImplementedError
@@ -27,5 +28,6 @@ class IUserRepository(ABC):
         users_id: int,
         first_name: str | None,
         last_name: str | None,
+        vk_screen_name: str | None,
     ) -> VKUserRegistrationDTO:
         raise NotImplementedError

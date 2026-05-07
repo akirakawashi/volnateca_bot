@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 VK_CONFIRMATION_EVENT_TYPE = "confirmation"
 VK_LIKE_EVENT_TYPES = frozenset(("like_add", "like_remove"))
+VK_REGISTRATION_EVENT_TYPES = frozenset(("message_new", "message_allow"))
 
 
 class VKCallbackMessageSchema(BaseModel):
@@ -33,6 +34,10 @@ class VKCallbackSchema(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
     type: str | None = Field(default=None, description="Тип события VK Callback API")
+    group_id: int | None = Field(default=None, description="ID сообщества VK")
+    event_id: str | None = Field(default=None, description="Уникальный ID события VK Callback API")
+    secret: str | None = Field(default=None, description="Секретный ключ VK Callback API")
+    api_version: str | None = Field(default=None, alias="v", description="Версия VK Callback API")
     event_object: VKCallbackObjectSchema = Field(
         default_factory=VKCallbackObjectSchema,
         alias="object",
@@ -45,8 +50,24 @@ class VKCallbackSchema(BaseModel):
     def is_like(self) -> bool:
         return self.type in VK_LIKE_EVENT_TYPES
 
+    def is_registration_event(self) -> bool:
+        return self.type in VK_REGISTRATION_EVENT_TYPES
+
+    def is_expected_group(self, expected_group_id: int) -> bool:
+        return self.group_id == expected_group_id
+
+    def has_valid_secret(self, expected_secret: str | None) -> bool:
+        if not expected_secret:
+            return True
+        return self.secret == expected_secret
+
     def get_like_user_id(self) -> int | None:
         return self._normalize_vk_user_id(raw_user_id=self.event_object.liker_id)
+
+    def get_primary_vk_user_id(self) -> int | None:
+        if self.is_like():
+            return self.get_like_user_id()
+        return self.get_vk_user_id()
 
     def get_vk_user_id(self) -> int | None:
         message = self.event_object.message
@@ -75,6 +96,19 @@ class VKCallbackSchema(BaseModel):
         if self.event_object.message and self.event_object.message.last_name:
             return self.event_object.message.last_name
         return None
+
+    def get_event_object_keys(self) -> tuple[str, ...]:
+        return self._get_present_keys(model=self.event_object)
+
+    def get_message_keys(self) -> tuple[str, ...]:
+        if self.event_object.message is None:
+            return ()
+        return self._get_present_keys(model=self.event_object.message)
+
+    @staticmethod
+    def _get_present_keys(model: BaseModel) -> tuple[str, ...]:
+        extra_keys = set(model.model_extra or {})
+        return tuple(sorted(model.model_fields_set | extra_keys))
 
     @staticmethod
     def _normalize_vk_user_id(raw_user_id: Any) -> int | None:
