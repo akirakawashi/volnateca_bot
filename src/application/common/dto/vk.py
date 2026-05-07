@@ -17,3 +17,24 @@ class VKUserProfileDTO:
         if self.screen_name:
             return f"https://vk.com/{self.screen_name}"
         return self.stable_profile_url
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class VKWallPostDTO:
+    owner_id: int
+    post_id: int
+
+    @property
+    def external_id(self) -> str:
+        return f"wall{self.owner_id}_{self.post_id}"
+
+    @property
+    def external_id_variants(self) -> tuple[str, ...]:
+        variants = {
+            self.external_id,
+            f"{self.owner_id}_{self.post_id}",
+        }
+        if self.owner_id < 0:
+            variants.add(f"wall{abs(self.owner_id)}_{self.post_id}")
+            variants.add(f"{abs(self.owner_id)}_{self.post_id}")
+        return tuple(sorted(variants))

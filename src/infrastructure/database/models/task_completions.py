@@ -85,6 +85,14 @@ class TaskCompletion(BaseModel, table=True):
             "Используется для идемпотентности и расследования повторных событий VK."
         ),
     )
+    evidence_external_id: str | None = Field(
+        default=None,
+        index=True,
+        description=(
+            "ID внешнего объекта, подтверждающего выполнение. "
+            "Для VK-репоста это ID записи-репоста на стене пользователя вида wall123_456."
+        ),
+    )
     rejected_reason: str | None = Field(
         default=None,
         sa_column=Column(Text),

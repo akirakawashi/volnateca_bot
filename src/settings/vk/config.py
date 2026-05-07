@@ -18,3 +18,8 @@ class VKSettings(Settings):
     API_VERSION: str = "5.199"
     API_BASE_URL: str = "https://api.vk.com/method"
     REQUEST_TIMEOUT_SECONDS: float = 5.0
+    REQUIRED_SUBSCRIPTION_GROUP_ID: int | None = None
+
+    @property
+    def required_subscription_group_id(self) -> int:
+        return self.REQUIRED_SUBSCRIPTION_GROUP_ID or self.GROUP_ID

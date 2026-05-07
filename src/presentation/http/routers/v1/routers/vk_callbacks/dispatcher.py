@@ -4,6 +4,10 @@ from fastapi import HTTPException, status
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 
+from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
+from application.command.create_vk_repost_task_from_wall_post import (
+    CreateVKRepostTaskFromWallPostHandler,
+)
 from application.command.register_vk_user import RegisterVKUserHandler
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
@@ -11,6 +15,8 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_ignored_callback,
     handle_like_callback,
     handle_registration_callback,
+    handle_repost_callback,
+    handle_wall_post_new_callback,
 )
 from settings.vk import VKSettings
 
@@ -19,6 +25,8 @@ from settings.vk import VKSettings
 class VKCallbackDispatcher:
     vk_settings: VKSettings
     register_vk_user_interactor: RegisterVKUserHandler
+    complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
+    create_vk_repost_task_interactor: CreateVKRepostTaskFromWallPostHandler
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
         self._validate_group(data=data)
@@ -31,6 +39,18 @@ class VKCallbackDispatcher:
 
         if data.is_like():
             return handle_like_callback(data=data)
+
+        if data.is_wall_post_new():
+            return await handle_wall_post_new_callback(
+                data=data,
+                interactor=self.create_vk_repost_task_interactor,
+            )
+
+        if data.is_repost():
+            return await handle_repost_callback(
+                data=data,
+                interactor=self.complete_vk_repost_task_interactor,
+            )
 
         if data.is_registration_event():
             return await handle_registration_callback(
