@@ -43,7 +43,7 @@ class VKUsersGetResponseSchema(BaseModel):
 class VKGroupsIsMemberResponseSchema(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    response: bool | None = None
+    response: int | None = None
     error: VKAPIErrorSchema | None = None
 
 
@@ -186,7 +186,7 @@ class VKAPIClient(IVKUserClient):
             )
             return None
 
-        return parsed_response.response
+        return bool(parsed_response.response) if parsed_response.response is not None else None
 
     async def has_user_reposted_wall_post(
         self,

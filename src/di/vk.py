@@ -8,7 +8,7 @@ from settings.vk import VKSettings
 
 
 class VKProvider(Provider):
-    @provide(scope=Scope.REQUEST, provides=IVKUserClient)
+    @provide(scope=Scope.APP, provides=IVKUserClient)
     async def get_vk_user_client(
         self,
         settings: VKSettings,
