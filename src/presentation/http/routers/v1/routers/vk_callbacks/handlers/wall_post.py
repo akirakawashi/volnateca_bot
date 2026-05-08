@@ -1,13 +1,9 @@
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 
-from application.command.create_vk_like_task_from_wall_post import (
-    CreateVKLikeTaskFromWallPostCommand,
-    CreateVKLikeTaskFromWallPostHandler,
-)
-from application.command.create_vk_repost_task_from_wall_post import (
-    CreateVKRepostTaskFromWallPostCommand,
-    CreateVKRepostTaskFromWallPostHandler,
+from application.command.create_vk_post_tasks import (
+    CreateVKPostTasksCommand,
+    CreateVKPostTasksHandler,
 )
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
@@ -15,8 +11,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_re
 
 async def handle_wall_post_new_callback(
     data: VKCallbackSchema,
-    interactor: CreateVKRepostTaskFromWallPostHandler,
-    like_task_interactor: CreateVKLikeTaskFromWallPostHandler,
+    interactor: CreateVKPostTasksHandler,
 ) -> PlainTextResponse:
     post = data.get_wall_post()
     if post is None or data.group_id is None:
@@ -29,64 +24,7 @@ async def handle_wall_post_new_callback(
         return vk_ok_response()
 
     result = await interactor(
-        command_data=CreateVKRepostTaskFromWallPostCommand(
-            event_id=data.event_id,
-            group_id=data.group_id,
-            post=post,
-            text=data.get_wall_post_text(),
-        ),
-    )
-    logger.info(
-        "TEMP VK wall_post_new callback processed (repost task): "
-        "event_id={}, event_type={}, status={}, tasks_id={}, code={}, external_id={}, "
-        "points={}, week_number={}, reason={}",
-        data.event_id,
-        data.type,
-        result.status,
-        result.tasks_id,
-        result.code,
-        result.external_id,
-        result.points,
-        result.week_number,
-        result.reason,
-    )
-
-    like_result = await like_task_interactor(
-        command_data=CreateVKLikeTaskFromWallPostCommand(
-            event_id=data.event_id,
-            group_id=data.group_id,
-            post=post,
-            text=data.get_wall_post_text(),
-        ),
-    )
-    logger.info(
-        "TEMP VK wall_post_new callback processed (like task): "
-        "event_id={}, event_type={}, status={}, tasks_id={}, code={}, external_id={}, "
-        "points={}, week_number={}, reason={}",
-        data.event_id,
-        data.type,
-        like_result.status,
-        like_result.tasks_id,
-        like_result.code,
-        like_result.external_id,
-        like_result.points,
-        like_result.week_number,
-        like_result.reason,
-    )
-    return vk_ok_response()
-
-    post = data.get_wall_post()
-    if post is None or data.group_id is None:
-        logger.warning(
-            "TEMP VK wall_post_new callback without post data: event_id={}, event_type={}, group_id={}",
-            data.event_id,
-            data.type,
-            data.group_id,
-        )
-        return vk_ok_response()
-
-    result = await interactor(
-        command_data=CreateVKRepostTaskFromWallPostCommand(
+        command_data=CreateVKPostTasksCommand(
             event_id=data.event_id,
             group_id=data.group_id,
             post=post,
@@ -95,15 +33,17 @@ async def handle_wall_post_new_callback(
     )
     logger.info(
         "TEMP VK wall_post_new callback processed: "
-        "event_id={}, event_type={}, status={}, tasks_id={}, code={}, external_id={}, "
-        "points={}, week_number={}, reason={}",
+        "event_id={}, event_type={}, status={}, external_id={}, "
+        "repost_tasks_id={}, like_tasks_id={}, "
+        "repost_points={}, like_points={}, week_number={}, reason={}",
         data.event_id,
         data.type,
         result.status,
-        result.tasks_id,
-        result.code,
         result.external_id,
-        result.points,
+        result.repost_tasks_id,
+        result.like_tasks_id,
+        result.repost_points,
+        result.like_points,
         result.week_number,
         result.reason,
     )

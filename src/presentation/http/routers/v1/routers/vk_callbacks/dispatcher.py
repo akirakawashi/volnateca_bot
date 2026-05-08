@@ -7,12 +7,7 @@ from loguru import logger
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
-from application.command.create_vk_like_task_from_wall_post import (
-    CreateVKLikeTaskFromWallPostHandler,
-)
-from application.command.create_vk_repost_task_from_wall_post import (
-    CreateVKRepostTaskFromWallPostHandler,
-)
+from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
 from application.command.register_vk_user import RegisterVKUserHandler
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
@@ -33,8 +28,7 @@ class VKCallbackDispatcher:
     register_vk_user_interactor: RegisterVKUserHandler
     complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
-    create_vk_repost_task_interactor: CreateVKRepostTaskFromWallPostHandler
-    create_vk_like_task_interactor: CreateVKLikeTaskFromWallPostHandler
+    create_vk_post_tasks_interactor: CreateVKPostTasksHandler
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
@@ -55,8 +49,7 @@ class VKCallbackDispatcher:
         if data.is_wall_post_new():
             return await handle_wall_post_new_callback(
                 data=data,
-                interactor=self.create_vk_repost_task_interactor,
-                like_task_interactor=self.create_vk_like_task_interactor,
+                interactor=self.create_vk_post_tasks_interactor,
             )
 
         if data.is_repost():
