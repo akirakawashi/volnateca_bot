@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Awaitable, Callable
 from functools import partial
 
@@ -21,8 +20,7 @@ from application.exceptions.repository import (
 )
 from domain.exception import DomainValidationError
 from domain.exceptions import AppError
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def setup_exception_handlers(app: FastAPI) -> None:
@@ -50,7 +48,7 @@ async def app_error_handler(
     err: AppError,
     status_code: int,
 ) -> JSONResponse:
-    logger.error("Application error: %s", err.title, exc_info=err)
+    logger.error("Application error: {}", err.title)
     return JSONResponse(
         status_code=status_code,
         content={"status": False, "message": err.title, "context": None},
@@ -64,7 +62,7 @@ async def pydantic_validation_error_handler(
     if not isinstance(err, RequestValidationError | ValidationError):
         raise err
 
-    logger.warning("Validation error: %s", err)
+    logger.warning("Validation error: {}", err)
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"status": False, "message": "Validation error", "context": err.errors()},
@@ -72,7 +70,7 @@ async def pydantic_validation_error_handler(
 
 
 async def unknown_exception_handler(request: Request, err: Exception) -> JSONResponse:
-    logger.exception("Unhandled exception", exc_info=err)
+    logger.exception("Unhandled exception")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"status": False, "message": "Internal server error", "context": None},

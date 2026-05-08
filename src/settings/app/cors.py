@@ -7,4 +7,4 @@ class CorsSettings(Settings):
     CORS_ALLOW_ORIGINS: ClassVar[list[str]] = ["*"]
     CORS_ALLOW_METHODS: ClassVar[list[str]] = ["*"]
     CORS_ALLOW_HEADERS: ClassVar[list[str]] = ["*"]
-    CORS_ALLOW_CREDENTIALS: bool = True
+    CORS_ALLOW_CREDENTIALS: bool = False
