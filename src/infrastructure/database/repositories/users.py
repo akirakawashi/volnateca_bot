@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
 from application.common.dto.user import VKUserRegistrationDTO
@@ -31,31 +32,43 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         vk_screen_name: str | None,
         bonus_points: int,
     ) -> VKUserRegistrationDTO:
-        user = User(
-            vk_user_id=vk_user_id,
-            first_name=first_name,
-            last_name=last_name,
-            vk_screen_name=vk_screen_name,
-            balance_points=bonus_points,
-            earned_points_total=bonus_points,
-        )
-        self._session.add(user)
-        await self._session.flush()
-        if user.users_id is None:
-            raise RuntimeError("User primary key was not generated")
-
-        self._session.add(
-            Transaction(
-                users_id=user.users_id,
-                transaction_type=TransactionType.ACCRUAL,
-                transaction_source=TransactionSource.REGISTRATION,
-                amount=bonus_points,
-                balance_before=0,
-                balance_after=bonus_points,
-                description="Бонус за регистрацию в VK-боте",
-            ),
-        )
-
+        try:
+            async with self._session.begin_nested():
+                user = User(
+                    vk_user_id=vk_user_id,
+                    first_name=first_name,
+                    last_name=last_name,
+                    vk_screen_name=vk_screen_name,
+                    balance_points=bonus_points,
+                    earned_points_total=bonus_points,
+                )
+                self._session.add(user)
+                await self._session.flush()
+                if user.users_id is None:
+                    raise RuntimeError("User primary key was not generated")
+                self._session.add(
+                    Transaction(
+                        users_id=user.users_id,
+                        transaction_type=TransactionType.ACCRUAL,
+                        transaction_source=TransactionSource.REGISTRATION,
+                        amount=bonus_points,
+                        balance_before=0,
+                        balance_after=bonus_points,
+                        description="Бонус за регистрацию в VK-боте",
+                    ),
+                )
+        except IntegrityError:
+            result = await self._session.execute(
+                select(User).where(col(User.vk_user_id) == vk_user_id).with_for_update(),
+            )
+            user = result.scalar_one()
+            if first_name is not None:
+                user.first_name = first_name
+            if last_name is not None:
+                user.last_name = last_name
+            if vk_screen_name is not None:
+                user.vk_screen_name = vk_screen_name
+            return self._to_registration_dto(user=user, created=False)
         return self._to_registration_dto(user=user, created=True)
 
     async def update_profile(

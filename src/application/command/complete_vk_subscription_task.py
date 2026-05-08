@@ -43,6 +43,27 @@ class CompleteVKSubscriptionTaskHandler(
         self,
         command_data: CompleteVKSubscriptionTaskCommand,
     ) -> VKSubscriptionTaskCompletionDTO:
+        task = await self.repository.get_or_create_subscription_task(
+            code=self._build_task_code(group_id=self.required_subscription_group_id),
+            task_name="Подписаться на группу Волны",
+            description="Бонус за подписку на группу Волны ВКонтакте.",
+            external_id=self._build_task_external_id(group_id=self.required_subscription_group_id),
+            points=SUBSCRIPTION_TASK_POINTS,
+            week_number=SUBSCRIPTION_TASK_WEEK_NUMBER,
+            repeat_policy=TaskRepeatPolicy.ONCE,
+        )
+
+        if await self.repository.is_subscription_task_completed(
+            vk_user_id=command_data.vk_user_id,
+            task=task,
+            completion_key=SUBSCRIPTION_TASK_COMPLETION_KEY,
+        ):
+            return VKSubscriptionTaskCompletionDTO(
+                status=VKSubscriptionTaskCompletionStatus.ALREADY_COMPLETED,
+                vk_user_id=command_data.vk_user_id,
+                tasks_id=task.tasks_id,
+            )
+
         is_member = await self.vk_user_client.is_group_member(
             vk_user_id=command_data.vk_user_id,
             group_id=self.required_subscription_group_id,
@@ -58,16 +79,6 @@ class CompleteVKSubscriptionTaskHandler(
                 status=VKSubscriptionTaskCompletionStatus.VK_API_UNAVAILABLE,
                 vk_user_id=command_data.vk_user_id,
             )
-
-        task = await self.repository.get_or_create_subscription_task(
-            code=self._build_task_code(group_id=self.required_subscription_group_id),
-            task_name="Подписаться на группу Волны",
-            description="Бонус за подписку на группу Волны ВКонтакте.",
-            external_id=self._build_task_external_id(group_id=self.required_subscription_group_id),
-            points=SUBSCRIPTION_TASK_POINTS,
-            week_number=SUBSCRIPTION_TASK_WEEK_NUMBER,
-            repeat_policy=TaskRepeatPolicy.ONCE,
-        )
 
         if not is_member:
             result = await self.repository.reject_subscription_task_for_vk_user(

@@ -90,3 +90,12 @@ class ITaskCompletionRepository(ABC):
         rejected_reason: str,
     ) -> VKSubscriptionTaskCompletionDTO:
         raise NotImplementedError
+
+    @abstractmethod
+    async def is_subscription_task_completed(
+        self,
+        vk_user_id: int,
+        task: VKSubscriptionTaskDTO,
+        completion_key: str,
+    ) -> bool:
+        raise NotImplementedError

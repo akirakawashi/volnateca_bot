@@ -92,6 +92,8 @@ class CompleteVKRepostTaskHandler(
             await self.uow.commit()
             return result
 
+        # has_user_reposted_wall_post не вызывается намеренно: событие wall_repost
+        # приходит от VK в момент самого репоста, поэтому дополнительная проверка не нужна
         result = await self.repository.complete_repost_task_for_vk_user(
             vk_user_id=command_data.vk_user_id,
             task=task,
