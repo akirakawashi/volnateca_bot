@@ -3,8 +3,12 @@ from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
+from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
+from application.command.create_vk_like_task_from_wall_post import (
+    CreateVKLikeTaskFromWallPostHandler,
+)
 from application.command.create_vk_repost_task_from_wall_post import (
     CreateVKRepostTaskFromWallPostHandler,
 )
@@ -33,6 +37,8 @@ async def vk_callback(
     complete_vk_repost_task_interactor: FromDishka[CompleteVKRepostTaskHandler],
     complete_vk_subscription_task_interactor: FromDishka[CompleteVKSubscriptionTaskHandler],
     create_vk_repost_task_interactor: FromDishka[CreateVKRepostTaskFromWallPostHandler],
+    create_vk_like_task_interactor: FromDishka[CreateVKLikeTaskFromWallPostHandler],
+    complete_vk_like_task_interactor: FromDishka[CompleteVKLikeTaskHandler],
     vk_settings: FromDishka[VKSettings],
 ) -> PlainTextResponse:
     dispatcher = VKCallbackDispatcher(
@@ -41,5 +47,7 @@ async def vk_callback(
         complete_vk_repost_task_interactor=complete_vk_repost_task_interactor,
         complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
         create_vk_repost_task_interactor=create_vk_repost_task_interactor,
+        create_vk_like_task_interactor=create_vk_like_task_interactor,
+        complete_vk_like_task_interactor=complete_vk_like_task_interactor,
     )
     return await dispatcher.handle(data=data)

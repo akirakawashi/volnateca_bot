@@ -4,8 +4,12 @@ from fastapi import HTTPException, status
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 
+from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
+from application.command.create_vk_like_task_from_wall_post import (
+    CreateVKLikeTaskFromWallPostHandler,
+)
 from application.command.create_vk_repost_task_from_wall_post import (
     CreateVKRepostTaskFromWallPostHandler,
 )
@@ -30,6 +34,8 @@ class VKCallbackDispatcher:
     complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     create_vk_repost_task_interactor: CreateVKRepostTaskFromWallPostHandler
+    create_vk_like_task_interactor: CreateVKLikeTaskFromWallPostHandler
+    complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
         self._validate_group(data=data)
@@ -41,12 +47,16 @@ class VKCallbackDispatcher:
         self._log_callback(data=data)
 
         if data.is_like():
-            return handle_like_callback(data=data)
+            return await handle_like_callback(
+                data=data,
+                interactor_complete=self.complete_vk_like_task_interactor,
+            )
 
         if data.is_wall_post_new():
             return await handle_wall_post_new_callback(
                 data=data,
                 interactor=self.create_vk_repost_task_interactor,
+                like_task_interactor=self.create_vk_like_task_interactor,
             )
 
         if data.is_repost():
@@ -67,6 +77,7 @@ class VKCallbackDispatcher:
                 interactor=self.register_vk_user_interactor,
                 subscription_interactor=self.complete_vk_subscription_task_interactor,
             )
+
 
         return handle_ignored_callback(data=data)
 

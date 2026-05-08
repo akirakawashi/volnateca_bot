@@ -1,7 +1,11 @@
 from dishka import Provider, Scope, provide
 
+from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
+from application.command.create_vk_like_task_from_wall_post import (
+    CreateVKLikeTaskFromWallPostHandler,
+)
 from application.command.create_vk_repost_task_from_wall_post import (
     CreateVKRepostTaskFromWallPostHandler,
 )
@@ -64,6 +68,28 @@ class InteractorProvider(Provider):
         uow: IUnitOfWork,
     ) -> CreateVKRepostTaskFromWallPostHandler:
         return CreateVKRepostTaskFromWallPostHandler(
+            repository=repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_create_vk_like_task_from_wall_post_handler(
+        self,
+        repository: ITaskCompletionRepository,
+        uow: IUnitOfWork,
+    ) -> CreateVKLikeTaskFromWallPostHandler:
+        return CreateVKLikeTaskFromWallPostHandler(
+            repository=repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_complete_vk_like_task_handler(
+        self,
+        repository: ITaskCompletionRepository,
+        uow: IUnitOfWork,
+    ) -> CompleteVKLikeTaskHandler:
+        return CompleteVKLikeTaskHandler(
             repository=repository,
             uow=uow,
         )

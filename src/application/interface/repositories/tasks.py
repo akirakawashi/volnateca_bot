@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 
 from application.common.dto.task import (
+    VKLikeTaskCompletionDTO,
+    VKLikeTaskCreationDTO,
+    VKLikeTaskDTO,
     VKRepostTaskCompletionDTO,
     VKRepostTaskCreationDTO,
     VKRepostTaskDTO,
@@ -98,4 +101,35 @@ class ITaskCompletionRepository(ABC):
         task: VKSubscriptionTaskDTO,
         completion_key: str,
     ) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def create_like_task_if_not_exists(
+        self,
+        code: str,
+        task_name: str,
+        description: str,
+        external_id: str,
+        points: int,
+        week_number: int | None,
+        repeat_policy: TaskRepeatPolicy,
+        event_id: str | None,
+    ) -> VKLikeTaskCreationDTO:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_active_like_task_by_external_ids(
+        self,
+        external_ids: tuple[str, ...],
+    ) -> VKLikeTaskDTO | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def complete_like_task_for_vk_user(
+        self,
+        vk_user_id: int,
+        task: VKLikeTaskDTO,
+        completion_key: str,
+        event_id: str | None,
+    ) -> VKLikeTaskCompletionDTO:
         raise NotImplementedError

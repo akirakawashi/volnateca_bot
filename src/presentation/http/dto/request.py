@@ -46,6 +46,9 @@ class VKCallbackObjectSchema(BaseModel):
     user_id: int | None = Field(default=None, description="ID пользователя VK")
     from_id: int | None = Field(default=None, description="ID пользователя VK")
     liker_id: int | None = Field(default=None, description="ID пользователя VK, поставившего лайк")
+    object_id: int | None = Field(default=None, description="ID объекта, которому поставлен лайк")
+    object_owner_id: int | None = Field(default=None, description="ID владельца объекта лайка")
+    object_type: str | None = Field(default=None, description="Тип объекта лайка (post, comment, etc.)")
     first_name: str | None = Field(default=None, description="Имя пользователя VK")
     last_name: str | None = Field(default=None, description="Фамилия пользователя VK")
     copy_history: list[VKCallbackWallPostSchema] = Field(
@@ -94,6 +97,18 @@ class VKCallbackSchema(BaseModel):
 
     def get_like_user_id(self) -> int | None:
         return self._normalize_vk_user_id(raw_user_id=self.event_object.liker_id)
+
+    def get_liked_post(self) -> VKWallPostDTO | None:
+        obj = self.event_object
+        if obj.object_type != "post" or obj.object_id is None or obj.object_owner_id is None:
+            return None
+        return VKWallPostDTO(owner_id=obj.object_owner_id, post_id=obj.object_id)
+
+    def get_liked_post_external_ids(self) -> tuple[str, ...]:
+        post = self.get_liked_post()
+        if post is None:
+            return ()
+        return post.external_id_variants
 
     def get_primary_vk_user_id(self) -> int | None:
         if self.is_like():
