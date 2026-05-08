@@ -31,14 +31,10 @@ class InteractorProvider(Provider):
         self,
         repository: ITaskCompletionRepository,
         uow: IUnitOfWork,
-        vk_user_client: IVKUserClient,
-        vk_settings: VKSettings,
     ) -> CompleteVKRepostTaskHandler:
         return CompleteVKRepostTaskHandler(
             repository=repository,
             uow=uow,
-            vk_user_client=vk_user_client,
-            required_subscription_group_id=vk_settings.required_subscription_group_id,
         )
 
     @provide(scope=Scope.REQUEST)
