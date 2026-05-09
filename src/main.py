@@ -24,18 +24,18 @@ def create_di_container() -> AsyncContainer:
 def create_fastapi_app() -> FastAPI:
     application = FastAPI(
         debug=config.app.DEBUG,
-        title=config.app.APP_NAME,
-        version=config.app.APP_VERSION,
+        title=config.app.NAME,
+        version=config.app.VERSION,
         openapi_url=config.docs.OPENAPI_URL,
     )
     include_routers(application)
 
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=config.cors.CORS_ALLOW_ORIGINS,
-        allow_credentials=config.cors.CORS_ALLOW_CREDENTIALS,
-        allow_methods=config.cors.CORS_ALLOW_METHODS,
-        allow_headers=config.cors.CORS_ALLOW_HEADERS,
+        allow_origins=config.cors.ALLOW_ORIGINS,
+        allow_credentials=config.cors.ALLOW_CREDENTIALS,
+        allow_methods=config.cors.ALLOW_METHODS,
+        allow_headers=config.cors.ALLOW_HEADERS,
     )
     application.add_middleware(TrustedHostMiddleware, allowed_hosts=config.app.TRUSTED_HOSTS)
 

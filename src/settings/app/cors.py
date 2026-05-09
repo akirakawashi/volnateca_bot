@@ -1,10 +1,17 @@
-from typing import ClassVar
+from pydantic_settings import SettingsConfigDict
 
 from settings.base import Settings
 
 
 class CorsSettings(Settings):
-    CORS_ALLOW_ORIGINS: ClassVar[list[str]] = ["*"]
-    CORS_ALLOW_METHODS: ClassVar[list[str]] = ["*"]
-    CORS_ALLOW_HEADERS: ClassVar[list[str]] = ["*"]
-    CORS_ALLOW_CREDENTIALS: bool = False
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="CORS_",
+        extra="ignore",
+    )
+
+    ALLOW_ORIGINS: list[str] = ["*"]
+    ALLOW_METHODS: list[str] = ["*"]
+    ALLOW_HEADERS: list[str] = ["*"]
+    ALLOW_CREDENTIALS: bool = False

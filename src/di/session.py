@@ -18,10 +18,10 @@ class DBProvider(Provider):
             config.dsn(),
             future=True,
             echo=False,
-            pool_size=config.DB_POOL_SIZE,
+            pool_size=config.POOL_SIZE,
             pool_pre_ping=True,
-            max_overflow=config.DB_MAX_OVERFLOW,
-            pool_recycle=config.DB_POOL_RECYCLE,
+            max_overflow=config.MAX_OVERFLOW,
+            pool_recycle=config.POOL_RECYCLE,
         )
         yield engine
         await engine.dispose(close=True)
