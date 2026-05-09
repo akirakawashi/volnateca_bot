@@ -5,31 +5,27 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
 from application.common.dto.task import (
-    VKLikeTaskCompletionDTO,
-    VKLikeTaskCompletionStatus,
     VKLikeTaskCreationDTO,
     VKLikeTaskCreationStatus,
     VKLikeTaskDTO,
-    VKRepostTaskCompletionDTO,
-    VKRepostTaskCompletionStatus,
     VKRepostTaskCreationDTO,
     VKRepostTaskCreationStatus,
     VKRepostTaskDTO,
-    VKSubscriptionTaskCompletionDTO,
-    VKSubscriptionTaskCompletionStatus,
     VKSubscriptionTaskDTO,
 )
-from application.interface.repositories.tasks import ITaskCompletionRepository
-from domain.enums.task import TaskCompletionStatus, TaskRepeatPolicy, TaskType
-from domain.enums.transaction import TransactionSource, TransactionType
-from infrastructure.database.models.task_completions import TaskCompletion
+from application.interface.repositories.tasks import ITaskRepository
+from domain.enums.task import TaskRepeatPolicy, TaskType
 from infrastructure.database.models.tasks import Task
-from infrastructure.database.models.transactions import Transaction
-from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
 
 
-class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
+class TaskRepository(SQLAlchemyRepository, ITaskRepository):
+    """Репозиторий справочника заданий.
+
+    Содержит только чтение и запись строк таблицы tasks. Никаких операций
+    над балансом пользователя или фактами выполнения здесь нет.
+    """
+
     async def create_repost_task_if_not_exists(
         self,
         code: str,
@@ -41,9 +37,10 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         repeat_policy: TaskRepeatPolicy,
         event_id: str | None,
     ) -> VKRepostTaskCreationDTO:
-        existing_task = await self._get_repost_task_by_code_or_external_id(
+        existing_task = await self._get_task_by_code_or_external_id(
             code=code,
             external_id=external_id,
+            task_type=TaskType.VK_REPOST,
         )
         if existing_task is not None:
             return self._to_repost_task_creation_dto(
@@ -54,7 +51,7 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
 
         try:
             async with self._session.begin_nested():
-                task = Task(
+                task = self._build_task(
                     code=code,
                     task_name=task_name,
                     description=description,
@@ -63,14 +60,14 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
                     week_number=week_number,
                     external_id=external_id,
                     repeat_policy=repeat_policy,
-                    is_active=True,
                 )
                 self._session.add(task)
                 await self._session.flush()
         except IntegrityError:
-            existing_task = await self._get_repost_task_by_code_or_external_id(
+            existing_task = await self._get_task_by_code_or_external_id(
                 code=code,
                 external_id=external_id,
+                task_type=TaskType.VK_REPOST,
             )
             if existing_task is None:
                 raise
@@ -89,108 +86,13 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         self,
         external_ids: tuple[str, ...],
     ) -> VKRepostTaskDTO | None:
-        if not external_ids:
-            return None
-
-        now = datetime.now(tz=UTC)
-        result = await self._session.execute(
-            select(Task)
-            .where(
-                col(Task.task_type) == TaskType.VK_REPOST,
-                col(Task.external_id).in_(external_ids),
-                col(Task.is_active).is_(True),
-                or_(col(Task.starts_at).is_(None), col(Task.starts_at) <= now),
-                or_(col(Task.ends_at).is_(None), col(Task.ends_at) > now),
-            )
-            .order_by(col(Task.tasks_id)),
+        task = await self._get_active_task_by_external_ids(
+            external_ids=external_ids,
+            task_type=TaskType.VK_REPOST,
         )
-        task = result.scalars().first()
         if task is None:
             return None
-
         return self._to_repost_task_dto(task=task)
-
-    async def complete_repost_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKRepostTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-        evidence_external_id: str | None,
-    ) -> VKRepostTaskCompletionDTO:
-        user = await self._get_user_for_update(vk_user_id=vk_user_id)
-        if user is None:
-            return VKRepostTaskCompletionDTO(
-                status=VKRepostTaskCompletionStatus.USER_NOT_REGISTERED,
-                vk_user_id=vk_user_id,
-                tasks_id=task.tasks_id,
-            )
-
-        completion = await self._get_completion_for_update(
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            completion_key=completion_key,
-        )
-        if completion and completion.task_completion_status == TaskCompletionStatus.COMPLETED:
-            return self._to_completion_result(
-                status=VKRepostTaskCompletionStatus.ALREADY_COMPLETED,
-                vk_user_id=vk_user_id,
-                user=user,
-                completion=completion,
-                points_awarded=0,
-            )
-
-        balance_before = user.balance_points
-        balance_after = balance_before + task.points
-        user.balance_points = balance_after
-        user.earned_points_total += task.points
-
-        transaction = Transaction(
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            transaction_type=TransactionType.ACCRUAL,
-            transaction_source=TransactionSource.TASK,
-            amount=task.points,
-            balance_before=balance_before,
-            balance_after=balance_after,
-            description=f"Начисление за задание: {task.task_name}",
-        )
-        self._session.add(transaction)
-        await self._session.flush()
-        if transaction.transactions_id is None:
-            raise RuntimeError("Transaction primary key was not generated")
-
-        now = datetime.now(tz=UTC)
-        if completion is None:
-            completion = TaskCompletion(
-                users_id=self._require_user_id(user=user),
-                tasks_id=task.tasks_id,
-                completion_key=completion_key,
-                transactions_id=transaction.transactions_id,
-                task_completion_status=TaskCompletionStatus.COMPLETED,
-                points_awarded=task.points,
-                external_event_id=event_id,
-                evidence_external_id=evidence_external_id,
-                checked_at=now,
-            )
-            self._session.add(completion)
-        else:
-            completion.transactions_id = transaction.transactions_id
-            completion.task_completion_status = TaskCompletionStatus.COMPLETED
-            completion.points_awarded = task.points
-            completion.external_event_id = event_id
-            completion.evidence_external_id = evidence_external_id
-            completion.rejected_reason = None
-            completion.checked_at = now
-
-        await self._session.flush()
-        return self._to_completion_result(
-            status=VKRepostTaskCompletionStatus.COMPLETED,
-            vk_user_id=vk_user_id,
-            user=user,
-            completion=completion,
-            points_awarded=task.points,
-        )
 
     async def get_or_create_subscription_task(
         self,
@@ -202,24 +104,17 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         week_number: int | None,
         repeat_policy: TaskRepeatPolicy,
     ) -> VKSubscriptionTaskDTO:
-        result = await self._session.execute(
-            select(Task)
-            .where(
-                col(Task.task_type) == TaskType.VK_SUBSCRIBE,
-                or_(
-                    col(Task.code) == code,
-                    col(Task.external_id) == external_id,
-                ),
-            )
-            .with_for_update(),
+        existing_task = await self._get_task_by_code_or_external_id(
+            code=code,
+            external_id=external_id,
+            task_type=TaskType.VK_SUBSCRIBE,
         )
-        existing_task = result.scalars().first()
         if existing_task is not None:
             return self._to_subscription_task_dto(task=existing_task)
 
         try:
             async with self._session.begin_nested():
-                task = Task(
+                task = self._build_task(
                     code=code,
                     task_name=task_name,
                     description=description,
@@ -228,191 +123,19 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
                     week_number=week_number,
                     external_id=external_id,
                     repeat_policy=repeat_policy,
-                    is_active=True,
                 )
                 self._session.add(task)
                 await self._session.flush()
         except IntegrityError:
-            result = await self._session.execute(
-                select(Task)
-                .where(
-                    col(Task.task_type) == TaskType.VK_SUBSCRIBE,
-                    or_(
-                        col(Task.code) == code,
-                        col(Task.external_id) == external_id,
-                    ),
-                )
-                .with_for_update(),
+            existing_task = await self._get_task_by_code_or_external_id(
+                code=code,
+                external_id=external_id,
+                task_type=TaskType.VK_SUBSCRIBE,
             )
-            existing_task = result.scalars().first()
             if existing_task is None:
                 raise
             return self._to_subscription_task_dto(task=existing_task)
         return self._to_subscription_task_dto(task=task)
-
-    async def complete_subscription_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKSubscriptionTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-        evidence_external_id: str | None,
-    ) -> VKSubscriptionTaskCompletionDTO:
-        user = await self._get_user_for_update(vk_user_id=vk_user_id)
-        if user is None:
-            return VKSubscriptionTaskCompletionDTO(
-                status=VKSubscriptionTaskCompletionStatus.USER_NOT_REGISTERED,
-                vk_user_id=vk_user_id,
-                tasks_id=task.tasks_id,
-            )
-
-        completion = await self._get_completion_for_update(
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            completion_key=completion_key,
-        )
-        if completion and completion.task_completion_status == TaskCompletionStatus.COMPLETED:
-            return self._to_subscription_completion_result(
-                status=VKSubscriptionTaskCompletionStatus.ALREADY_COMPLETED,
-                vk_user_id=vk_user_id,
-                user=user,
-                completion=completion,
-                points_awarded=0,
-            )
-
-        balance_before = user.balance_points
-        balance_after = balance_before + task.points
-        user.balance_points = balance_after
-        user.earned_points_total += task.points
-
-        transaction = Transaction(
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            transaction_type=TransactionType.ACCRUAL,
-            transaction_source=TransactionSource.TASK,
-            amount=task.points,
-            balance_before=balance_before,
-            balance_after=balance_after,
-            description=f"Начисление за задание: {task.task_name}",
-        )
-        self._session.add(transaction)
-        await self._session.flush()
-        if transaction.transactions_id is None:
-            raise RuntimeError("Transaction primary key was not generated")
-
-        now = datetime.now(tz=UTC)
-        if completion is None:
-            completion = TaskCompletion(
-                users_id=self._require_user_id(user=user),
-                tasks_id=task.tasks_id,
-                completion_key=completion_key,
-                transactions_id=transaction.transactions_id,
-                task_completion_status=TaskCompletionStatus.COMPLETED,
-                points_awarded=task.points,
-                external_event_id=event_id,
-                evidence_external_id=evidence_external_id,
-                checked_at=now,
-            )
-            self._session.add(completion)
-        else:
-            completion.transactions_id = transaction.transactions_id
-            completion.task_completion_status = TaskCompletionStatus.COMPLETED
-            completion.points_awarded = task.points
-            completion.external_event_id = event_id
-            completion.evidence_external_id = evidence_external_id
-            completion.rejected_reason = None
-            completion.checked_at = now
-
-        await self._session.flush()
-        return self._to_subscription_completion_result(
-            status=VKSubscriptionTaskCompletionStatus.COMPLETED,
-            vk_user_id=vk_user_id,
-            user=user,
-            completion=completion,
-            points_awarded=task.points,
-        )
-
-    async def reject_subscription_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKSubscriptionTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-        evidence_external_id: str | None,
-        rejected_reason: str,
-    ) -> VKSubscriptionTaskCompletionDTO:
-        user = await self._get_user_for_update(vk_user_id=vk_user_id)
-        if user is None:
-            return VKSubscriptionTaskCompletionDTO(
-                status=VKSubscriptionTaskCompletionStatus.USER_NOT_REGISTERED,
-                vk_user_id=vk_user_id,
-                tasks_id=task.tasks_id,
-                rejected_reason=rejected_reason,
-            )
-
-        completion = await self._get_completion_for_update(
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            completion_key=completion_key,
-        )
-        if completion and completion.task_completion_status == TaskCompletionStatus.COMPLETED:
-            return self._to_subscription_completion_result(
-                status=VKSubscriptionTaskCompletionStatus.ALREADY_COMPLETED,
-                vk_user_id=vk_user_id,
-                user=user,
-                completion=completion,
-                points_awarded=0,
-            )
-
-        now = datetime.now(tz=UTC)
-        if completion is None:
-            completion = TaskCompletion(
-                users_id=self._require_user_id(user=user),
-                tasks_id=task.tasks_id,
-                completion_key=completion_key,
-                task_completion_status=TaskCompletionStatus.REJECTED,
-                points_awarded=0,
-                external_event_id=event_id,
-                evidence_external_id=evidence_external_id,
-                rejected_reason=rejected_reason,
-                checked_at=now,
-            )
-            self._session.add(completion)
-        else:
-            completion.task_completion_status = TaskCompletionStatus.REJECTED
-            completion.points_awarded = 0
-            completion.external_event_id = event_id
-            completion.evidence_external_id = evidence_external_id
-            completion.rejected_reason = rejected_reason
-            completion.checked_at = now
-
-        await self._session.flush()
-        return self._to_subscription_completion_result(
-            status=VKSubscriptionTaskCompletionStatus.REJECTED,
-            vk_user_id=vk_user_id,
-            user=user,
-            completion=completion,
-            points_awarded=0,
-            rejected_reason=rejected_reason,
-        )
-
-    async def is_subscription_task_completed(
-        self,
-        vk_user_id: int,
-        task: VKSubscriptionTaskDTO,
-        completion_key: str,
-    ) -> bool:
-        result = await self._session.execute(
-            select(TaskCompletion)
-            .join(User, col(TaskCompletion.users_id) == col(User.users_id))
-            .where(
-                col(User.vk_user_id) == vk_user_id,
-                col(TaskCompletion.tasks_id) == task.tasks_id,
-                col(TaskCompletion.completion_key) == completion_key,
-                col(TaskCompletion.task_completion_status) == TaskCompletionStatus.COMPLETED,
-            ),
-        )
-        return result.scalar_one_or_none() is not None
 
     async def create_like_task_if_not_exists(
         self,
@@ -425,9 +148,10 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         repeat_policy: TaskRepeatPolicy,
         event_id: str | None,
     ) -> VKLikeTaskCreationDTO:
-        existing_task = await self._get_like_task_by_code_or_external_id(
+        existing_task = await self._get_task_by_code_or_external_id(
             code=code,
             external_id=external_id,
+            task_type=TaskType.VK_LIKE,
         )
         if existing_task is not None:
             return self._to_like_task_creation_dto(
@@ -438,7 +162,7 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
 
         try:
             async with self._session.begin_nested():
-                task = Task(
+                task = self._build_task(
                     code=code,
                     task_name=task_name,
                     description=description,
@@ -447,14 +171,14 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
                     week_number=week_number,
                     external_id=external_id,
                     repeat_policy=repeat_policy,
-                    is_active=True,
                 )
                 self._session.add(task)
                 await self._session.flush()
         except IntegrityError:
-            existing_task = await self._get_like_task_by_code_or_external_id(
+            existing_task = await self._get_task_by_code_or_external_id(
                 code=code,
                 external_id=external_id,
+                task_type=TaskType.VK_LIKE,
             )
             if existing_task is None:
                 raise
@@ -473,6 +197,38 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         self,
         external_ids: tuple[str, ...],
     ) -> VKLikeTaskDTO | None:
+        task = await self._get_active_task_by_external_ids(
+            external_ids=external_ids,
+            task_type=TaskType.VK_LIKE,
+        )
+        if task is None:
+            return None
+        return self._to_like_task_dto(task=task)
+
+    async def _get_task_by_code_or_external_id(
+        self,
+        code: str,
+        external_id: str,
+        task_type: TaskType,
+    ) -> Task | None:
+        result = await self._session.execute(
+            select(Task)
+            .where(
+                col(Task.task_type) == task_type,
+                or_(
+                    col(Task.code) == code,
+                    col(Task.external_id) == external_id,
+                ),
+            )
+            .with_for_update(),
+        )
+        return result.scalars().first()
+
+    async def _get_active_task_by_external_ids(
+        self,
+        external_ids: tuple[str, ...],
+        task_type: TaskType,
+    ) -> Task | None:
         if not external_ids:
             return None
 
@@ -480,7 +236,7 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         result = await self._session.execute(
             select(Task)
             .where(
-                col(Task.task_type) == TaskType.VK_LIKE,
+                col(Task.task_type) == task_type,
                 col(Task.external_id).in_(external_ids),
                 col(Task.is_active).is_(True),
                 or_(col(Task.starts_at).is_(None), col(Task.starts_at) <= now),
@@ -488,156 +244,31 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
             )
             .order_by(col(Task.tasks_id)),
         )
-        task = result.scalars().first()
-        if task is None:
-            return None
-        return self._to_like_task_dto(task=task)
-
-    async def complete_like_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKLikeTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-    ) -> VKLikeTaskCompletionDTO:
-        user = await self._get_user_for_update(vk_user_id=vk_user_id)
-        if user is None:
-            return VKLikeTaskCompletionDTO(
-                status=VKLikeTaskCompletionStatus.USER_NOT_REGISTERED,
-                vk_user_id=vk_user_id,
-                tasks_id=task.tasks_id,
-            )
-
-        completion = await self._get_completion_for_update(
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            completion_key=completion_key,
-        )
-        if completion and completion.task_completion_status == TaskCompletionStatus.COMPLETED:
-            return VKLikeTaskCompletionDTO(
-                status=VKLikeTaskCompletionStatus.ALREADY_COMPLETED,
-                vk_user_id=vk_user_id,
-                users_id=self._require_user_id(user=user),
-                tasks_id=task.tasks_id,
-                task_completions_id=completion.task_completions_id,
-                transactions_id=completion.transactions_id,
-                points_awarded=0,
-                balance_points=user.balance_points,
-            )
-
-        balance_before = user.balance_points
-        balance_after = balance_before + task.points
-        user.balance_points = balance_after
-        user.earned_points_total += task.points
-
-        transaction = Transaction(
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            transaction_type=TransactionType.ACCRUAL,
-            transaction_source=TransactionSource.TASK,
-            amount=task.points,
-            balance_before=balance_before,
-            balance_after=balance_after,
-            description=f"Начисление за задание: {task.task_name}",
-        )
-        self._session.add(transaction)
-        await self._session.flush()
-        if transaction.transactions_id is None:
-            raise RuntimeError("Transaction primary key was not generated")
-
-        now = datetime.now(tz=UTC)
-        if completion is None:
-            completion = TaskCompletion(
-                users_id=self._require_user_id(user=user),
-                tasks_id=task.tasks_id,
-                completion_key=completion_key,
-                transactions_id=transaction.transactions_id,
-                task_completion_status=TaskCompletionStatus.COMPLETED,
-                points_awarded=task.points,
-                external_event_id=event_id,
-                checked_at=now,
-            )
-            self._session.add(completion)
-        else:
-            completion.transactions_id = transaction.transactions_id
-            completion.task_completion_status = TaskCompletionStatus.COMPLETED
-            completion.points_awarded = task.points
-            completion.external_event_id = event_id
-            completion.rejected_reason = None
-            completion.checked_at = now
-
-        await self._session.flush()
-        if completion.task_completions_id is None:
-            raise RuntimeError("TaskCompletion primary key was not generated")
-        return VKLikeTaskCompletionDTO(
-            status=VKLikeTaskCompletionStatus.COMPLETED,
-            vk_user_id=vk_user_id,
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            task_completions_id=completion.task_completions_id,
-            transactions_id=transaction.transactions_id,
-            points_awarded=task.points,
-            balance_points=user.balance_points,
-        )
-
-    async def _get_user_for_update(self, vk_user_id: int) -> User | None:
-        result = await self._session.execute(
-            select(User).where(col(User.vk_user_id) == vk_user_id).with_for_update(),
-        )
-        return result.scalar_one_or_none()
-
-    async def _get_repost_task_by_code_or_external_id(
-        self,
-        code: str,
-        external_id: str,
-    ) -> Task | None:
-        result = await self._session.execute(
-            select(Task)
-            .where(
-                col(Task.task_type) == TaskType.VK_REPOST,
-                or_(
-                    col(Task.code) == code,
-                    col(Task.external_id) == external_id,
-                ),
-            )
-            .with_for_update(),
-        )
         return result.scalars().first()
 
-    async def _get_like_task_by_code_or_external_id(
-        self,
+    @staticmethod
+    def _build_task(
+        *,
         code: str,
+        task_name: str,
+        description: str,
+        task_type: TaskType,
+        points: int,
+        week_number: int | None,
         external_id: str,
-    ) -> Task | None:
-        result = await self._session.execute(
-            select(Task)
-            .where(
-                col(Task.task_type) == TaskType.VK_LIKE,
-                or_(
-                    col(Task.code) == code,
-                    col(Task.external_id) == external_id,
-                ),
-            )
-            .with_for_update(),
+        repeat_policy: TaskRepeatPolicy,
+    ) -> Task:
+        return Task(
+            code=code,
+            task_name=task_name,
+            description=description,
+            task_type=task_type,
+            points=points,
+            week_number=week_number,
+            external_id=external_id,
+            repeat_policy=repeat_policy,
+            is_active=True,
         )
-        return result.scalars().first()
-
-    async def _get_completion_for_update(
-        self,
-        users_id: int,
-        tasks_id: int,
-        completion_key: str,
-    ) -> TaskCompletion | None:
-        result = await self._session.execute(
-            select(TaskCompletion)
-            .where(
-                col(TaskCompletion.users_id) == users_id,
-                col(TaskCompletion.tasks_id) == tasks_id,
-                col(TaskCompletion.completion_key) == completion_key,
-            )
-            .with_for_update(),
-        )
-        return result.scalar_one_or_none()
 
     @staticmethod
     def _to_repost_task_dto(task: Task) -> VKRepostTaskDTO:
@@ -672,6 +303,22 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         )
 
     @staticmethod
+    def _to_like_task_dto(task: Task) -> VKLikeTaskDTO:
+        if task.tasks_id is None:
+            raise RuntimeError("Task primary key was not generated")
+        if task.external_id is None:
+            raise RuntimeError("VK like task external_id is not set")
+
+        return VKLikeTaskDTO(
+            tasks_id=task.tasks_id,
+            task_name=task.task_name,
+            external_id=task.external_id,
+            points=task.points,
+            repeat_policy=task.repeat_policy,
+            week_number=task.week_number,
+        )
+
+    @staticmethod
     def _to_repost_task_creation_dto(
         status: VKRepostTaskCreationStatus,
         task: Task,
@@ -687,74 +334,6 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
             code=task.code,
             external_id=task.external_id,
             points=task.points,
-            week_number=task.week_number,
-        )
-
-    @staticmethod
-    def _to_completion_result(
-        status: VKRepostTaskCompletionStatus,
-        vk_user_id: int,
-        user: User,
-        completion: TaskCompletion,
-        points_awarded: int,
-    ) -> VKRepostTaskCompletionDTO:
-        if completion.task_completions_id is None:
-            raise RuntimeError("TaskCompletion primary key was not generated")
-
-        return VKRepostTaskCompletionDTO(
-            status=status,
-            vk_user_id=vk_user_id,
-            users_id=TaskCompletionRepository._require_user_id(user=user),
-            tasks_id=completion.tasks_id,
-            task_completions_id=completion.task_completions_id,
-            transactions_id=completion.transactions_id,
-            points_awarded=points_awarded,
-            balance_points=user.balance_points,
-        )
-
-    @staticmethod
-    def _to_subscription_completion_result(
-        status: VKSubscriptionTaskCompletionStatus,
-        vk_user_id: int,
-        user: User,
-        completion: TaskCompletion,
-        points_awarded: int,
-        rejected_reason: str | None = None,
-    ) -> VKSubscriptionTaskCompletionDTO:
-        if completion.task_completions_id is None:
-            raise RuntimeError("TaskCompletion primary key was not generated")
-
-        return VKSubscriptionTaskCompletionDTO(
-            status=status,
-            vk_user_id=vk_user_id,
-            users_id=TaskCompletionRepository._require_user_id(user=user),
-            tasks_id=completion.tasks_id,
-            task_completions_id=completion.task_completions_id,
-            transactions_id=completion.transactions_id,
-            points_awarded=points_awarded,
-            balance_points=user.balance_points,
-            rejected_reason=rejected_reason or completion.rejected_reason,
-        )
-
-    @staticmethod
-    def _require_user_id(user: User) -> int:
-        if user.users_id is None:
-            raise RuntimeError("User primary key was not generated")
-        return user.users_id
-
-    @staticmethod
-    def _to_like_task_dto(task: Task) -> VKLikeTaskDTO:
-        if task.tasks_id is None:
-            raise RuntimeError("Task primary key was not generated")
-        if task.external_id is None:
-            raise RuntimeError("VK like task external_id is not set")
-
-        return VKLikeTaskDTO(
-            tasks_id=task.tasks_id,
-            task_name=task.task_name,
-            external_id=task.external_id,
-            points=task.points,
-            repeat_policy=task.repeat_policy,
             week_number=task.week_number,
         )
 

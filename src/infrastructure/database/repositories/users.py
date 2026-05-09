@@ -1,8 +1,9 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
 from application.common.dto.user import VKUserRegistrationDTO
+from application.common.dto.wallet import UserBalanceSnapshot
 from application.interface.repositories.users import IUserRepository
 from domain.enums.transaction import TransactionSource, TransactionType
 from infrastructure.database.models.transactions import Transaction
@@ -90,6 +91,43 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             user.vk_screen_name = vk_screen_name
 
         return self._to_registration_dto(user=user, created=False)
+
+    async def get_balance_snapshot_for_update(
+        self,
+        vk_user_id: int,
+    ) -> UserBalanceSnapshot | None:
+        result = await self._session.execute(
+            select(User).where(col(User.vk_user_id) == vk_user_id).with_for_update(),
+        )
+        user = result.scalar_one_or_none()
+        if user is None:
+            return None
+        if user.users_id is None:
+            raise RuntimeError("User primary key was not generated")
+
+        return UserBalanceSnapshot(
+            users_id=user.users_id,
+            vk_user_id=user.vk_user_id,
+            balance_points=user.balance_points,
+            earned_points_total=user.earned_points_total,
+        )
+
+    async def apply_balance_change(
+        self,
+        *,
+        users_id: int,
+        balance_points: int,
+        earned_points_total: int,
+    ) -> None:
+        await self._session.execute(
+            update(User)
+            .where(col(User.users_id) == users_id)
+            .values(
+                balance_points=balance_points,
+                earned_points_total=earned_points_total,
+            ),
+        )
+        await self._session.flush()
 
     @staticmethod
     def _to_registration_dto(

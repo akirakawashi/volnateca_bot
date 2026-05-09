@@ -11,7 +11,7 @@ from application.common.dto.task import (
     VKRepostTaskCreationStatus,
 )
 from application.common.dto.vk import VKWallPostDTO
-from application.interface.repositories.tasks import ITaskCompletionRepository
+from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
 from domain.enums.task import TaskRepeatPolicy
 
@@ -49,10 +49,10 @@ class CreateVKPostTasksHandler(
 ):
     def __init__(
         self,
-        repository: ITaskCompletionRepository,
+        task_repository: ITaskRepository,
         uow: IUnitOfWork,
     ) -> None:
-        self.repository = repository
+        self.task_repository = task_repository
         self.uow = uow
 
     async def __call__(
@@ -99,7 +99,7 @@ class CreateVKPostTasksHandler(
             text=command_data.text,
         )
 
-        repost_result = await self.repository.create_repost_task_if_not_exists(
+        repost_result = await self.task_repository.create_repost_task_if_not_exists(
             code=f"vk_repost_wall_{abs(canonical_post.owner_id)}_{canonical_post.post_id}",
             task_name=self._build_repost_task_name(parsed_marker=parsed_marker),
             description=description,
@@ -109,7 +109,7 @@ class CreateVKPostTasksHandler(
             repeat_policy=TaskRepeatPolicy.ONCE,
             event_id=command_data.event_id,
         )
-        like_result = await self.repository.create_like_task_if_not_exists(
+        like_result = await self.task_repository.create_like_task_if_not_exists(
             code=f"vk_like_wall_{abs(canonical_post.owner_id)}_{canonical_post.post_id}",
             task_name=self._build_like_task_name(parsed_marker=parsed_marker),
             description=description,

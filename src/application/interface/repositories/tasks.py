@@ -1,19 +1,23 @@
 from abc import ABC, abstractmethod
 
 from application.common.dto.task import (
-    VKLikeTaskCompletionDTO,
     VKLikeTaskCreationDTO,
     VKLikeTaskDTO,
-    VKRepostTaskCompletionDTO,
     VKRepostTaskCreationDTO,
     VKRepostTaskDTO,
-    VKSubscriptionTaskCompletionDTO,
     VKSubscriptionTaskDTO,
 )
 from domain.enums.task import TaskRepeatPolicy
 
 
-class ITaskCompletionRepository(ABC):
+class ITaskRepository(ABC):
+    """Репозиторий справочника заданий.
+
+    Отвечает только за чтение и запись строк таблицы tasks. Любая бизнес-логика
+    (начисление баллов, фиксация выполнения, обновление баланса) находится
+    в AwardTaskService и других репозиториях.
+    """
+
     @abstractmethod
     async def create_repost_task_if_not_exists(
         self,
@@ -36,17 +40,6 @@ class ITaskCompletionRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def complete_repost_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKRepostTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-        evidence_external_id: str | None,
-    ) -> VKRepostTaskCompletionDTO:
-        raise NotImplementedError
-
-    @abstractmethod
     async def get_or_create_subscription_task(
         self,
         code: str,
@@ -57,38 +50,6 @@ class ITaskCompletionRepository(ABC):
         week_number: int | None,
         repeat_policy: TaskRepeatPolicy,
     ) -> VKSubscriptionTaskDTO:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def complete_subscription_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKSubscriptionTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-        evidence_external_id: str | None,
-    ) -> VKSubscriptionTaskCompletionDTO:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def reject_subscription_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKSubscriptionTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-        evidence_external_id: str | None,
-        rejected_reason: str,
-    ) -> VKSubscriptionTaskCompletionDTO:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def is_subscription_task_completed(
-        self,
-        vk_user_id: int,
-        task: VKSubscriptionTaskDTO,
-        completion_key: str,
-    ) -> bool:
         raise NotImplementedError
 
     @abstractmethod
@@ -110,14 +71,4 @@ class ITaskCompletionRepository(ABC):
         self,
         external_ids: tuple[str, ...],
     ) -> VKLikeTaskDTO | None:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def complete_like_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKLikeTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-    ) -> VKLikeTaskCompletionDTO:
         raise NotImplementedError

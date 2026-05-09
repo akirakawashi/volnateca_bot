@@ -4,14 +4,16 @@ from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
+from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
-from application.command.register_vk_user import RegisterVKUserHandler
 from application.interface.clients import IVKUserClient
-from application.interface.repositories.tasks import ITaskCompletionRepository
+from application.interface.repositories.task_completions import ITaskCompletionRepository
+from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
+from application.services.award_task_service import AwardTaskService
 from settings.vk import VKSettings
 
 
@@ -43,24 +45,30 @@ class InteractorProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_complete_vk_repost_task_handler(
         self,
-        repository: ITaskCompletionRepository,
+        task_repository: ITaskRepository,
+        award_service: AwardTaskService,
         uow: IUnitOfWork,
     ) -> CompleteVKRepostTaskHandler:
         return CompleteVKRepostTaskHandler(
-            repository=repository,
+            task_repository=task_repository,
+            award_service=award_service,
             uow=uow,
         )
 
     @provide(scope=Scope.REQUEST)
     def get_complete_vk_subscription_task_handler(
         self,
-        repository: ITaskCompletionRepository,
+        task_repository: ITaskRepository,
+        task_completion_repository: ITaskCompletionRepository,
+        award_service: AwardTaskService,
         uow: IUnitOfWork,
         vk_user_client: IVKUserClient,
         vk_settings: VKSettings,
     ) -> CompleteVKSubscriptionTaskHandler:
         return CompleteVKSubscriptionTaskHandler(
-            repository=repository,
+            task_repository=task_repository,
+            task_completion_repository=task_completion_repository,
+            award_service=award_service,
             uow=uow,
             vk_user_client=vk_user_client,
             required_subscription_group_id=vk_settings.required_subscription_group_id,
@@ -69,21 +77,23 @@ class InteractorProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_create_vk_post_tasks_handler(
         self,
-        repository: ITaskCompletionRepository,
+        task_repository: ITaskRepository,
         uow: IUnitOfWork,
     ) -> CreateVKPostTasksHandler:
         return CreateVKPostTasksHandler(
-            repository=repository,
+            task_repository=task_repository,
             uow=uow,
         )
 
     @provide(scope=Scope.REQUEST)
     def get_complete_vk_like_task_handler(
         self,
-        repository: ITaskCompletionRepository,
+        task_repository: ITaskRepository,
+        award_service: AwardTaskService,
         uow: IUnitOfWork,
     ) -> CompleteVKLikeTaskHandler:
         return CompleteVKLikeTaskHandler(
-            repository=repository,
+            task_repository=task_repository,
+            award_service=award_service,
             uow=uow,
         )

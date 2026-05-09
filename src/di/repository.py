@@ -1,9 +1,13 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from application.interface.repositories.tasks import ITaskCompletionRepository
+from application.interface.repositories.task_completions import ITaskCompletionRepository
+from application.interface.repositories.tasks import ITaskRepository
+from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
-from infrastructure.database.repositories.tasks import TaskCompletionRepository
+from infrastructure.database.repositories.task_completions import TaskCompletionRepository
+from infrastructure.database.repositories.tasks import TaskRepository
+from infrastructure.database.repositories.transactions import TransactionRepository
 from infrastructure.database.repositories.users import UserRepository
 
 
@@ -15,9 +19,23 @@ class RepositoriesProvider(Provider):
     ) -> UserRepository:
         return UserRepository(session=session)
 
+    @provide(scope=Scope.REQUEST, provides=ITaskRepository)
+    def get_task_repository(
+        self,
+        session: AsyncSession,
+    ) -> TaskRepository:
+        return TaskRepository(session=session)
+
     @provide(scope=Scope.REQUEST, provides=ITaskCompletionRepository)
     def get_task_completion_repository(
         self,
         session: AsyncSession,
     ) -> TaskCompletionRepository:
         return TaskCompletionRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=ITransactionRepository)
+    def get_transaction_repository(
+        self,
+        session: AsyncSession,
+    ) -> TransactionRepository:
+        return TransactionRepository(session=session)
