@@ -7,7 +7,9 @@ from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
-from application.command.register_vk_user import RegisterVKUserHandler
+from application.command.register_vk_user_and_check_subscription import (
+    RegisterVKUserAndCheckSubscriptionHandler,
+)
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.dispatcher import VKCallbackDispatcher
 from settings.vk import VKSettings
@@ -28,7 +30,7 @@ vk_callback_router = APIRouter(
 )
 async def vk_callback(
     data: VKCallbackSchema,
-    register_vk_user_interactor: FromDishka[RegisterVKUserHandler],
+    register_vk_user_and_check_subscription_interactor: FromDishka[RegisterVKUserAndCheckSubscriptionHandler],
     complete_vk_repost_task_interactor: FromDishka[CompleteVKRepostTaskHandler],
     complete_vk_subscription_task_interactor: FromDishka[CompleteVKSubscriptionTaskHandler],
     create_vk_post_tasks_interactor: FromDishka[CreateVKPostTasksHandler],
@@ -37,7 +39,9 @@ async def vk_callback(
 ) -> PlainTextResponse:
     dispatcher = VKCallbackDispatcher(
         vk_settings=vk_settings,
-        register_vk_user_interactor=register_vk_user_interactor,
+        register_vk_user_and_check_subscription_interactor=(
+            register_vk_user_and_check_subscription_interactor
+        ),
         complete_vk_repost_task_interactor=complete_vk_repost_task_interactor,
         complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
         create_vk_post_tasks_interactor=create_vk_post_tasks_interactor,

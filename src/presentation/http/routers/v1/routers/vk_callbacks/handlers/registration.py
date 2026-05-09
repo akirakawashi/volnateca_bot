@@ -1,19 +1,17 @@
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 
-from application.command.complete_vk_subscription_task import (
-    CompleteVKSubscriptionTaskCommand,
-    CompleteVKSubscriptionTaskHandler,
+from application.command.register_vk_user_and_check_subscription import (
+    RegisterVKUserAndCheckSubscriptionCommand,
+    RegisterVKUserAndCheckSubscriptionHandler,
 )
-from application.command.register_vk_user import RegisterVKUserCommand, RegisterVKUserHandler
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
 
 async def handle_registration_callback(
     data: VKCallbackSchema,
-    interactor: RegisterVKUserHandler,
-    subscription_interactor: CompleteVKSubscriptionTaskHandler,
+    interactor: RegisterVKUserAndCheckSubscriptionHandler,
 ) -> PlainTextResponse:
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
@@ -25,7 +23,8 @@ async def handle_registration_callback(
         return vk_ok_response()
 
     result = await interactor(
-        command_data=RegisterVKUserCommand(
+        command_data=RegisterVKUserAndCheckSubscriptionCommand(
+            event_id=data.event_id,
             vk_user_id=vk_user_id,
             first_name=data.get_first_name(),
             last_name=data.get_last_name(),
@@ -36,17 +35,10 @@ async def handle_registration_callback(
         "event_id={}, event_type={}, vk_user_id={}, users_id={}, created={}, screen_name={}",
         data.event_id,
         data.type,
-        result.vk_user_id,
-        result.users_id,
-        result.created,
-        result.vk_screen_name,
-    )
-
-    subscription_result = await subscription_interactor(
-        command_data=CompleteVKSubscriptionTaskCommand(
-            event_id=data.event_id,
-            vk_user_id=vk_user_id,
-        ),
+        result.registration.vk_user_id,
+        result.registration.users_id,
+        result.registration.created,
+        result.registration.vk_screen_name,
     )
     logger.info(
         "VK subscription check after registration processed: "
@@ -54,14 +46,14 @@ async def handle_registration_callback(
         "task_completions_id={}, transactions_id={}, points_awarded={}, balance_points={}, rejected_reason={}",
         data.event_id,
         data.type,
-        subscription_result.vk_user_id,
-        subscription_result.status,
-        subscription_result.users_id,
-        subscription_result.tasks_id,
-        subscription_result.task_completions_id,
-        subscription_result.transactions_id,
-        subscription_result.points_awarded,
-        subscription_result.balance_points,
-        subscription_result.rejected_reason,
+        result.subscription.vk_user_id,
+        result.subscription.status,
+        result.subscription.users_id,
+        result.subscription.tasks_id,
+        result.subscription.task_completions_id,
+        result.subscription.transactions_id,
+        result.subscription.points_awarded,
+        result.subscription.balance_points,
+        result.subscription.rejected_reason,
     )
     return vk_ok_response()

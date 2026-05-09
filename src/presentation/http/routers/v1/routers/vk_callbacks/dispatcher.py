@@ -8,7 +8,9 @@ from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
-from application.command.register_vk_user import RegisterVKUserHandler
+from application.command.register_vk_user_and_check_subscription import (
+    RegisterVKUserAndCheckSubscriptionHandler,
+)
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_confirmation_callback,
@@ -25,7 +27,7 @@ from settings.vk import VKSettings
 @dataclass(slots=True, frozen=True, kw_only=True)
 class VKCallbackDispatcher:
     vk_settings: VKSettings
-    register_vk_user_interactor: RegisterVKUserHandler
+    register_vk_user_and_check_subscription_interactor: RegisterVKUserAndCheckSubscriptionHandler
     complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     create_vk_post_tasks_interactor: CreateVKPostTasksHandler
@@ -67,10 +69,8 @@ class VKCallbackDispatcher:
         if data.is_registration_event():
             return await handle_registration_callback(
                 data=data,
-                interactor=self.register_vk_user_interactor,
-                subscription_interactor=self.complete_vk_subscription_task_interactor,
+                interactor=self.register_vk_user_and_check_subscription_interactor,
             )
-
 
         return handle_ignored_callback(data=data)
 

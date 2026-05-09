@@ -1,9 +1,12 @@
 from dishka import Provider, Scope, provide
 
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
-from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
+from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
+from application.command.register_vk_user_and_check_subscription import (
+    RegisterVKUserAndCheckSubscriptionHandler,
+)
 from application.command.register_vk_user import RegisterVKUserHandler
 from application.interface.clients import IVKUserClient
 from application.interface.repositories.tasks import ITaskCompletionRepository
@@ -24,6 +27,17 @@ class InteractorProvider(Provider):
             repository=repository,
             uow=uow,
             vk_user_client=vk_user_client,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_register_vk_user_and_check_subscription_handler(
+        self,
+        register_vk_user_interactor: RegisterVKUserHandler,
+        complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler,
+    ) -> RegisterVKUserAndCheckSubscriptionHandler:
+        return RegisterVKUserAndCheckSubscriptionHandler(
+            register_vk_user_interactor=register_vk_user_interactor,
+            complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
         )
 
     @provide(scope=Scope.REQUEST)
