@@ -19,6 +19,20 @@ class RegisterVKUserCommand:
 
 
 class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistrationDTO]):
+    """Регистрирует пользователя VK один раз.
+
+    Контракт:
+      - если пользователь уже существует, обработчик НЕ дергает VK API
+        и НЕ обновляет профиль/баланс. Возвращает DTO с created=False.
+        Никакой commit при этом не выполняется.
+      - если пользователя нет, обработчик подтягивает профиль из VK и
+        создаёт запись с регистрационным бонусом, после чего коммитит.
+
+    Такое поведение убирает лишние вызовы VK API и обновления профиля
+    на каждое входящее сообщение и страхует от двойного commit'а в
+    композитных сценариях.
+    """
+
     def __init__(
         self,
         repository: IUserRepository,
@@ -33,6 +47,19 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
         self,
         command_data: RegisterVKUserCommand,
     ) -> VKUserRegistrationDTO:
+        existing_user = await self.repository.get_by_vk_user_id(
+            vk_user_id=command_data.vk_user_id,
+        )
+        if existing_user is not None:
+            logger.info(
+                "TEMP VK user already registered, skipping VK API and DB writes: "
+                "vk_user_id={}, users_id={}, screen_name={}",
+                command_data.vk_user_id,
+                existing_user.users_id,
+                existing_user.vk_screen_name,
+            )
+            return existing_user
+
         profile = await self.vk_user_client.get_user_profile(vk_user_id=command_data.vk_user_id)
         first_name = self._select_profile_value(
             profile_value=profile.first_name if profile else None,
@@ -43,25 +70,6 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
             fallback_value=command_data.last_name,
         )
         vk_screen_name = profile.screen_name if profile else None
-
-        user = await self.repository.get_by_vk_user_id(
-            vk_user_id=command_data.vk_user_id,
-        )
-        if user is not None:
-            user = await self.repository.update_profile(
-                users_id=user.users_id,
-                first_name=first_name,
-                last_name=last_name,
-                vk_screen_name=vk_screen_name,
-            )
-            await self.uow.commit()
-            logger.info(
-                "TEMP VK user profile updated: vk_user_id={}, users_id={}, screen_name={}",
-                command_data.vk_user_id,
-                user.users_id,
-                user.vk_screen_name,
-            )
-            return user
 
         user = await self.repository.create_registered_user(
             vk_user_id=command_data.vk_user_id,

@@ -40,20 +40,31 @@ async def handle_registration_callback(
         result.registration.created,
         result.registration.vk_screen_name,
     )
-    logger.info(
-        "VK subscription check after registration processed: "
-        "event_id={}, event_type={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
-        "task_completions_id={}, transactions_id={}, points_awarded={}, balance_points={}, rejected_reason={}",
-        data.event_id,
-        data.type,
-        result.subscription.vk_user_id,
-        result.subscription.status,
-        result.subscription.users_id,
-        result.subscription.tasks_id,
-        result.subscription.task_completions_id,
-        result.subscription.transactions_id,
-        result.subscription.points_awarded,
-        result.subscription.balance_points,
-        result.subscription.rejected_reason,
-    )
+    if result.subscription is None:
+        logger.info(
+            "VK subscription check after registration skipped (user already registered): "
+            "event_id={}, event_type={}, vk_user_id={}, users_id={}",
+            data.event_id,
+            data.type,
+            result.registration.vk_user_id,
+            result.registration.users_id,
+        )
+    else:
+        logger.info(
+            "VK subscription check after registration processed: "
+            "event_id={}, event_type={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
+            "task_completions_id={}, transactions_id={}, "
+            "points_awarded={}, balance_points={}, rejected_reason={}",
+            data.event_id,
+            data.type,
+            result.subscription.vk_user_id,
+            result.subscription.status,
+            result.subscription.users_id,
+            result.subscription.tasks_id,
+            result.subscription.task_completions_id,
+            result.subscription.transactions_id,
+            result.subscription.points_awarded,
+            result.subscription.balance_points,
+            result.subscription.rejected_reason,
+        )
     return vk_ok_response()

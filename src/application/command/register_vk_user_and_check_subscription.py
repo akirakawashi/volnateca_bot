@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from loguru import logger
+
 from application.base_interactor import Interactor
 from application.command.complete_vk_subscription_task import (
     CompleteVKSubscriptionTaskCommand,
@@ -20,8 +22,15 @@ class RegisterVKUserAndCheckSubscriptionCommand:
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class RegisterVKUserAndCheckSubscriptionDTO:
+    """Результат сценария «зашёл по сообщению».
+
+    `subscription` равен None, если пользователь уже был зарегистрирован
+    ранее: в этом случае страховочная проверка подписки не запускается,
+    бонус за подписку начисляется только через GROUP_JOIN.
+    """
+
     registration: VKUserRegistrationDTO
-    subscription: VKSubscriptionTaskCompletionDTO
+    subscription: VKSubscriptionTaskCompletionDTO | None
 
 
 class RegisterVKUserAndCheckSubscriptionHandler(
@@ -30,6 +39,18 @@ class RegisterVKUserAndCheckSubscriptionHandler(
         RegisterVKUserAndCheckSubscriptionDTO,
     ],
 ):
+    """Сценарий первого сообщения боту.
+
+    Если пользователь уже зарегистрирован — никакой работы: ни записей в БД,
+    ни обращений к VK API. Это предотвращает дёргание VK на каждое входящее
+    сообщение и снимает риск «двойного commit'а» из-за повторного запуска
+    проверки подписки.
+
+    Если пользователь новый — регистрируем и сразу делаем разовую
+    страховочную проверку подписки (на случай, если он уже был в группе
+    до первого сообщения).
+    """
+
     def __init__(
         self,
         register_vk_user_interactor: RegisterVKUserHandler,
@@ -49,6 +70,19 @@ class RegisterVKUserAndCheckSubscriptionHandler(
                 last_name=command_data.last_name,
             ),
         )
+        if not registration.created:
+            logger.info(
+                "TEMP VK subscription insurance check skipped (user already registered): "
+                "event_id={}, vk_user_id={}, users_id={}",
+                command_data.event_id,
+                command_data.vk_user_id,
+                registration.users_id,
+            )
+            return RegisterVKUserAndCheckSubscriptionDTO(
+                registration=registration,
+                subscription=None,
+            )
+
         subscription = await self.complete_vk_subscription_task_interactor(
             command_data=CompleteVKSubscriptionTaskCommand(
                 event_id=command_data.event_id,
