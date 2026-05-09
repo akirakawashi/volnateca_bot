@@ -4,6 +4,7 @@ from dishka import Provider
 
 from di.config import ConfigProvider
 from di.ioc import InteractorProvider
+from di.presentation import PresentationProvider
 from di.repository import RepositoriesProvider
 from di.session import DBProvider
 from di.uow import UoWProvider
@@ -17,5 +18,6 @@ def make_providers() -> Iterable[Provider]:
         VKProvider(),
         RepositoriesProvider(),
         InteractorProvider(),
+        PresentationProvider(),
         UoWProvider(),
     )
