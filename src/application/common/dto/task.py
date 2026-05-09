@@ -7,10 +7,8 @@ from domain.enums.task import TaskRepeatPolicy
 class VKRepostTaskCompletionStatus(str, Enum):
     COMPLETED = "completed"
     ALREADY_COMPLETED = "already_completed"
-    REJECTED = "rejected"
     TASK_NOT_FOUND = "task_not_found"
     USER_NOT_REGISTERED = "user_not_registered"
-    VK_API_UNAVAILABLE = "vk_api_unavailable"
 
 
 class VKRepostTaskCreationStatus(str, Enum):
@@ -49,7 +47,6 @@ class VKRepostTaskCompletionDTO:
     transactions_id: int | None = None
     points_awarded: int = 0
     balance_points: int | None = None
-    rejected_reason: str | None = None
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

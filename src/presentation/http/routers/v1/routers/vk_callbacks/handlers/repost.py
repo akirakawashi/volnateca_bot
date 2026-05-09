@@ -45,7 +45,7 @@ async def handle_repost_callback(
     logger.info(
         "TEMP VK repost callback processed: "
         "event_id={}, event_type={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
-        "task_completions_id={}, transactions_id={}, points_awarded={}, balance_points={}, rejected_reason={}",
+        "task_completions_id={}, transactions_id={}, points_awarded={}, balance_points={}",
         data.event_id,
         data.type,
         result.vk_user_id,
@@ -56,6 +56,5 @@ async def handle_repost_callback(
         result.transactions_id,
         result.points_awarded,
         result.balance_points,
-        result.rejected_reason,
     )
     return vk_ok_response()

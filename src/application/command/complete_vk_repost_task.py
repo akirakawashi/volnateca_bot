@@ -53,8 +53,7 @@ class CompleteVKRepostTaskHandler(
             )
 
         completion_key = self._get_completion_key(task=task, checked_at=datetime.now(tz=UTC))
-        # has_user_reposted_wall_post не вызывается намеренно: событие wall_repost
-        # приходит от VK в момент самого репоста, поэтому дополнительная проверка не нужна
+        # wall_repost arrives from VK at repost time, so no extra repost verification is needed.
         result = await self.repository.complete_repost_task_for_vk_user(
             vk_user_id=command_data.vk_user_id,
             task=task,

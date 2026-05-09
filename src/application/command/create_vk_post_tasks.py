@@ -16,13 +16,14 @@ from application.interface.uow import IUnitOfWork
 from domain.enums.task import TaskRepeatPolicy
 
 POST_TASKS_MARKER = "#volnateca"
+POST_TASKS_MARKER_PATTERN = re.compile(rf"{re.escape(POST_TASKS_MARKER)}(?!_\w)", re.IGNORECASE)
 POST_TASKS_REPOST_POINTS_PATTERN = re.compile(
-    r"#volnateca_repost_points_(?P<points>\d+)", re.IGNORECASE
+    rf"{re.escape(POST_TASKS_MARKER)}_repost_points_(?P<points>\d+)", re.IGNORECASE
 )
 POST_TASKS_LIKE_POINTS_PATTERN = re.compile(
-    r"#volnateca_like_points_(?P<points>\d+)", re.IGNORECASE
+    rf"{re.escape(POST_TASKS_MARKER)}_like_points_(?P<points>\d+)", re.IGNORECASE
 )
-POST_TASKS_WEEK_PATTERN = re.compile(r"#volnateca_week_(?P<week>\d+)", re.IGNORECASE)
+POST_TASKS_WEEK_PATTERN = re.compile(rf"{re.escape(POST_TASKS_MARKER)}_week_(?P<week>\d+)", re.IGNORECASE)
 DEFAULT_REPOST_POINTS = 20
 DEFAULT_LIKE_POINTS = 10
 MAX_TASK_DESCRIPTION_LENGTH = 500
@@ -168,7 +169,7 @@ class CreateVKPostTasksHandler(
     def _parse_marker(text: str) -> ParsedVKPostMarker | None:
         # Check for #volnateca marker but exclude sub-tags like #volnateca_week_N etc.
         # We look for a standalone "#volnateca" word (not followed by "_")
-        if not re.search(r"#volnateca(?!_\w)", text, re.IGNORECASE):
+        if not POST_TASKS_MARKER_PATTERN.search(text):
             return None
 
         repost_points = DEFAULT_REPOST_POINTS
@@ -212,9 +213,7 @@ class CreateVKPostTasksHandler(
         text: str,
     ) -> str:
         cleaned_text = "\n".join(
-            line
-            for line in text.splitlines()
-            if not line.strip().lower().startswith("#volnateca")
+            line for line in text.splitlines() if not line.strip().lower().startswith(POST_TASKS_MARKER)
         ).strip()
         description = f"Автоматически создано из VK-поста {post.external_id}."
         if cleaned_text:

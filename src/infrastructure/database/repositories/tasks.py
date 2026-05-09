@@ -192,70 +192,6 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
             points_awarded=task.points,
         )
 
-    async def reject_repost_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKRepostTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-        evidence_external_id: str | None,
-        rejected_reason: str,
-    ) -> VKRepostTaskCompletionDTO:
-        user = await self._get_user_for_update(vk_user_id=vk_user_id)
-        if user is None:
-            return VKRepostTaskCompletionDTO(
-                status=VKRepostTaskCompletionStatus.USER_NOT_REGISTERED,
-                vk_user_id=vk_user_id,
-                tasks_id=task.tasks_id,
-                rejected_reason=rejected_reason,
-            )
-
-        completion = await self._get_completion_for_update(
-            users_id=self._require_user_id(user=user),
-            tasks_id=task.tasks_id,
-            completion_key=completion_key,
-        )
-        if completion and completion.task_completion_status == TaskCompletionStatus.COMPLETED:
-            return self._to_completion_result(
-                status=VKRepostTaskCompletionStatus.ALREADY_COMPLETED,
-                vk_user_id=vk_user_id,
-                user=user,
-                completion=completion,
-                points_awarded=0,
-            )
-
-        now = datetime.now(tz=UTC)
-        if completion is None:
-            completion = TaskCompletion(
-                users_id=self._require_user_id(user=user),
-                tasks_id=task.tasks_id,
-                completion_key=completion_key,
-                task_completion_status=TaskCompletionStatus.REJECTED,
-                points_awarded=0,
-                external_event_id=event_id,
-                evidence_external_id=evidence_external_id,
-                rejected_reason=rejected_reason,
-                checked_at=now,
-            )
-            self._session.add(completion)
-        else:
-            completion.task_completion_status = TaskCompletionStatus.REJECTED
-            completion.points_awarded = 0
-            completion.external_event_id = event_id
-            completion.evidence_external_id = evidence_external_id
-            completion.rejected_reason = rejected_reason
-            completion.checked_at = now
-
-        await self._session.flush()
-        return self._to_completion_result(
-            status=VKRepostTaskCompletionStatus.REJECTED,
-            vk_user_id=vk_user_id,
-            user=user,
-            completion=completion,
-            points_awarded=0,
-            rejected_reason=rejected_reason,
-        )
-
     async def get_or_create_subscription_task(
         self,
         code: str,
@@ -761,7 +697,6 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         user: User,
         completion: TaskCompletion,
         points_awarded: int,
-        rejected_reason: str | None = None,
     ) -> VKRepostTaskCompletionDTO:
         if completion.task_completions_id is None:
             raise RuntimeError("TaskCompletion primary key was not generated")
@@ -775,7 +710,6 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
             transactions_id=completion.transactions_id,
             points_awarded=points_awarded,
             balance_points=user.balance_points,
-            rejected_reason=rejected_reason or completion.rejected_reason,
         )
 
     @staticmethod

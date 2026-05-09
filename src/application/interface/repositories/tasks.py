@@ -47,18 +47,6 @@ class ITaskCompletionRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def reject_repost_task_for_vk_user(
-        self,
-        vk_user_id: int,
-        task: VKRepostTaskDTO,
-        completion_key: str,
-        event_id: str | None,
-        evidence_external_id: str | None,
-        rejected_reason: str,
-    ) -> VKRepostTaskCompletionDTO:
-        raise NotImplementedError
-
-    @abstractmethod
     async def get_or_create_subscription_task(
         self,
         code: str,
