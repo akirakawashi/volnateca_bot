@@ -5,12 +5,12 @@ from application.command.complete_vk_subscription_task import (
     CompleteVKSubscriptionTaskCommand,
     CompleteVKSubscriptionTaskHandler,
 )
-from presentation.http.dto.request import VKCallbackSchema
+from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
 
 async def handle_subscription_callback(
-    data: VKCallbackSchema,
+    data: VKCallbackPayload,
     interactor: CompleteVKSubscriptionTaskHandler,
 ) -> PlainTextResponse:
     vk_user_id = data.get_vk_user_id()

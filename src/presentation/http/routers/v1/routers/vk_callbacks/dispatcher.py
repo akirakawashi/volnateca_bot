@@ -21,6 +21,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_subscription_callback,
     handle_wall_post_new_callback,
 )
+from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from settings.vk import VKSettings
 
 
@@ -34,69 +35,70 @@ class VKCallbackDispatcher:
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
-        self._validate_group(data=data)
+        payload = VKCallbackPayload(data=data)
+        self._validate_group(payload=payload)
 
-        if data.is_confirmation():
+        if payload.is_confirmation():
             return handle_confirmation_callback(vk_settings=self.vk_settings)
 
-        self._validate_secret(data=data)
-        self._log_callback(data=data)
+        self._validate_secret(payload=payload)
+        self._log_callback(payload=payload)
 
-        if data.is_like():
+        if payload.is_like():
             return await handle_like_callback(
-                data=data,
+                data=payload,
                 interactor_complete=self.complete_vk_like_task_interactor,
             )
 
-        if data.is_wall_post_new():
+        if payload.is_wall_post_new():
             return await handle_wall_post_new_callback(
-                data=data,
+                data=payload,
                 interactor=self.create_vk_post_tasks_interactor,
             )
 
-        if data.is_repost():
+        if payload.is_repost():
             return await handle_repost_callback(
-                data=data,
+                data=payload,
                 interactor=self.complete_vk_repost_task_interactor,
             )
 
-        if data.is_subscription_event():
+        if payload.is_subscription_event():
             return await handle_subscription_callback(
-                data=data,
+                data=payload,
                 interactor=self.complete_vk_subscription_task_interactor,
             )
 
-        if data.is_registration_event():
+        if payload.is_registration_event():
             return await handle_registration_callback(
-                data=data,
+                data=payload,
                 interactor=self.register_vk_user_and_check_subscription_interactor,
             )
 
-        return handle_ignored_callback(data=data)
+        return handle_ignored_callback(data=payload)
 
-    def _validate_group(self, data: VKCallbackSchema) -> None:
-        if data.is_expected_group(expected_group_id=self.vk_settings.GROUP_ID):
+    def _validate_group(self, payload: VKCallbackPayload) -> None:
+        if payload.is_expected_group(expected_group_id=self.vk_settings.GROUP_ID):
             return
 
         logger.warning(
             "TEMP VK callback rejected by group_id: event_type={}, group_id={}",
-            data.type,
-            data.group_id,
+            payload.type,
+            payload.group_id,
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Unexpected VK group id",
         )
 
-    def _validate_secret(self, data: VKCallbackSchema) -> None:
-        if data.has_valid_secret(expected_secret=self.vk_settings.SECRET_KEY):
+    def _validate_secret(self, payload: VKCallbackPayload) -> None:
+        if payload.has_valid_secret(expected_secret=self.vk_settings.SECRET_KEY):
             return
 
         logger.warning(
             "TEMP VK callback rejected by secret: event_id={}, event_type={}, group_id={}",
-            data.event_id,
-            data.type,
-            data.group_id,
+            payload.event_id,
+            payload.type,
+            payload.group_id,
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -104,14 +106,14 @@ class VKCallbackDispatcher:
         )
 
     @staticmethod
-    def _log_callback(data: VKCallbackSchema) -> None:
+    def _log_callback(payload: VKCallbackPayload) -> None:
         logger.info(
             "TEMP VK callback received: "
             "event_id={}, event_type={}, group_id={}, vk_user_id={}, object_keys={}, message_keys={}",
-            data.event_id,
-            data.type,
-            data.group_id,
-            data.get_primary_vk_user_id(),
-            data.get_event_object_keys(),
-            data.get_message_keys(),
+            payload.event_id,
+            payload.type,
+            payload.group_id,
+            payload.get_primary_vk_user_id(),
+            payload.get_event_object_keys(),
+            payload.get_message_keys(),
         )

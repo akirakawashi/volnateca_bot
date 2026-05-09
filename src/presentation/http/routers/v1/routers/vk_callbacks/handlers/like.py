@@ -5,12 +5,12 @@ from application.command.complete_vk_like_task import (
     CompleteVKLikeTaskCommand,
     CompleteVKLikeTaskHandler,
 )
-from presentation.http.dto.request import VKCallbackSchema
+from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
 
 async def handle_like_callback(
-    data: VKCallbackSchema,
+    data: VKCallbackPayload,
     interactor_complete: CompleteVKLikeTaskHandler,
 ) -> PlainTextResponse:
     if data.type != "like_add":

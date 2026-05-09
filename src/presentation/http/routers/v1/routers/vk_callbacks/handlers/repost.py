@@ -5,12 +5,12 @@ from application.command.complete_vk_repost_task import (
     CompleteVKRepostTaskCommand,
     CompleteVKRepostTaskHandler,
 )
-from presentation.http.dto.request import VKCallbackSchema
+from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
 
 async def handle_repost_callback(
-    data: VKCallbackSchema,
+    data: VKCallbackPayload,
     interactor: CompleteVKRepostTaskHandler,
 ) -> PlainTextResponse:
     vk_user_id = data.get_repost_user_id()

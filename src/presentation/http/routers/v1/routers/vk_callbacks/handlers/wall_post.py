@@ -5,12 +5,12 @@ from application.command.create_vk_post_tasks import (
     CreateVKPostTasksCommand,
     CreateVKPostTasksHandler,
 )
-from presentation.http.dto.request import VKCallbackSchema
+from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
 
 async def handle_wall_post_new_callback(
-    data: VKCallbackSchema,
+    data: VKCallbackPayload,
     interactor: CreateVKPostTasksHandler,
 ) -> PlainTextResponse:
     post = data.get_wall_post()
