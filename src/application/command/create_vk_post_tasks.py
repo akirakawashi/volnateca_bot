@@ -1,4 +1,3 @@
-import re
 from dataclasses import dataclass
 
 from loguru import logger
@@ -13,25 +12,12 @@ from application.common.dto.task import (
 from application.common.dto.vk import VKWallPostDTO
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
+from application.services.vk_post_task_marker import (
+    ParsedVKPostMarker,
+    build_vk_post_task_description,
+    parse_vk_post_task_marker,
+)
 from domain.enums.task import TaskRepeatPolicy
-
-POST_TASKS_MARKER = "#volnateca"
-POST_TASKS_MARKER_PATTERN = re.compile(rf"{re.escape(POST_TASKS_MARKER)}(?!_\w)", re.IGNORECASE)
-POST_TASKS_REPOST_POINTS_PATTERN = re.compile(
-    rf"{re.escape(POST_TASKS_MARKER)}_repost_points_(?P<points>\d+)", re.IGNORECASE
-)
-POST_TASKS_LIKE_POINTS_PATTERN = re.compile(
-    rf"{re.escape(POST_TASKS_MARKER)}_like_points_(?P<points>\d+)", re.IGNORECASE
-)
-POST_TASKS_WEEK_PATTERN = re.compile(rf"{re.escape(POST_TASKS_MARKER)}_week_(?P<week>\d+)", re.IGNORECASE)
-DEFAULT_REPOST_POINTS = 20
-DEFAULT_LIKE_POINTS = 10
-MAX_TASK_DESCRIPTION_LENGTH = 500
-
-#volnateca
-#volnateca_week_1
-#volnateca_like_points_10
-#volnateca_repost_points_20
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -40,13 +26,6 @@ class CreateVKPostTasksCommand:
     group_id: int
     post: VKWallPostDTO
     text: str
-
-
-@dataclass(slots=True, frozen=True, kw_only=True)
-class ParsedVKPostMarker:
-    repost_points: int
-    like_points: int
-    week_number: int | None
 
 
 class CreateVKPostTasksHandler(
@@ -75,7 +54,7 @@ class CreateVKPostTasksHandler(
                 reason="wall_post_owner_is_not_callback_group",
             )
 
-        parsed_marker = self._parse_marker(text=command_data.text)
+        parsed_marker = parse_vk_post_task_marker(text=command_data.text)
         if parsed_marker is None:
             return VKPostTasksCreationDTO(
                 status=VKPostTasksCreationStatus.IGNORED,
@@ -99,8 +78,8 @@ class CreateVKPostTasksHandler(
                 reason="week_number_must_be_between_1_and_12",
             )
 
-        description = self._build_task_description(
-            post=canonical_post,
+        description = build_vk_post_task_description(
+            post_external_id=canonical_post.external_id,
             text=command_data.text,
         )
 
@@ -171,34 +150,6 @@ class CreateVKPostTasksHandler(
         return VKWallPostDTO(owner_id=-abs(group_id), post_id=post.post_id)
 
     @staticmethod
-    def _parse_marker(text: str) -> ParsedVKPostMarker | None:
-        # Проверка для #volnateca маркера, но исключая под-теги, такие как #volnateca_week_N и т.д.
-        # Мы ищем отдельное слово "#volnateca" (не за которым следует "_")
-        if not POST_TASKS_MARKER_PATTERN.search(text):
-            return None
-
-        repost_points = DEFAULT_REPOST_POINTS
-        repost_match = POST_TASKS_REPOST_POINTS_PATTERN.search(text)
-        if repost_match is not None:
-            repost_points = int(repost_match.group("points"))
-
-        like_points = DEFAULT_LIKE_POINTS
-        like_match = POST_TASKS_LIKE_POINTS_PATTERN.search(text)
-        if like_match is not None:
-            like_points = int(like_match.group("points"))
-
-        week_number = None
-        week_match = POST_TASKS_WEEK_PATTERN.search(text)
-        if week_match is not None:
-            week_number = int(week_match.group("week"))
-
-        return ParsedVKPostMarker(
-            repost_points=repost_points,
-            like_points=like_points,
-            week_number=week_number,
-        )
-
-    @staticmethod
     def _build_repost_task_name(parsed_marker: ParsedVKPostMarker) -> str:
         if parsed_marker.repost_points >= 60:
             return "Сделать репост партнёрского поста"
@@ -211,16 +162,3 @@ class CreateVKPostTasksHandler(
         if parsed_marker.week_number is not None:
             return f"Поставить лайк посту недели {parsed_marker.week_number}"
         return "Поставить лайк посту"
-
-    @staticmethod
-    def _build_task_description(
-        post: VKWallPostDTO,
-        text: str,
-    ) -> str:
-        cleaned_text = "\n".join(
-            line for line in text.splitlines() if not line.strip().lower().startswith(POST_TASKS_MARKER)
-        ).strip()
-        description = f"Автоматически создано из VK-поста {post.external_id}."
-        if cleaned_text:
-            description = f"{description}\n\n{cleaned_text}"
-        return description[:MAX_TASK_DESCRIPTION_LENGTH]
