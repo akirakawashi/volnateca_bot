@@ -4,6 +4,7 @@ from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
+from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
@@ -97,3 +98,10 @@ class InteractorProvider(Provider):
             award_service=award_service,
             uow=uow,
         )
+
+    @provide(scope=Scope.REQUEST)
+    def get_vk_user_tasks_handler(
+        self,
+        task_repository: ITaskRepository,
+    ) -> GetVKUserTasksHandler:
+        return GetVKUserTasksHandler(task_repository=task_repository)

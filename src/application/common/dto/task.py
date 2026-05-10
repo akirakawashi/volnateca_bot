@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from domain.enums.task import TaskRepeatPolicy
+from domain.enums.task import TaskRepeatPolicy, TaskType
 
 
 class VKRepostTaskCompletionStatus(str, Enum):
@@ -25,6 +25,23 @@ class VKSubscriptionTaskCompletionStatus(str, Enum):
     REJECTED = "rejected"
     USER_NOT_REGISTERED = "user_not_registered"
     VK_API_UNAVAILABLE = "vk_api_unavailable"
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class VKUserAvailableTaskDTO:
+    tasks_id: int
+    task_name: str
+    task_type: TaskType
+    external_id: str | None
+    points: int
+    repeat_policy: TaskRepeatPolicy
+    week_number: int | None
+
+    @property
+    def action_url(self) -> str | None:
+        if self.external_id is None or not self.external_id.startswith("wall"):
+            return None
+        return f"https://vk.com/{self.external_id}"
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

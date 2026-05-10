@@ -12,10 +12,13 @@ from application.common.dto.task import (
     VKRepostTaskCreationStatus,
     VKRepostTaskDTO,
     VKSubscriptionTaskDTO,
+    VKUserAvailableTaskDTO,
 )
 from application.interface.repositories.tasks import ITaskRepository
-from domain.enums.task import TaskRepeatPolicy, TaskType
+from domain.enums.task import TaskCompletionStatus, TaskRepeatPolicy, TaskType
+from infrastructure.database.models.task_completions import TaskCompletion
 from infrastructure.database.models.tasks import Task
+from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
 
 
@@ -205,6 +208,59 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             return None
         return self._to_like_task_dto(task=task)
 
+    async def list_available_tasks_for_vk_user(
+        self,
+        vk_user_id: int,
+    ) -> list[VKUserAvailableTaskDTO]:
+        users_id = await self._get_users_id_by_vk_user_id(vk_user_id=vk_user_id)
+        if users_id is None:
+            return []
+
+        now = datetime.now(tz=UTC)
+        tasks = await self._list_active_tasks(now=now)
+        completed_keys = await self._list_completed_task_keys(users_id=users_id)
+
+        return [
+            self._to_user_available_task_dto(task=task)
+            for task in tasks
+            if not self._is_task_completed_for_current_period(
+                task=task,
+                checked_at=now,
+                completed_keys=completed_keys,
+            )
+        ]
+
+    async def _get_users_id_by_vk_user_id(self, vk_user_id: int) -> int | None:
+        result = await self._session.execute(
+            select(User).where(col(User.vk_user_id) == vk_user_id),
+        )
+        user = result.scalar_one_or_none()
+        return user.users_id if user is not None else None
+
+    async def _list_active_tasks(self, now: datetime) -> list[Task]:
+        result = await self._session.execute(
+            select(Task)
+            .where(
+                col(Task.is_active).is_(True),
+                or_(col(Task.starts_at).is_(None), col(Task.starts_at) <= now),
+                or_(col(Task.ends_at).is_(None), col(Task.ends_at) > now),
+            )
+            .order_by(col(Task.week_number), col(Task.tasks_id)),
+        )
+        return list(result.scalars().all())
+
+    async def _list_completed_task_keys(self, users_id: int) -> set[tuple[int, str]]:
+        result = await self._session.execute(
+            select(TaskCompletion).where(
+                col(TaskCompletion.users_id) == users_id,
+                col(TaskCompletion.task_completion_status) == TaskCompletionStatus.COMPLETED,
+            ),
+        )
+        return {
+            (completion.tasks_id, completion.completion_key)
+            for completion in result.scalars().all()
+        }
+
     async def _get_task_by_code_or_external_id(
         self,
         code: str,
@@ -268,6 +324,49 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             external_id=external_id,
             repeat_policy=repeat_policy,
             is_active=True,
+        )
+
+    @staticmethod
+    def _is_task_completed_for_current_period(
+        *,
+        task: Task,
+        checked_at: datetime,
+        completed_keys: set[tuple[int, str]],
+    ) -> bool:
+        if task.tasks_id is None:
+            raise RuntimeError("Task primary key was not generated")
+        completion_key = TaskRepository._get_completion_key(task=task, checked_at=checked_at)
+        return (task.tasks_id, completion_key) in completed_keys
+
+    @staticmethod
+    def _get_completion_key(
+        *,
+        task: Task,
+        checked_at: datetime,
+    ) -> str:
+        if task.repeat_policy == TaskRepeatPolicy.ONCE:
+            return "once"
+        if task.repeat_policy == TaskRepeatPolicy.DAILY:
+            return checked_at.date().isoformat()
+        if task.week_number is not None:
+            return f"week_{task.week_number:02d}"
+
+        iso_calendar = checked_at.isocalendar()
+        return f"{iso_calendar.year}-W{iso_calendar.week:02d}"
+
+    @staticmethod
+    def _to_user_available_task_dto(task: Task) -> VKUserAvailableTaskDTO:
+        if task.tasks_id is None:
+            raise RuntimeError("Task primary key was not generated")
+
+        return VKUserAvailableTaskDTO(
+            tasks_id=task.tasks_id,
+            task_name=task.task_name,
+            task_type=task.task_type,
+            external_id=task.external_id,
+            points=task.points,
+            repeat_policy=task.repeat_policy,
+            week_number=task.week_number,
         )
 
     @staticmethod

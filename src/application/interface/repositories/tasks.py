@@ -6,6 +6,7 @@ from application.common.dto.task import (
     VKRepostTaskCreationDTO,
     VKRepostTaskDTO,
     VKSubscriptionTaskDTO,
+    VKUserAvailableTaskDTO,
 )
 from domain.enums.task import TaskRepeatPolicy
 
@@ -71,4 +72,11 @@ class ITaskRepository(ABC):
         self,
         external_ids: tuple[str, ...],
     ) -> VKLikeTaskDTO | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_available_tasks_for_vk_user(
+        self,
+        vk_user_id: int,
+    ) -> list[VKUserAvailableTaskDTO]:
         raise NotImplementedError
