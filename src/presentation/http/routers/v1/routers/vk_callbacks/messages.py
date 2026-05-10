@@ -32,7 +32,7 @@ def build_task_accrual_message(
     task_name: str,
     points_awarded: int,
     balance_points: int | None,
-    ) -> VKMessageText:
+) -> VKMessageText:
     lines = [
         "✅ Задание выполнено",
         task_name,

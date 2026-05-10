@@ -11,6 +11,7 @@ from application.common.dto.task import VKSubscriptionTaskCompletionStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
+from presentation.http.routers.v1.routers.vk_callbacks.keyboards import build_main_menu_keyboard
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     VKMessageText,
     build_balance_message,
@@ -213,6 +214,7 @@ async def _send_user_message(
         sent = await message_client.send_message(
             vk_user_id=vk_user_id,
             message=message.text,
+            keyboard=build_main_menu_keyboard(),
         )
     except Exception:
         logger.exception(

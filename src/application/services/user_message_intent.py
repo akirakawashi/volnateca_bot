@@ -71,6 +71,7 @@ REFERRAL_TOKENS = frozenset(
         "referral",
         "ref",
         "реферал",
+        "рефералка",
         "рефералы",
         "друг",
         "друзья",
