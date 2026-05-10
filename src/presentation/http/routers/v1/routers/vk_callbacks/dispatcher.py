@@ -11,6 +11,7 @@ from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
+from application.interface.clients import IVKMessageClient
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_confirmation_callback,
@@ -33,6 +34,7 @@ class VKCallbackDispatcher:
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     create_vk_post_tasks_interactor: CreateVKPostTasksHandler
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
+    vk_message_client: IVKMessageClient
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
         payload = VKCallbackPayload(data=data)
@@ -72,6 +74,7 @@ class VKCallbackDispatcher:
             return await handle_registration_callback(
                 data=payload,
                 interactor=self.register_vk_user_and_check_subscription_interactor,
+                message_client=self.vk_message_client,
             )
 
         return handle_ignored_callback(data=payload)

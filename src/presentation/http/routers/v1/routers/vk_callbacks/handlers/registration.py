@@ -1,10 +1,14 @@
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 
+from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionCommand,
+    RegisterVKUserAndCheckSubscriptionDTO,
     RegisterVKUserAndCheckSubscriptionHandler,
 )
+from application.interface.clients import IVKMessageClient
+from presentation.http.routers.v1.routers.vk_callbacks.messages import build_registration_welcome_message
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
@@ -12,6 +16,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_re
 async def handle_registration_callback(
     data: VKCallbackPayload,
     interactor: RegisterVKUserAndCheckSubscriptionHandler,
+    message_client: IVKMessageClient,
 ) -> PlainTextResponse:
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
@@ -67,4 +72,50 @@ async def handle_registration_callback(
             result.subscription.balance_points,
             result.subscription.rejected_reason,
         )
+    if result.registration.created:
+        await _send_registration_welcome_message(
+            data=data,
+            result=result,
+            message_client=message_client,
+        )
     return vk_ok_response()
+
+
+async def _send_registration_welcome_message(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+) -> None:
+    message = build_registration_welcome_message(
+        first_name=data.get_first_name(),
+        balance_points=_get_actual_balance_points(result=result),
+        bonus_points=REGISTRATION_BONUS_POINTS,
+    )
+    try:
+        sent = await message_client.send_message(
+            vk_user_id=result.registration.vk_user_id,
+            message=message.text,
+        )
+    except Exception:
+        logger.exception(
+            "VK registration welcome message failed: event_id={}, vk_user_id={}, users_id={}",
+            data.event_id,
+            result.registration.vk_user_id,
+            result.registration.users_id,
+        )
+        return
+
+    if not sent:
+        logger.warning(
+            "VK registration welcome message was not sent: event_id={}, vk_user_id={}, users_id={}",
+            data.event_id,
+            result.registration.vk_user_id,
+            result.registration.users_id,
+        )
+
+
+def _get_actual_balance_points(result: RegisterVKUserAndCheckSubscriptionDTO) -> int:
+    if result.subscription is not None and result.subscription.balance_points is not None:
+        return result.subscription.balance_points
+    return result.registration.balance_points
