@@ -1,8 +1,8 @@
-"""init
+"""init schema
 
-Revision ID: 15b5f59a77d0
+Revision ID: 4b29a945199c
 Revises: 
-Create Date: 2026-05-07 11:41:36.252677
+Create Date: 2026-05-10 09:07:06.583451
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = '15b5f59a77d0'
+revision: str = '4b29a945199c'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -185,6 +185,7 @@ def upgrade() -> None:
     sa.Column('task_completion_status', sa.Enum('pending', 'completed', 'rejected', 'canceled', name='task_completion_status'), nullable=False),
     sa.Column('points_awarded', sa.Integer(), nullable=False),
     sa.Column('external_event_id', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('evidence_external_id', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('rejected_reason', sa.Text(), nullable=True),
     sa.Column('checked_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -197,6 +198,7 @@ def upgrade() -> None:
     sa.UniqueConstraint('users_id', 'tasks_id', 'completion_key', name='uq_task_completions_users_tasks_key')
     )
     op.create_index(op.f('ix_task_completions_completion_key'), 'task_completions', ['completion_key'], unique=False)
+    op.create_index(op.f('ix_task_completions_evidence_external_id'), 'task_completions', ['evidence_external_id'], unique=False)
     op.create_index(op.f('ix_task_completions_external_event_id'), 'task_completions', ['external_event_id'], unique=False)
     op.create_index(op.f('ix_task_completions_tasks_id'), 'task_completions', ['tasks_id'], unique=False)
     op.create_index(op.f('ix_task_completions_users_id'), 'task_completions', ['users_id'], unique=False)
@@ -253,6 +255,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_task_completions_users_id'), table_name='task_completions')
     op.drop_index(op.f('ix_task_completions_tasks_id'), table_name='task_completions')
     op.drop_index(op.f('ix_task_completions_external_event_id'), table_name='task_completions')
+    op.drop_index(op.f('ix_task_completions_evidence_external_id'), table_name='task_completions')
     op.drop_index(op.f('ix_task_completions_completion_key'), table_name='task_completions')
     op.drop_table('task_completions')
     op.drop_index(op.f('ix_referrals_inviter_users_id'), table_name='referrals')
