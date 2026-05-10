@@ -18,7 +18,7 @@ class DBSettings(Settings):
     PASSWORD: str
     POOL_SIZE: int = 6
     MAX_OVERFLOW: int = 20
-    POOL_RECYCLE: int = 3000
+    POOL_RECYCLE_SECONDS: int = 3000
 
     def dsn(self) -> str:
         return (

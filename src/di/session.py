@@ -21,7 +21,7 @@ class DBProvider(Provider):
             pool_size=config.POOL_SIZE,
             pool_pre_ping=True,
             max_overflow=config.MAX_OVERFLOW,
-            pool_recycle=config.POOL_RECYCLE,
+            pool_recycle=config.POOL_RECYCLE_SECONDS,
         )
         yield engine
         await engine.dispose(close=True)

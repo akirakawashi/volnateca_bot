@@ -8,3 +8,17 @@ class AppError(Exception):
     @property
     def title(self) -> str:
         return "An application error occurred"
+
+
+@dataclass(frozen=True, kw_only=True)
+class DomainError(AppError):
+    @property
+    def title(self) -> str:
+        return "A domain error occurred"
+
+
+@dataclass(frozen=True, kw_only=True)
+class DomainValidationError(DomainError):
+    @property
+    def title(self) -> str:
+        return "A domain validation error occurred"
