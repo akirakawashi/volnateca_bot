@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from application.common.dto.task import VKUserAvailableTaskDTO
+
 
 POINTS_SIGN = "✦"
 
@@ -63,6 +65,25 @@ def build_balance_message(*, balance_points: int) -> VKMessageText:
     return VKMessageText(text=f"💫 Баланс\n\n{balance_points} {POINTS_SIGN}")
 
 
+def build_tasks_message(*, tasks: tuple[VKUserAvailableTaskDTO, ...]) -> VKMessageText:
+    if not tasks:
+        return VKMessageText(text="🎯 Ваши активные задания\n\nСейчас активных заданий нет.")
+
+    lines = ["🎯 Ваши активные задания"]
+    for index, task in enumerate(tasks, start=1):
+        lines.extend(
+            (
+                "",
+                f"{index}. {task.task_name}",
+                f"+{task.points} {POINTS_SIGN}",
+            ),
+        )
+        if task.action_url is not None:
+            lines.append(task.action_url)
+
+    return VKMessageText(text="\n".join(lines))
+
+
 def build_help_message() -> VKMessageText:
     return VKMessageText(
         text=(
@@ -102,4 +123,5 @@ __all__ = [
     "build_registration_welcome_message",
     "build_subscription_reward_message",
     "build_task_accrual_message",
+    "build_tasks_message",
 ]

@@ -1,6 +1,7 @@
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 
+from application.command.get_vk_user_tasks import GetVKUserTasksCommand, GetVKUserTasksHandler
 from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionCommand,
@@ -19,6 +20,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_help_message,
     build_registration_welcome_message,
     build_subscription_reward_message,
+    build_tasks_message,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
@@ -27,6 +29,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_re
 async def handle_registration_callback(
     data: VKCallbackPayload,
     interactor: RegisterVKUserAndCheckSubscriptionHandler,
+    get_vk_user_tasks_interactor: GetVKUserTasksHandler,
     message_client: IVKMessageClient,
     intent_classifier: IUserMessageIntentClassifier,
 ) -> PlainTextResponse:
@@ -101,6 +104,7 @@ async def handle_registration_callback(
             result=result,
             message_client=message_client,
             intent_classifier=intent_classifier,
+            get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
         )
     return vk_ok_response()
 
@@ -164,13 +168,20 @@ async def _handle_registered_user_message(
     result: RegisterVKUserAndCheckSubscriptionDTO,
     message_client: IVKMessageClient,
     intent_classifier: IUserMessageIntentClassifier,
+    get_vk_user_tasks_interactor: GetVKUserTasksHandler,
 ) -> None:
     message_text = data.get_message_text()
     classified = await intent_classifier.classify(text=message_text)
-    response = _build_registered_user_response(
-        intent=classified.intent,
-        balance_points=result.registration.balance_points,
-    )
+    if classified.intent == UserMessageIntent.TASKS:
+        tasks_result = await get_vk_user_tasks_interactor(
+            command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
+        )
+        response = build_tasks_message(tasks=tasks_result.tasks)
+    else:
+        response = _build_registered_user_response(
+            intent=classified.intent,
+            balance_points=result.registration.balance_points,
+        )
     await _send_user_message(
         data=data,
         vk_user_id=result.registration.vk_user_id,
