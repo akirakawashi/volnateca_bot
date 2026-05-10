@@ -7,7 +7,6 @@ from application.base_interactor import Interactor
 from application.common.dto.task import (
     VKRepostTaskCompletionDTO,
     VKRepostTaskCompletionStatus,
-    VKRepostTaskDTO,
 )
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
@@ -17,7 +16,7 @@ from application.services.award_task_service import (
     AwardTaskService,
     TaskAwardSpec,
 )
-from domain.enums.task import TaskRepeatPolicy
+from application.services.task_completion_key import build_task_completion_key
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -68,7 +67,11 @@ class CompleteVKRepostTaskHandler(
                 task_name=task.task_name,
                 points=task.points,
             ),
-            completion_key=self._get_completion_key(task=task, checked_at=datetime.now(tz=UTC)),
+            completion_key=build_task_completion_key(
+                repeat_policy=task.repeat_policy,
+                week_number=task.week_number,
+                checked_at=datetime.now(tz=UTC),
+            ),
             event_id=command_data.event_id,
             evidence_external_id=command_data.repost_external_id,
         )
@@ -87,22 +90,6 @@ class CompleteVKRepostTaskHandler(
             points_awarded=outcome.points_awarded,
             balance_points=outcome.balance_points,
         )
-
-    @staticmethod
-    def _get_completion_key(
-        task: VKRepostTaskDTO,
-        checked_at: datetime,
-    ) -> str:
-        if task.repeat_policy == TaskRepeatPolicy.ONCE:
-            return "once"
-        if task.repeat_policy == TaskRepeatPolicy.DAILY:
-            return checked_at.date().isoformat()
-        if task.week_number is not None:
-            return f"week_{task.week_number:02d}"
-
-        iso_calendar = checked_at.isocalendar()
-        return f"{iso_calendar.year}-W{iso_calendar.week:02d}"
-
 
 def _map_status(outcome: AwardTaskOutcomeStatus) -> VKRepostTaskCompletionStatus:
     match outcome:

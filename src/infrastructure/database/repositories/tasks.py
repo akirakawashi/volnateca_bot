@@ -15,6 +15,7 @@ from application.common.dto.task import (
     VKUserAvailableTaskDTO,
 )
 from application.interface.repositories.tasks import ITaskRepository
+from application.services.task_completion_key import build_task_completion_key
 from domain.enums.task import TaskCompletionStatus, TaskRepeatPolicy, TaskType
 from infrastructure.database.models.task_completions import TaskCompletion
 from infrastructure.database.models.tasks import Task
@@ -335,24 +336,12 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
     ) -> bool:
         if task.tasks_id is None:
             raise RuntimeError("Task primary key was not generated")
-        completion_key = TaskRepository._get_completion_key(task=task, checked_at=checked_at)
+        completion_key = build_task_completion_key(
+            repeat_policy=task.repeat_policy,
+            week_number=task.week_number,
+            checked_at=checked_at,
+        )
         return (task.tasks_id, completion_key) in completed_keys
-
-    @staticmethod
-    def _get_completion_key(
-        *,
-        task: Task,
-        checked_at: datetime,
-    ) -> str:
-        if task.repeat_policy == TaskRepeatPolicy.ONCE:
-            return "once"
-        if task.repeat_policy == TaskRepeatPolicy.DAILY:
-            return checked_at.date().isoformat()
-        if task.week_number is not None:
-            return f"week_{task.week_number:02d}"
-
-        iso_calendar = checked_at.isocalendar()
-        return f"{iso_calendar.year}-W{iso_calendar.week:02d}"
 
     @staticmethod
     def _to_user_available_task_dto(task: Task) -> VKUserAvailableTaskDTO:
