@@ -8,6 +8,7 @@ class VKCallbackMessageSchema(BaseModel):
     user_id: int | None = Field(default=None, description="ID пользователя VK")
     first_name: str | None = Field(default=None, description="Имя пользователя VK")
     last_name: str | None = Field(default=None, description="Фамилия пользователя VK")
+    text: str | None = Field(default=None, description="Текст сообщения пользователя")
 
 
 class VKCallbackWallPostSchema(BaseModel):

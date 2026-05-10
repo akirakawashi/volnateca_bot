@@ -8,6 +8,7 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
 from application.interface.clients import IVKMessageClient
+from application.interface.services import IUserMessageIntentClassifier
 from presentation.http.routers.v1.routers.vk_callbacks.dispatcher import VKCallbackDispatcher
 from settings.vk import VKSettings
 
@@ -23,6 +24,7 @@ class PresentationProvider(Provider):
         create_vk_post_tasks_interactor: CreateVKPostTasksHandler,
         complete_vk_like_task_interactor: CompleteVKLikeTaskHandler,
         vk_message_client: IVKMessageClient,
+        user_message_intent_classifier: IUserMessageIntentClassifier,
     ) -> VKCallbackDispatcher:
         return VKCallbackDispatcher(
             vk_settings=vk_settings,
@@ -34,4 +36,5 @@ class PresentationProvider(Provider):
             create_vk_post_tasks_interactor=create_vk_post_tasks_interactor,
             complete_vk_like_task_interactor=complete_vk_like_task_interactor,
             vk_message_client=vk_message_client,
+            user_message_intent_classifier=user_message_intent_classifier,
         )
