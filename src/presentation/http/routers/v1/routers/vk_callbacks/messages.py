@@ -45,6 +45,24 @@ def build_balance_message(*, balance_points: int) -> VKMessageText:
     return VKMessageText(text=f"Баланс: {balance_points} {POINTS_SIGN}.")
 
 
+def build_help_message() -> VKMessageText:
+    return VKMessageText(
+        text=(
+            "Я понимаю команды:\n"
+            "Баланс — покажу твои дискошары.\n"
+            "Задания — покажу активности проекта.\n"
+            "Магазин — покажу призы.\n"
+            "Рефералка — покажу ссылку для друзей."
+        ),
+    )
+
+
+def build_free_text_fallback_message() -> VKMessageText:
+    return VKMessageText(
+        text="Пока я лучше всего понимаю команды: Баланс, Задания, Магазин, Рефералка.",
+    )
+
+
 def _build_greeting(*, first_name: str | None) -> str:
     clean_first_name = first_name.strip() if first_name is not None else ""
     if clean_first_name:
@@ -55,6 +73,8 @@ def _build_greeting(*, first_name: str | None) -> str:
 __all__ = [
     "VKMessageText",
     "build_balance_message",
+    "build_free_text_fallback_message",
+    "build_help_message",
     "build_registration_welcome_message",
     "build_task_accrual_message",
 ]

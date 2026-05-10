@@ -46,6 +46,9 @@ class VKCallbackPayload:
     def is_registration_event(self) -> bool:
         return self.type in VKEventGroups.REGISTRATION
 
+    def is_message_new(self) -> bool:
+        return self.type == VKEventType.MESSAGE_NEW
+
     # Callback validation
 
     def is_expected_group(self, expected_group_id: int) -> bool:
@@ -103,6 +106,10 @@ class VKCallbackPayload:
         if self.data.event_object.message and self.data.event_object.message.last_name:
             return self.data.event_object.message.last_name
         return None
+
+    def get_message_text(self) -> str:
+        message = self.data.event_object.message
+        return message.text if message and message.text is not None else ""
 
     # Post extraction
 

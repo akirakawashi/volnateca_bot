@@ -7,8 +7,16 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionDTO,
     RegisterVKUserAndCheckSubscriptionHandler,
 )
+from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
-from presentation.http.routers.v1.routers.vk_callbacks.messages import build_registration_welcome_message
+from application.interface.services import IUserMessageIntentClassifier
+from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+    VKMessageText,
+    build_balance_message,
+    build_free_text_fallback_message,
+    build_help_message,
+    build_registration_welcome_message,
+)
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
@@ -17,6 +25,7 @@ async def handle_registration_callback(
     data: VKCallbackPayload,
     interactor: RegisterVKUserAndCheckSubscriptionHandler,
     message_client: IVKMessageClient,
+    intent_classifier: IUserMessageIntentClassifier,
 ) -> PlainTextResponse:
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
@@ -78,6 +87,13 @@ async def handle_registration_callback(
             result=result,
             message_client=message_client,
         )
+    elif data.is_message_new():
+        await _handle_registered_user_message(
+            data=data,
+            result=result,
+            message_client=message_client,
+            intent_classifier=intent_classifier,
+        )
     return vk_ok_response()
 
 
@@ -92,30 +108,94 @@ async def _send_registration_welcome_message(
         balance_points=_get_actual_balance_points(result=result),
         bonus_points=REGISTRATION_BONUS_POINTS,
     )
-    try:
-        sent = await message_client.send_message(
-            vk_user_id=result.registration.vk_user_id,
-            message=message.text,
-        )
-    except Exception:
-        logger.exception(
-            "VK registration welcome message failed: event_id={}, vk_user_id={}, users_id={}",
-            data.event_id,
-            result.registration.vk_user_id,
-            result.registration.users_id,
-        )
-        return
-
-    if not sent:
-        logger.warning(
-            "VK registration welcome message was not sent: event_id={}, vk_user_id={}, users_id={}",
-            data.event_id,
-            result.registration.vk_user_id,
-            result.registration.users_id,
-        )
+    await _send_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=message,
+        message_client=message_client,
+        log_message="VK registration welcome message",
+    )
 
 
 def _get_actual_balance_points(result: RegisterVKUserAndCheckSubscriptionDTO) -> int:
     if result.subscription is not None and result.subscription.balance_points is not None:
         return result.subscription.balance_points
     return result.registration.balance_points
+
+
+async def _handle_registered_user_message(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+    intent_classifier: IUserMessageIntentClassifier,
+) -> None:
+    message_text = data.get_message_text()
+    classified = await intent_classifier.classify(text=message_text)
+    response = _build_registered_user_response(
+        intent=classified.intent,
+        balance_points=result.registration.balance_points,
+    )
+    await _send_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=response,
+        message_client=message_client,
+        log_message="VK registered user message response",
+    )
+    logger.info(
+        "VK registered user message handled: event_id={}, vk_user_id={}, users_id={}, intent={}, confidence={}",
+        data.event_id,
+        result.registration.vk_user_id,
+        result.registration.users_id,
+        classified.intent,
+        classified.confidence,
+    )
+
+
+def _build_registered_user_response(
+    *,
+    intent: UserMessageIntent,
+    balance_points: int,
+) -> VKMessageText:
+    if intent == UserMessageIntent.BALANCE:
+        return build_balance_message(balance_points=balance_points)
+    if intent == UserMessageIntent.HELP:
+        return build_help_message()
+    return build_free_text_fallback_message()
+
+
+async def _send_user_message(
+    *,
+    data: VKCallbackPayload,
+    vk_user_id: int,
+    users_id: int,
+    message: VKMessageText,
+    message_client: IVKMessageClient,
+    log_message: str,
+) -> None:
+    try:
+        sent = await message_client.send_message(
+            vk_user_id=vk_user_id,
+            message=message.text,
+        )
+    except Exception:
+        logger.exception(
+            "{} failed: event_id={}, vk_user_id={}, users_id={}",
+            log_message,
+            data.event_id,
+            vk_user_id,
+            users_id,
+        )
+        return
+
+    if not sent:
+        logger.warning(
+            "{} was not sent: event_id={}, vk_user_id={}, users_id={}",
+            log_message,
+            data.event_id,
+            vk_user_id,
+            users_id,
+        )
