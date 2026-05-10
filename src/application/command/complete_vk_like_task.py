@@ -5,18 +5,17 @@ from loguru import logger
 
 from application.base_interactor import Interactor
 from application.common.dto.task import (
-    VKLikeTaskCompletionDTO,
-    VKLikeTaskCompletionStatus,
+    TaskCompletionResult,
+    TaskCompletionResultStatus,
 )
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
 from application.services.award_task_service import (
-    AwardTaskOutcome,
-    AwardTaskOutcomeStatus,
     AwardTaskService,
     TaskAwardSpec,
 )
 from application.services.task_completion_key import build_task_completion_key
+from application.services.task_completion_result import build_task_completion_result
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -27,7 +26,7 @@ class CompleteVKLikeTaskCommand:
 
 
 class CompleteVKLikeTaskHandler(
-    Interactor[CompleteVKLikeTaskCommand, VKLikeTaskCompletionDTO],
+    Interactor[CompleteVKLikeTaskCommand, TaskCompletionResult],
 ):
     def __init__(
         self,
@@ -42,7 +41,7 @@ class CompleteVKLikeTaskHandler(
     async def __call__(
         self,
         command_data: CompleteVKLikeTaskCommand,
-    ) -> VKLikeTaskCompletionDTO:
+    ) -> TaskCompletionResult:
         task = await self.task_repository.get_active_like_task_by_external_ids(
             external_ids=command_data.liked_post_external_ids,
         )
@@ -53,8 +52,8 @@ class CompleteVKLikeTaskHandler(
                 command_data.vk_user_id,
                 command_data.liked_post_external_ids,
             )
-            return VKLikeTaskCompletionDTO(
-                status=VKLikeTaskCompletionStatus.TASK_NOT_FOUND,
+            return TaskCompletionResult(
+                status=TaskCompletionResultStatus.TASK_NOT_FOUND,
                 vk_user_id=command_data.vk_user_id,
             )
 
@@ -75,7 +74,7 @@ class CompleteVKLikeTaskHandler(
         )
         await self.uow.commit()
 
-        result = self._to_completion_dto(outcome=outcome)
+        result = build_task_completion_result(outcome=outcome)
         logger.info(
             "TEMP VK like task completion handled: "
             "event_id={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
@@ -91,27 +90,3 @@ class CompleteVKLikeTaskHandler(
             result.balance_points,
         )
         return result
-
-    @staticmethod
-    def _to_completion_dto(outcome: AwardTaskOutcome) -> VKLikeTaskCompletionDTO:
-        return VKLikeTaskCompletionDTO(
-            status=_map_status(outcome=outcome.status),
-            vk_user_id=outcome.vk_user_id,
-            users_id=outcome.users_id,
-            tasks_id=outcome.tasks_id,
-            task_completions_id=outcome.task_completions_id,
-            transactions_id=outcome.transactions_id,
-            points_awarded=outcome.points_awarded,
-            balance_points=outcome.balance_points,
-        )
-
-def _map_status(outcome: AwardTaskOutcomeStatus) -> VKLikeTaskCompletionStatus:
-    match outcome:
-        case AwardTaskOutcomeStatus.COMPLETED:
-            return VKLikeTaskCompletionStatus.COMPLETED
-        case AwardTaskOutcomeStatus.ALREADY_COMPLETED:
-            return VKLikeTaskCompletionStatus.ALREADY_COMPLETED
-        case AwardTaskOutcomeStatus.USER_NOT_REGISTERED:
-            return VKLikeTaskCompletionStatus.USER_NOT_REGISTERED
-        case AwardTaskOutcomeStatus.REJECTED:
-            raise RuntimeError("VK like task does not support REJECTED outcome")

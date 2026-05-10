@@ -8,7 +8,7 @@ from application.command.complete_vk_subscription_task import (
     CompleteVKSubscriptionTaskHandler,
 )
 from application.command.register_vk_user import RegisterVKUserCommand, RegisterVKUserHandler
-from application.common.dto.task import VKSubscriptionTaskCompletionDTO
+from application.common.dto.task import TaskCompletionResult
 from application.common.dto.user import VKUserRegistrationDTO
 
 
@@ -30,7 +30,7 @@ class RegisterVKUserAndCheckSubscriptionDTO:
     """
 
     registration: VKUserRegistrationDTO
-    subscription: VKSubscriptionTaskCompletionDTO | None
+    subscription: TaskCompletionResult | None
 
 
 class RegisterVKUserAndCheckSubscriptionHandler(

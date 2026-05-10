@@ -1,11 +1,9 @@
 from abc import ABC, abstractmethod
 
 from application.common.dto.task import (
+    TaskSummary,
     VKLikeTaskCreationDTO,
-    VKLikeTaskDTO,
     VKRepostTaskCreationDTO,
-    VKRepostTaskDTO,
-    VKSubscriptionTaskDTO,
     VKUserAvailableTaskDTO,
 )
 from domain.enums.task import TaskRepeatPolicy
@@ -37,7 +35,7 @@ class ITaskRepository(ABC):
     async def get_active_repost_task_by_external_ids(
         self,
         external_ids: tuple[str, ...],
-    ) -> VKRepostTaskDTO | None:
+    ) -> TaskSummary | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -50,7 +48,7 @@ class ITaskRepository(ABC):
         points: int,
         week_number: int | None,
         repeat_policy: TaskRepeatPolicy,
-    ) -> VKSubscriptionTaskDTO:
+    ) -> TaskSummary:
         raise NotImplementedError
 
     @abstractmethod
@@ -71,7 +69,7 @@ class ITaskRepository(ABC):
     async def get_active_like_task_by_external_ids(
         self,
         external_ids: tuple[str, ...],
-    ) -> VKLikeTaskDTO | None:
+    ) -> TaskSummary | None:
         raise NotImplementedError
 
     @abstractmethod

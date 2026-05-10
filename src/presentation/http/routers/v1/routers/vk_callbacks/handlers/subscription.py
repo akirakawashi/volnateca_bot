@@ -5,7 +5,7 @@ from application.command.complete_vk_subscription_task import (
     CompleteVKSubscriptionTaskCommand,
     CompleteVKSubscriptionTaskHandler,
 )
-from application.common.dto.task import VKSubscriptionTaskCompletionDTO, VKSubscriptionTaskCompletionStatus
+from application.common.dto.task import TaskCompletionResult, TaskCompletionResultStatus
 from application.interface.clients import IVKMessageClient
 from presentation.http.routers.v1.routers.vk_callbacks.keyboards import build_main_menu_keyboard
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
@@ -52,7 +52,7 @@ async def handle_subscription_callback(
         result.balance_points,
         result.rejected_reason,
     )
-    if result.status == VKSubscriptionTaskCompletionStatus.COMPLETED:
+    if result.status == TaskCompletionResultStatus.COMPLETED:
         await _send_subscription_reward_message(
             data=data,
             result=result,
@@ -64,7 +64,7 @@ async def handle_subscription_callback(
 async def _send_subscription_reward_message(
     *,
     data: VKCallbackPayload,
-    result: VKSubscriptionTaskCompletionDTO,
+    result: TaskCompletionResult,
     message_client: IVKMessageClient,
 ) -> None:
     if result.users_id is None or result.balance_points is None:

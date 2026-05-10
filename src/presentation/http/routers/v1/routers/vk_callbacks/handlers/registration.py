@@ -8,7 +8,7 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionDTO,
     RegisterVKUserAndCheckSubscriptionHandler,
 )
-from application.common.dto.task import VKSubscriptionTaskCompletionStatus
+from application.common.dto.task import TaskCompletionResultStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
@@ -137,7 +137,7 @@ async def _send_subscription_reward_message_after_registration(
     message_client: IVKMessageClient,
 ) -> None:
     subscription = result.subscription
-    if subscription is None or subscription.status != VKSubscriptionTaskCompletionStatus.COMPLETED:
+    if subscription is None or subscription.status != TaskCompletionResultStatus.COMPLETED:
         return
     if subscription.balance_points is None:
         logger.warning(

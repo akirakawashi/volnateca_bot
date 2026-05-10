@@ -5,18 +5,17 @@ from loguru import logger
 
 from application.base_interactor import Interactor
 from application.common.dto.task import (
-    VKRepostTaskCompletionDTO,
-    VKRepostTaskCompletionStatus,
+    TaskCompletionResult,
+    TaskCompletionResultStatus,
 )
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
 from application.services.award_task_service import (
-    AwardTaskOutcome,
-    AwardTaskOutcomeStatus,
     AwardTaskService,
     TaskAwardSpec,
 )
 from application.services.task_completion_key import build_task_completion_key
+from application.services.task_completion_result import build_task_completion_result
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -28,7 +27,7 @@ class CompleteVKRepostTaskCommand:
 
 
 class CompleteVKRepostTaskHandler(
-    Interactor[CompleteVKRepostTaskCommand, VKRepostTaskCompletionDTO],
+    Interactor[CompleteVKRepostTaskCommand, TaskCompletionResult],
 ):
     def __init__(
         self,
@@ -43,7 +42,7 @@ class CompleteVKRepostTaskHandler(
     async def __call__(
         self,
         command_data: CompleteVKRepostTaskCommand,
-    ) -> VKRepostTaskCompletionDTO:
+    ) -> TaskCompletionResult:
         task = await self.task_repository.get_active_repost_task_by_external_ids(
             external_ids=command_data.target_post_external_ids,
         )
@@ -54,8 +53,8 @@ class CompleteVKRepostTaskHandler(
                 command_data.vk_user_id,
                 command_data.target_post_external_ids,
             )
-            return VKRepostTaskCompletionDTO(
-                status=VKRepostTaskCompletionStatus.TASK_NOT_FOUND,
+            return TaskCompletionResult(
+                status=TaskCompletionResultStatus.TASK_NOT_FOUND,
                 vk_user_id=command_data.vk_user_id,
             )
 
@@ -76,28 +75,4 @@ class CompleteVKRepostTaskHandler(
             evidence_external_id=command_data.repost_external_id,
         )
         await self.uow.commit()
-        return self._to_completion_dto(outcome=outcome)
-
-    @staticmethod
-    def _to_completion_dto(outcome: AwardTaskOutcome) -> VKRepostTaskCompletionDTO:
-        return VKRepostTaskCompletionDTO(
-            status=_map_status(outcome=outcome.status),
-            vk_user_id=outcome.vk_user_id,
-            users_id=outcome.users_id,
-            tasks_id=outcome.tasks_id,
-            task_completions_id=outcome.task_completions_id,
-            transactions_id=outcome.transactions_id,
-            points_awarded=outcome.points_awarded,
-            balance_points=outcome.balance_points,
-        )
-
-def _map_status(outcome: AwardTaskOutcomeStatus) -> VKRepostTaskCompletionStatus:
-    match outcome:
-        case AwardTaskOutcomeStatus.COMPLETED:
-            return VKRepostTaskCompletionStatus.COMPLETED
-        case AwardTaskOutcomeStatus.ALREADY_COMPLETED:
-            return VKRepostTaskCompletionStatus.ALREADY_COMPLETED
-        case AwardTaskOutcomeStatus.USER_NOT_REGISTERED:
-            return VKRepostTaskCompletionStatus.USER_NOT_REGISTERED
-        case AwardTaskOutcomeStatus.REJECTED:
-            raise RuntimeError("VK repost task does not support REJECTED outcome")
+        return build_task_completion_result(outcome=outcome)

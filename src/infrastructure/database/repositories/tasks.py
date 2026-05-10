@@ -5,13 +5,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
 from application.common.dto.task import (
+    TaskSummary,
     VKLikeTaskCreationDTO,
     VKLikeTaskCreationStatus,
-    VKLikeTaskDTO,
     VKRepostTaskCreationDTO,
     VKRepostTaskCreationStatus,
-    VKRepostTaskDTO,
-    VKSubscriptionTaskDTO,
     VKUserAvailableTaskDTO,
 )
 from application.interface.repositories.tasks import ITaskRepository
@@ -89,14 +87,14 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
     async def get_active_repost_task_by_external_ids(
         self,
         external_ids: tuple[str, ...],
-    ) -> VKRepostTaskDTO | None:
+    ) -> TaskSummary | None:
         task = await self._get_active_task_by_external_ids(
             external_ids=external_ids,
             task_type=TaskType.VK_REPOST,
         )
         if task is None:
             return None
-        return self._to_repost_task_dto(task=task)
+        return self._to_task_summary(task=task)
 
     async def get_or_create_subscription_task(
         self,
@@ -107,14 +105,14 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         points: int,
         week_number: int | None,
         repeat_policy: TaskRepeatPolicy,
-    ) -> VKSubscriptionTaskDTO:
+    ) -> TaskSummary:
         existing_task = await self._get_task_by_code_or_external_id(
             code=code,
             external_id=external_id,
             task_type=TaskType.VK_SUBSCRIBE,
         )
         if existing_task is not None:
-            return self._to_subscription_task_dto(task=existing_task)
+            return self._to_task_summary(task=existing_task)
 
         try:
             async with self._session.begin_nested():
@@ -138,8 +136,8 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             )
             if existing_task is None:
                 raise
-            return self._to_subscription_task_dto(task=existing_task)
-        return self._to_subscription_task_dto(task=task)
+            return self._to_task_summary(task=existing_task)
+        return self._to_task_summary(task=task)
 
     async def create_like_task_if_not_exists(
         self,
@@ -200,14 +198,14 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
     async def get_active_like_task_by_external_ids(
         self,
         external_ids: tuple[str, ...],
-    ) -> VKLikeTaskDTO | None:
+    ) -> TaskSummary | None:
         task = await self._get_active_task_by_external_ids(
             external_ids=external_ids,
             task_type=TaskType.VK_LIKE,
         )
         if task is None:
             return None
-        return self._to_like_task_dto(task=task)
+        return self._to_task_summary(task=task)
 
     async def list_available_tasks_for_vk_user(
         self,
@@ -359,45 +357,11 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         )
 
     @staticmethod
-    def _to_repost_task_dto(task: Task) -> VKRepostTaskDTO:
+    def _to_task_summary(task: Task) -> TaskSummary:
         if task.tasks_id is None:
             raise RuntimeError("Task primary key was not generated")
-        if task.external_id is None:
-            raise RuntimeError("VK repost task external_id is not set")
 
-        return VKRepostTaskDTO(
-            tasks_id=task.tasks_id,
-            task_name=task.task_name,
-            external_id=task.external_id,
-            points=task.points,
-            repeat_policy=task.repeat_policy,
-            week_number=task.week_number,
-        )
-
-    @staticmethod
-    def _to_subscription_task_dto(task: Task) -> VKSubscriptionTaskDTO:
-        if task.tasks_id is None:
-            raise RuntimeError("Task primary key was not generated")
-        if task.external_id is None:
-            raise RuntimeError("VK subscription task external_id is not set")
-
-        return VKSubscriptionTaskDTO(
-            tasks_id=task.tasks_id,
-            task_name=task.task_name,
-            external_id=task.external_id,
-            points=task.points,
-            repeat_policy=task.repeat_policy,
-            week_number=task.week_number,
-        )
-
-    @staticmethod
-    def _to_like_task_dto(task: Task) -> VKLikeTaskDTO:
-        if task.tasks_id is None:
-            raise RuntimeError("Task primary key was not generated")
-        if task.external_id is None:
-            raise RuntimeError("VK like task external_id is not set")
-
-        return VKLikeTaskDTO(
+        return TaskSummary(
             tasks_id=task.tasks_id,
             task_name=task.task_name,
             external_id=task.external_id,
