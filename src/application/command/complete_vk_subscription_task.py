@@ -17,12 +17,8 @@ from application.services.award_task_service import (
     AwardTaskService,
     TaskAwardSpec,
 )
+from application.services.vk_subscription_task_rules import VKSubscriptionTaskRules
 from domain.enums.task import TaskRepeatPolicy
-
-SUBSCRIPTION_TASK_POINTS = 15
-SUBSCRIPTION_TASK_WEEK_NUMBER = 1
-SUBSCRIPTION_TASK_COMPLETION_KEY = "once"
-SUBSCRIPTION_REJECTED_REASON = "vk_user_is_not_group_member"
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -42,6 +38,7 @@ class CompleteVKSubscriptionTaskHandler(
         uow: IUnitOfWork,
         vk_user_client: IVKUserClient,
         required_subscription_group_id: int,
+        subscription_task_rules: VKSubscriptionTaskRules | None = None,
     ) -> None:
         self.task_repository = task_repository
         self.task_completion_repository = task_completion_repository
@@ -49,6 +46,7 @@ class CompleteVKSubscriptionTaskHandler(
         self.uow = uow
         self.vk_user_client = vk_user_client
         self.required_subscription_group_id = required_subscription_group_id
+        self.subscription_task_rules = subscription_task_rules or VKSubscriptionTaskRules()
 
     async def __call__(
         self,
@@ -59,15 +57,15 @@ class CompleteVKSubscriptionTaskHandler(
             task_name="Подписаться на группу Волны",
             description="Бонус за подписку на группу Волны ВКонтакте.",
             external_id=self._build_task_external_id(group_id=self.required_subscription_group_id),
-            points=SUBSCRIPTION_TASK_POINTS,
-            week_number=SUBSCRIPTION_TASK_WEEK_NUMBER,
+            points=self.subscription_task_rules.points,
+            week_number=self.subscription_task_rules.week_number,
             repeat_policy=TaskRepeatPolicy.ONCE,
         )
 
         if await self.task_completion_repository.is_completed_by_vk_user(
             vk_user_id=command_data.vk_user_id,
             tasks_id=task.tasks_id,
-            completion_key=SUBSCRIPTION_TASK_COMPLETION_KEY,
+            completion_key=self.subscription_task_rules.completion_key,
         ):
             return VKSubscriptionTaskCompletionDTO(
                 status=VKSubscriptionTaskCompletionStatus.ALREADY_COMPLETED,
@@ -100,16 +98,16 @@ class CompleteVKSubscriptionTaskHandler(
             outcome = await self.award_service.reject(
                 vk_user_id=command_data.vk_user_id,
                 task=spec,
-                completion_key=SUBSCRIPTION_TASK_COMPLETION_KEY,
+                completion_key=self.subscription_task_rules.completion_key,
                 event_id=command_data.event_id,
                 evidence_external_id=task.external_id,
-                rejected_reason=SUBSCRIPTION_REJECTED_REASON,
+                rejected_reason=self.subscription_task_rules.rejected_reason,
             )
         else:
             outcome = await self.award_service.award(
                 vk_user_id=command_data.vk_user_id,
                 task=spec,
-                completion_key=SUBSCRIPTION_TASK_COMPLETION_KEY,
+                completion_key=self.subscription_task_rules.completion_key,
                 event_id=command_data.event_id,
                 evidence_external_id=task.external_id,
             )
