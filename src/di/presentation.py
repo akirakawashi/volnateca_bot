@@ -7,6 +7,7 @@ from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
+from application.interface.clients import IVKMessageClient
 from presentation.http.routers.v1.routers.vk_callbacks.dispatcher import VKCallbackDispatcher
 from settings.vk import VKSettings
 
@@ -21,6 +22,7 @@ class PresentationProvider(Provider):
         complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler,
         create_vk_post_tasks_interactor: CreateVKPostTasksHandler,
         complete_vk_like_task_interactor: CompleteVKLikeTaskHandler,
+        vk_message_client: IVKMessageClient,
     ) -> VKCallbackDispatcher:
         return VKCallbackDispatcher(
             vk_settings=vk_settings,
@@ -31,4 +33,5 @@ class PresentationProvider(Provider):
             complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
             create_vk_post_tasks_interactor=create_vk_post_tasks_interactor,
             complete_vk_like_task_interactor=complete_vk_like_task_interactor,
+            vk_message_client=vk_message_client,
         )
