@@ -28,6 +28,11 @@ DEFAULT_REPOST_POINTS = 20
 DEFAULT_LIKE_POINTS = 10
 MAX_TASK_DESCRIPTION_LENGTH = 500
 
+#volnateca
+#volnateca_week_1
+#volnateca_like_points_10
+#volnateca_repost_points_20
+
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class CreateVKPostTasksCommand:
@@ -167,8 +172,8 @@ class CreateVKPostTasksHandler(
 
     @staticmethod
     def _parse_marker(text: str) -> ParsedVKPostMarker | None:
-        # Check for #volnateca marker but exclude sub-tags like #volnateca_week_N etc.
-        # We look for a standalone "#volnateca" word (not followed by "_")
+        # Проверка для #volnateca маркера, но исключая под-теги, такие как #volnateca_week_N и т.д.
+        # Мы ищем отдельное слово "#volnateca" (не за которым следует "_")
         if not POST_TASKS_MARKER_PATTERN.search(text):
             return None
 
