@@ -1,4 +1,6 @@
 import asyncio
+import json
+import secrets
 from http import HTTPStatus
 from typing import Any, Self
 
@@ -7,12 +9,13 @@ from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from application.common.dto.vk import VKUserProfileDTO
-from application.interface.clients import IVKUserClient
+from application.interface.clients import IVKMessageClient, IVKUserClient
 from settings.vk import VKSettings
 
 VK_USERS_GET_METHOD = "users.get"
 VK_USERS_GET_FIELDS = "screen_name"
 VK_GROUPS_IS_MEMBER_METHOD = "groups.isMember"
+VK_MESSAGES_SEND_METHOD = "messages.send"
 
 
 class VKAPIErrorSchema(BaseModel):
@@ -45,7 +48,14 @@ class VKGroupsIsMemberResponseSchema(BaseModel):
     error: VKAPIErrorSchema | None = None
 
 
-class VKAPIClient(IVKUserClient):
+class VKMessagesSendResponseSchema(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    response: int | None = None
+    error: VKAPIErrorSchema | None = None
+
+
+class VKAPIClient(IVKUserClient, IVKMessageClient):
     def __init__(
         self,
         settings: VKSettings,
@@ -170,6 +180,56 @@ class VKAPIClient(IVKUserClient):
             return None
 
         return bool(parsed_response.response) if parsed_response.response is not None else None
+
+    async def send_message(
+        self,
+        *,
+        vk_user_id: int,
+        message: str,
+        random_id: int | None = None,
+        keyboard: dict[str, object] | None = None,
+    ) -> bool:
+        if not self._settings.GROUP_ACCESS_TOKEN:
+            logger.warning("VK messages.send skipped: group access token is not configured")
+            return False
+        if not message:
+            logger.warning("VK messages.send skipped: empty message, vk_user_id={}", vk_user_id)
+            return False
+
+        params = {
+            "user_id": str(vk_user_id),
+            "message": message,
+            "random_id": str(random_id if random_id is not None else secrets.randbits(31)),
+            "access_token": self._settings.GROUP_ACCESS_TOKEN,
+            "v": self._settings.API_VERSION,
+        }
+        if keyboard is not None:
+            params["keyboard"] = json.dumps(keyboard, ensure_ascii=False)
+
+        response_data = await self._request(method=VK_MESSAGES_SEND_METHOD, params=params)
+        if response_data is None:
+            return False
+
+        try:
+            parsed_response = VKMessagesSendResponseSchema.model_validate(response_data)
+        except ValidationError as err:
+            logger.warning(
+                "VK messages.send response validation failed: vk_user_id={}, error={}",
+                vk_user_id,
+                err,
+            )
+            return False
+
+        if parsed_response.error is not None:
+            logger.warning(
+                "VK messages.send returned error: vk_user_id={}, error_code={}, error_msg={}",
+                vk_user_id,
+                parsed_response.error.error_code,
+                parsed_response.error.error_msg,
+            )
+            return False
+
+        return parsed_response.response is not None
 
     async def _request(
         self,
