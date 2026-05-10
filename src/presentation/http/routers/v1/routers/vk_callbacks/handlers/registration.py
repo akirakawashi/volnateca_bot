@@ -7,6 +7,7 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionDTO,
     RegisterVKUserAndCheckSubscriptionHandler,
 )
+from application.common.dto.task import VKSubscriptionTaskCompletionStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
@@ -16,6 +17,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_free_text_fallback_message,
     build_help_message,
     build_registration_welcome_message,
+    build_subscription_reward_message,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
@@ -87,6 +89,11 @@ async def handle_registration_callback(
             result=result,
             message_client=message_client,
         )
+        await _send_subscription_reward_message_after_registration(
+            data=data,
+            result=result,
+            message_client=message_client,
+        )
     elif data.is_message_new():
         await _handle_registered_user_message(
             data=data,
@@ -105,7 +112,7 @@ async def _send_registration_welcome_message(
 ) -> None:
     message = build_registration_welcome_message(
         first_name=data.get_first_name(),
-        balance_points=_get_actual_balance_points(result=result),
+        balance_points=result.registration.balance_points,
         bonus_points=REGISTRATION_BONUS_POINTS,
     )
     await _send_user_message(
@@ -118,10 +125,36 @@ async def _send_registration_welcome_message(
     )
 
 
-def _get_actual_balance_points(result: RegisterVKUserAndCheckSubscriptionDTO) -> int:
-    if result.subscription is not None and result.subscription.balance_points is not None:
-        return result.subscription.balance_points
-    return result.registration.balance_points
+async def _send_subscription_reward_message_after_registration(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+) -> None:
+    subscription = result.subscription
+    if subscription is None or subscription.status != VKSubscriptionTaskCompletionStatus.COMPLETED:
+        return
+    if subscription.balance_points is None:
+        logger.warning(
+            "VK subscription reward message skipped without balance: event_id={}, vk_user_id={}, users_id={}",
+            data.event_id,
+            result.registration.vk_user_id,
+            result.registration.users_id,
+        )
+        return
+
+    message = build_subscription_reward_message(
+        points_awarded=subscription.points_awarded,
+        balance_points=subscription.balance_points,
+    )
+    await _send_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=message,
+        message_client=message_client,
+        log_message="VK subscription reward message after registration",
+    )
 
 
 async def _handle_registered_user_message(

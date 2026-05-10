@@ -70,6 +70,7 @@ class VKCallbackDispatcher:
             return await handle_subscription_callback(
                 data=payload,
                 interactor=self.complete_vk_subscription_task_interactor,
+                message_client=self.vk_message_client,
             )
 
         if payload.is_registration_event():

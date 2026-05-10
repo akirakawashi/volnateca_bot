@@ -19,9 +19,10 @@ def build_registration_welcome_message(
     return VKMessageText(
         text=(
             f"{greeting}\n"
-            f"Ты в Волнатеке.\n"
-            f"Начислили {bonus_points} {POINTS_SIGN} за старт.\n"
-            f"Баланс: {balance_points} {POINTS_SIGN}."
+            "🌊 Добро пожаловать в Волнатеку!\n\n"
+            "✅ Регистрация завершена\n"
+            f"+{bonus_points} {POINTS_SIGN} за старт\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
         ),
     )
 
@@ -31,35 +32,58 @@ def build_task_accrual_message(
     task_name: str,
     points_awarded: int,
     balance_points: int | None,
-) -> VKMessageText:
+    ) -> VKMessageText:
     lines = [
-        f"Задание выполнено: {task_name}.",
-        f"Начислили {points_awarded} {POINTS_SIGN}.",
+        "✅ Задание выполнено",
+        task_name,
+        "",
+        f"+{points_awarded} {POINTS_SIGN}",
     ]
     if balance_points is not None:
-        lines.append(f"Баланс: {balance_points} {POINTS_SIGN}.")
+        lines.extend(("", f"💫 Баланс: {balance_points} {POINTS_SIGN}"))
     return VKMessageText(text="\n".join(lines))
 
 
+def build_subscription_reward_message(
+    *,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            "✅ Подписка засчитана\n"
+            "Ты подписан на группу Волны.\n\n"
+            f"+{points_awarded} {POINTS_SIGN} за подписку\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def build_balance_message(*, balance_points: int) -> VKMessageText:
-    return VKMessageText(text=f"Баланс: {balance_points} {POINTS_SIGN}.")
+    return VKMessageText(text=f"💫 Баланс\n\n{balance_points} {POINTS_SIGN}")
 
 
 def build_help_message() -> VKMessageText:
     return VKMessageText(
         text=(
-            "Я понимаю команды:\n"
-            "Баланс — покажу твои дискошары.\n"
-            "Задания — покажу активности проекта.\n"
-            "Магазин — покажу призы.\n"
-            "Рефералка — покажу ссылку для друзей."
+            "🌊 Меню Волнатеки\n\n"
+            "💫 Баланс — покажу твои дискошары\n"
+            "🎯 Задания — покажу активности проекта\n"
+            "🎁 Магазин — покажу призы\n"
+            "🤝 Рефералка — покажу ссылку для друзей"
         ),
     )
 
 
 def build_free_text_fallback_message() -> VKMessageText:
     return VKMessageText(
-        text="Пока я лучше всего понимаю команды: Баланс, Задания, Магазин, Рефералка.",
+        text=(
+            "🤔 Пока я лучше всего понимаю команды:\n\n"
+            "💫 Баланс\n"
+            "🎯 Задания\n"
+            "🎁 Магазин\n"
+            "🤝 Рефералка"
+        ),
     )
 
 
@@ -76,5 +100,6 @@ __all__ = [
     "build_free_text_fallback_message",
     "build_help_message",
     "build_registration_welcome_message",
+    "build_subscription_reward_message",
     "build_task_accrual_message",
 ]
