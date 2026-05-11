@@ -101,14 +101,11 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
             earned_points_total_before=snapshot.earned_points_total,
             amount=REFERRAL_BONUS_POINTS,
         )
-        level_before = get_level(snapshot.earned_points_total)
-        level_after = get_level(accrual.earned_points_total_after)
-        level_up: int | None = level_after if level_after > level_before else None
         await self.user_repository.apply_balance_change(
             users_id=snapshot.users_id,
             balance_points=accrual.balance_after,
             earned_points_total=accrual.earned_points_total_after,
-            current_level=level_after,
+            current_level=get_level(accrual.earned_points_total_after),
         )
         referral_transaction = await self.transaction_repository.create(
             users_id=snapshot.users_id,
@@ -171,6 +168,13 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
                 milestone_reached = referral_count
                 milestone_bonus_points = achievement.points
                 current_balance = milestone_accrual.balance_after
+                current_earned = milestone_accrual.earned_points_total_after
+
+        # Итоговый level_up — сравниваем начальный уровень с финальным
+        # (учитывает как реферальный бонус, так и возможный milestone-бонус)
+        level_before = get_level(snapshot.earned_points_total)
+        final_level = get_level(current_earned)
+        level_up: int | None = final_level if final_level > level_before else None
 
         await self.uow.commit()
         return ProcessReferralDTO(
