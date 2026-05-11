@@ -105,7 +105,6 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         description: str,
         external_id: str,
         points: int,
-        week_number: int | None,
         repeat_policy: TaskRepeatPolicy,
     ) -> TaskSummary:
         existing_task = await self._get_task_by_code_or_external_id(
@@ -124,7 +123,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
                     description=description,
                     task_type=TaskType.VK_SUBSCRIBE,
                     points=points,
-                    week_number=week_number,
+                    week_number=None,
                     external_id=external_id,
                     repeat_policy=repeat_policy,
                 )
@@ -327,6 +326,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             select(Task)
             .where(
                 col(Task.is_active).is_(True),
+                col(Task.task_type) != TaskType.VK_SUBSCRIBE,
                 col(Task.week_number) == week_number,
             )
             .order_by(col(Task.tasks_id)),
@@ -418,7 +418,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             raise RuntimeError("Первичный ключ задания не был сгенерирован")
         completion_key = build_task_completion_key(
             repeat_policy=task.repeat_policy,
-            week_number=task.week_number,
+            week_number=TaskRepository._task_week_number(task=task),
             checked_at=checked_at,
         )
         return (task.tasks_id, completion_key) in completed_keys
@@ -435,7 +435,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             external_id=task.external_id,
             points=task.points,
             repeat_policy=task.repeat_policy,
-            week_number=task.week_number,
+            week_number=TaskRepository._task_week_number(task=task),
         )
 
     @staticmethod
@@ -449,7 +449,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             external_id=task.external_id,
             points=task.points,
             repeat_policy=task.repeat_policy,
-            week_number=task.week_number,
+            week_number=TaskRepository._task_week_number(task=task),
         )
 
     @staticmethod
@@ -521,5 +521,11 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             task_name=task.task_name,
             points=task.points,
             repeat_policy=task.repeat_policy,
-            week_number=task.week_number,
+            week_number=TaskRepository._task_week_number(task=task),
         )
+
+    @staticmethod
+    def _task_week_number(task: Task) -> int | None:
+        if task.task_type == TaskType.VK_SUBSCRIBE:
+            return None
+        return task.week_number

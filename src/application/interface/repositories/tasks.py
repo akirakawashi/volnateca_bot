@@ -48,7 +48,6 @@ class ITaskRepository(ABC):
         description: str,
         external_id: str,
         points: int,
-        week_number: int | None,
         repeat_policy: TaskRepeatPolicy,
     ) -> TaskSummary:
         raise NotImplementedError

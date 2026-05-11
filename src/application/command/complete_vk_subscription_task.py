@@ -62,7 +62,6 @@ class CompleteVKSubscriptionTaskHandler(
             description="Бонус за подписку на группу Волны ВКонтакте.",
             external_id=self._build_task_external_id(group_id=self.required_subscription_group_id),
             points=self.subscription_task_rules.points,
-            week_number=self.subscription_task_rules.week_number,
             repeat_policy=TaskRepeatPolicy.ONCE,
         )
 
@@ -91,7 +90,7 @@ class CompleteVKSubscriptionTaskHandler(
             tasks_id=task.tasks_id,
             task_name=task.task_name,
             points=task.points,
-            week_number=task.week_number,
+            week_number=None,
         )
         if not is_member:
             outcome = await self.award_service.reject(
