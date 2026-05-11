@@ -61,6 +61,21 @@ def build_subscription_reward_message(
     )
 
 
+def build_like_reward_message(
+    *,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            "✅ Лайк засчитан\n"
+            "Ты поставил лайк записи Волны.\n\n"
+            f"+{points_awarded} {POINTS_SIGN} за лайк\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def build_balance_message(*, balance_points: int) -> VKMessageText:
     return VKMessageText(text=f"💫 Баланс\n\n{balance_points} {POINTS_SIGN}")
 
@@ -120,6 +135,7 @@ __all__ = [
     "build_balance_message",
     "build_free_text_fallback_message",
     "build_help_message",
+    "build_like_reward_message",
     "build_registration_welcome_message",
     "build_subscription_reward_message",
     "build_task_accrual_message",

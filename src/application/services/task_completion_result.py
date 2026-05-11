@@ -8,6 +8,7 @@ def build_task_completion_result(outcome: AwardTaskOutcome) -> TaskCompletionRes
         vk_user_id=outcome.vk_user_id,
         users_id=outcome.users_id,
         tasks_id=outcome.tasks_id,
+        task_name=outcome.task_name,
         task_completions_id=outcome.task_completions_id,
         transactions_id=outcome.transactions_id,
         points_awarded=outcome.points_awarded,

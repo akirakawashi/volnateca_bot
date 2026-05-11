@@ -54,6 +54,7 @@ class VKCallbackDispatcher:
             return await handle_like_callback(
                 data=payload,
                 interactor_complete=self.complete_vk_like_task_interactor,
+                message_client=self.vk_message_client,
             )
 
         if payload.is_wall_post_new():

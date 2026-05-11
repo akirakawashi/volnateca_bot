@@ -12,7 +12,6 @@ from application.common.dto.task import TaskCompletionResultStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
-from presentation.http.routers.v1.routers.vk_callbacks.keyboards import build_main_menu_keyboard
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     VKMessageText,
     build_balance_message,
@@ -22,6 +21,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_subscription_reward_message,
     build_tasks_message,
 )
+from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
@@ -120,7 +120,7 @@ async def _send_registration_welcome_message(
         balance_points=result.registration.balance_points,
         bonus_points=REGISTRATION_BONUS_POINTS,
     )
-    await _send_user_message(
+    await send_vk_user_message(
         data=data,
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
@@ -153,7 +153,7 @@ async def _send_subscription_reward_message_after_registration(
         points_awarded=subscription.points_awarded,
         balance_points=subscription.balance_points,
     )
-    await _send_user_message(
+    await send_vk_user_message(
         data=data,
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
@@ -183,7 +183,7 @@ async def _handle_registered_user_message(
             intent=classified.intent,
             balance_points=result.registration.balance_points,
         )
-    await _send_user_message(
+    await send_vk_user_message(
         data=data,
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
@@ -212,38 +212,3 @@ def _build_registered_user_response(
     if intent == UserMessageIntent.HELP:
         return build_help_message()
     return build_free_text_fallback_message()
-
-
-async def _send_user_message(
-    *,
-    data: VKCallbackPayload,
-    vk_user_id: int,
-    users_id: int,
-    message: VKMessageText,
-    message_client: IVKMessageClient,
-    log_message: str,
-) -> None:
-    try:
-        sent = await message_client.send_message(
-            vk_user_id=vk_user_id,
-            message=message.text,
-            keyboard=build_main_menu_keyboard(),
-        )
-    except Exception:
-        logger.exception(
-            "{} не отправлено из-за ошибки: event_id={}, vk_user_id={}, users_id={}",
-            log_message,
-            data.event_id,
-            vk_user_id,
-            users_id,
-        )
-        return
-
-    if not sent:
-        logger.warning(
-            "{} не отправлено: event_id={}, vk_user_id={}, users_id={}",
-            log_message,
-            data.event_id,
-            vk_user_id,
-            users_id,
-        )

@@ -46,6 +46,7 @@ class TaskCompletionResult:
     vk_user_id: int
     users_id: int | None = None
     tasks_id: int | None = None
+    task_name: str | None = None
     task_completions_id: int | None = None
     transactions_id: int | None = None
     points_awarded: int = 0

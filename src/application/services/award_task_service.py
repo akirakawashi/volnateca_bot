@@ -45,6 +45,7 @@ class AwardTaskOutcome:
     vk_user_id: int
     users_id: int | None = None
     tasks_id: int | None = None
+    task_name: str | None = None
     task_completions_id: int | None = None
     transactions_id: int | None = None
     points_awarded: int = 0
@@ -92,6 +93,7 @@ class AwardTaskService:
                 status=AwardTaskOutcomeStatus.USER_NOT_REGISTERED,
                 vk_user_id=vk_user_id,
                 tasks_id=task.tasks_id,
+                task_name=task.task_name,
             )
 
         completion = await self._task_completions.get_for_update(
@@ -108,6 +110,7 @@ class AwardTaskService:
                 vk_user_id=vk_user_id,
                 users_id=snapshot.users_id,
                 tasks_id=task.tasks_id,
+                task_name=task.task_name,
                 task_completions_id=completion.task_completions_id,
                 transactions_id=completion.transactions_id,
                 points_awarded=0,
@@ -169,6 +172,7 @@ class AwardTaskService:
             vk_user_id=vk_user_id,
             users_id=snapshot.users_id,
             tasks_id=task.tasks_id,
+            task_name=task.task_name,
             task_completions_id=completion.task_completions_id,
             transactions_id=transaction.transactions_id,
             points_awarded=accrual.amount,
@@ -191,6 +195,7 @@ class AwardTaskService:
                 status=AwardTaskOutcomeStatus.USER_NOT_REGISTERED,
                 vk_user_id=vk_user_id,
                 tasks_id=task.tasks_id,
+                task_name=task.task_name,
                 rejected_reason=rejected_reason,
             )
 
@@ -208,6 +213,7 @@ class AwardTaskService:
                 vk_user_id=vk_user_id,
                 users_id=snapshot.users_id,
                 tasks_id=task.tasks_id,
+                task_name=task.task_name,
                 task_completions_id=completion.task_completions_id,
                 transactions_id=completion.transactions_id,
                 points_awarded=0,
@@ -245,6 +251,7 @@ class AwardTaskService:
             vk_user_id=vk_user_id,
             users_id=snapshot.users_id,
             tasks_id=task.tasks_id,
+            task_name=task.task_name,
             task_completions_id=completion.task_completions_id,
             transactions_id=None,
             points_awarded=0,
