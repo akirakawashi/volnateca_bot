@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 3f30641b21fe
+Revision ID: ede63ce6af90
 Revises: 
-Create Date: 2026-05-11 12:16:32.864197
+Create Date: 2026-05-11 14:11:31.945488
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = '3f30641b21fe'
+revision: str = 'ede63ce6af90'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
