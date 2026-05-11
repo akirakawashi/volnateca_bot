@@ -26,6 +26,7 @@ from application.interface.uow import IUnitOfWork
 from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
 from application.services.daily_streak_achievement_service import DailyStreakAchievementService
+from application.services.quiz_streak_achievement_service import QuizStreakAchievementService
 from settings.vk import VKSettings
 
 
@@ -130,12 +131,14 @@ class InteractorProvider(Provider):
         quiz_repository: IQuizRepository,
         task_repository: ITaskRepository,
         award_service: AwardTaskService,
+        quiz_streak_achievement_service: QuizStreakAchievementService,
         uow: IUnitOfWork,
     ) -> AnswerQuizQuestionHandler:
         return AnswerQuizQuestionHandler(
             quiz_repository=quiz_repository,
             task_repository=task_repository,
             award_service=award_service,
+            quiz_streak_achievement_service=quiz_streak_achievement_service,
             uow=uow,
         )
 

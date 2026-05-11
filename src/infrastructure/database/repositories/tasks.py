@@ -255,7 +255,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
                 or_(col(Task.starts_at).is_(None), col(Task.starts_at) <= now),
                 or_(col(Task.ends_at).is_(None), col(Task.ends_at) > now),
             )
-            .order_by(col(Task.week_number), col(Task.tasks_id)),
+            .order_by(col(Task.starts_at), col(Task.tasks_id)),
         )
         quiz_tasks = list(result.scalars().all())
         if not quiz_tasks:

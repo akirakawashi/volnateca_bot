@@ -24,6 +24,7 @@ class QuizAnswerSavedDTO:
     tasks_id: int
     already_answered: bool
     quiz_answers_id: int | None = None
+    quiz_unavailable: bool = False
 
 
 __all__ = ["QuizAnswerSavedDTO", "QuizQuestionDTO", "QuizQuestionOptionDTO"]

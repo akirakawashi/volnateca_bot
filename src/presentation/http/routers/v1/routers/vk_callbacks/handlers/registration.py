@@ -22,6 +22,7 @@ from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
 from domain.services.level import get_level_name
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
+    send_quiz_streak_reward_if_needed,
     send_week_completion_reward_if_needed,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
@@ -38,6 +39,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_quiz_completed_message,
     build_quiz_offer_message,
     build_quiz_question_message,
+    build_quiz_unavailable_message,
     build_referral_bonus_message,
     build_referral_link_message,
     build_referral_milestone_message,
@@ -354,7 +356,16 @@ async def _handle_start_quiz(
         ),
     )
     if question is None:
-        # Квиз уже пройден или вопросов нет — показываем актуальный список заданий
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_quiz_unavailable_message(),
+            message_client=message_client,
+            log_message="Сообщение о недоступной викторине VK",
+        )
+
+        # Квиз уже пройден, недоступен или вопросов нет — показываем актуальный список заданий
         tasks_result = await get_vk_user_tasks_interactor(
             command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
         )
@@ -426,6 +437,17 @@ async def _handle_quiz_answer(
     if answer_result.invalid_payload:
         return
 
+    if answer_result.quiz_unavailable:
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_quiz_unavailable_message(),
+            message_client=message_client,
+            log_message="Сообщение о недоступной викторине VK",
+        )
+        return
+
     # Обратная связь по правильности ответа (не показываем при повторном нажатии)
     if not answer_result.already_answered:
         await send_vk_user_message(
@@ -476,6 +498,16 @@ async def _handle_quiz_answer(
             points_awarded=answer_result.week_completion_points_awarded,
             balance_points=answer_result.week_completion_balance_points,
             level_up=answer_result.week_completion_level_up,
+            message_client=message_client,
+        )
+        await send_quiz_streak_reward_if_needed(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            streak_count=answer_result.quiz_streak_count,
+            points_awarded=answer_result.quiz_streak_points_awarded,
+            balance_points=answer_result.quiz_streak_balance_points,
+            level_up=answer_result.quiz_streak_level_up,
             message_client=message_client,
         )
         return

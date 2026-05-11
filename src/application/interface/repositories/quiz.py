@@ -40,6 +40,11 @@ class IQuizRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_current_correct_quiz_streak(self, vk_user_id: int) -> int:
+        """Возвращает текущую серию завершённых викторин без ошибок."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def link_answer_to_task_completion(
         self,
         quiz_answers_id: int,

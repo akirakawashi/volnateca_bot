@@ -129,8 +129,9 @@ def build_help_message() -> VKMessageText:
 def build_quiz_offer_message(*, task_name: str, points: int) -> VKMessageText:
     return VKMessageText(
         text=(
-            f"🧠 {task_name}\n\n"
-            "Ответь на вопросы недели и получи баллы!\n\n"
+            f"🧠 Доступна викторина: {task_name}\n\n"
+            "Ответь на вопросы викторины и получи баллы.\n"
+            "После прохождения покажу следующую доступную викторину.\n\n"
             f"Награда: +{points} {POINTS_SIGN}\n\n"
             "Хочешь пройти квиз прямо сейчас?"
         ),
@@ -157,6 +158,15 @@ def build_quiz_answer_result_message(
         return VKMessageText(text="✅ Верно!")
     correct_hint = f"\nПравильный ответ: {correct_option_text}" if correct_option_text else ""
     return VKMessageText(text=f"❌ Неверно.{correct_hint}")
+
+
+def build_quiz_unavailable_message() -> VKMessageText:
+    return VKMessageText(
+        text=(
+            "⏳ Эта викторина уже недоступна.\n\n"
+            "Открой 🎯 Задания, чтобы увидеть актуальные активности."
+        ),
+    )
 
 
 def build_quiz_completed_message(
@@ -253,6 +263,21 @@ def build_daily_streak_reward_message(
     )
 
 
+def build_quiz_streak_reward_message(
+    *,
+    streak_count: int,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🏆 {streak_count} викторин подряд без ошибок!\n\n"
+            f"+{points_awarded} {POINTS_SIGN} бонус\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def build_level_up_message(*, new_level: int, level_name: str, balance_points: int) -> VKMessageText:
     return VKMessageText(
         text=(
@@ -282,6 +307,8 @@ __all__ = [
     "build_quiz_completed_message",
     "build_quiz_offer_message",
     "build_quiz_question_message",
+    "build_quiz_streak_reward_message",
+    "build_quiz_unavailable_message",
     "build_referral_bonus_message",
     "build_referral_link_message",
     "build_referral_milestone_message",

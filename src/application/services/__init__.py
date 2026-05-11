@@ -15,6 +15,12 @@ from application.services.daily_streak_achievement_service import (
     DailyStreakAchievementService,
     DailyStreakAward,
 )
+from application.services.quiz_streak_achievement_service import (
+    QUIZ_STREAK_ACHIEVEMENT_CODE,
+    QUIZ_STREAK_TARGET,
+    QuizStreakAchievementService,
+    QuizStreakAward,
+)
 from application.services.user_message_intent import RuleBasedUserMessageIntentClassifier
 from application.services.week_completion_achievement_service import (
     WEEK_COMPLETION_ACHIEVEMENT_CODE,
@@ -33,6 +39,10 @@ __all__ = [
     "DAILY_STREAK_ACHIEVEMENTS",
     "DailyStreakAchievementService",
     "DailyStreakAward",
+    "QUIZ_STREAK_ACHIEVEMENT_CODE",
+    "QUIZ_STREAK_TARGET",
+    "QuizStreakAchievementService",
+    "QuizStreakAward",
     "RuleBasedUserMessageIntentClassifier",
     "TaskAwardSpec",
     "WEEK_COMPLETION_ACHIEVEMENT_CODE",
