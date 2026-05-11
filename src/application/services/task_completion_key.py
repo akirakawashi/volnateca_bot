@@ -13,8 +13,12 @@ def build_task_completion_key(
         return "once"
     if repeat_policy == TaskRepeatPolicy.DAILY:
         return checked_at.date().isoformat()
-    if week_number is not None:
-        return f"week_{week_number:02d}"
+    if repeat_policy == TaskRepeatPolicy.WEEKLY:
+        if week_number is not None:
+            return f"week_{week_number:02d}"
 
-    iso_calendar = checked_at.isocalendar()
-    return f"{iso_calendar.year}-W{iso_calendar.week:02d}"
+        # Weekly tasks without a project week use the calendar ISO week.
+        iso_calendar = checked_at.isocalendar()
+        return f"{iso_calendar.year}-W{iso_calendar.week:02d}"
+
+    raise ValueError(f"Unsupported task repeat policy: {repeat_policy}")
