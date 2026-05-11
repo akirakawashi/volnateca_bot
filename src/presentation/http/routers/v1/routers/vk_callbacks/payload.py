@@ -1,11 +1,21 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from application.common.dto.vk import VKWallPostDTO
 from presentation.http.dto.request import VKCallbackSchema, VKCallbackWallPostSchema
+from presentation.http.routers.v1.routers.vk_callbacks.event_objects import (
+    VKCallbackEventObjectSchema,
+    VKLikeObjectSchema,
+    VKMessageObjectSchema,
+    VKRepostObjectSchema,
+    VKUserObjectSchema,
+    VKWallPostObjectSchema,
+)
 from presentation.http.routers.v1.routers.vk_callbacks.event_types import VKEventGroups, VKEventType
+
+EventObjectT = TypeVar("EventObjectT", bound=VKCallbackEventObjectSchema)
 
 
 @dataclass(slots=True, frozen=True)
@@ -60,7 +70,8 @@ class VKCallbackPayload:
     # User extraction
 
     def get_like_user_id(self) -> int | None:
-        return self._normalize_vk_user_id(raw_user_id=self.data.event_object.liker_id)
+        like_object = self.get_like_object()
+        return self._normalize_vk_user_id(raw_user_id=like_object.liker_id if like_object else None)
 
     def get_primary_vk_user_id(self) -> int | None:
         if self.is_like():
@@ -70,8 +81,12 @@ class VKCallbackPayload:
         return self.get_vk_user_id()
 
     def get_repost_user_id(self) -> int | None:
-        from_id = self._normalize_vk_user_id(raw_user_id=self.data.event_object.from_id)
-        wall_owner_id = self._normalize_vk_user_id(raw_user_id=self.data.event_object.owner_id)
+        repost_object = self.get_repost_object()
+        if repost_object is None:
+            return None
+
+        from_id = self._normalize_vk_user_id(raw_user_id=repost_object.from_id)
+        wall_owner_id = self._normalize_vk_user_id(raw_user_id=repost_object.owner_id)
 
         # Count only reposts published on the reposting user's own wall.
         if from_id is None or wall_owner_id is None or from_id != wall_owner_id:
@@ -80,44 +95,58 @@ class VKCallbackPayload:
         return from_id
 
     def get_vk_user_id(self) -> int | None:
-        message = self.data.event_object.message
+        message_object = self.get_message_object()
+        message = message_object.message if message_object is not None else None
+        user_object = self.get_user_object()
         raw_user_id: Any = (
             message.from_id
             if message and message.from_id is not None
             else message.user_id
             if message and message.user_id is not None
-            else self.data.event_object.user_id
-            if self.data.event_object.user_id is not None
-            else self.data.event_object.from_id
+            else user_object.user_id
+            if user_object and user_object.user_id is not None
+            else user_object.from_id
+            if user_object is not None
+            else None
         )
 
         return self._normalize_vk_user_id(raw_user_id=raw_user_id)
 
     def get_first_name(self) -> str | None:
-        if self.data.event_object.first_name:
-            return self.data.event_object.first_name
-        if self.data.event_object.message and self.data.event_object.message.first_name:
-            return self.data.event_object.message.first_name
+        user_object = self.get_user_object()
+        if user_object is not None and user_object.first_name:
+            return user_object.first_name
+
+        message_object = self.get_message_object()
+        if message_object is not None and message_object.message.first_name:
+            return message_object.message.first_name
         return None
 
     def get_last_name(self) -> str | None:
-        if self.data.event_object.last_name:
-            return self.data.event_object.last_name
-        if self.data.event_object.message and self.data.event_object.message.last_name:
-            return self.data.event_object.message.last_name
+        user_object = self.get_user_object()
+        if user_object is not None and user_object.last_name:
+            return user_object.last_name
+
+        message_object = self.get_message_object()
+        if message_object is not None and message_object.message.last_name:
+            return message_object.message.last_name
         return None
 
     def get_message_text(self) -> str:
-        message = self.data.event_object.message
+        message_object = self.get_message_object()
+        message = message_object.message if message_object is not None else None
         return message.text if message and message.text is not None else ""
 
     # Post extraction
 
     def get_liked_post(self) -> VKWallPostDTO | None:
-        obj = self.data.event_object
-        if obj.object_type != "post" or obj.object_id is None or obj.object_owner_id is None:
+        like_object = self.get_like_object()
+        if like_object is None:
             return None
-        return VKWallPostDTO(owner_id=obj.object_owner_id, post_id=obj.object_id)
+        return VKWallPostDTO(
+            owner_id=like_object.object_owner_id,
+            post_id=like_object.object_id,
+        )
 
     def get_liked_post_external_ids(self) -> tuple[str, ...]:
         post = self.get_liked_post()
@@ -130,24 +159,51 @@ class VKCallbackPayload:
         return post.external_id if post is not None else None
 
     def get_reposted_wall_post_external_ids(self) -> tuple[str, ...]:
+        repost_object = self.get_repost_object()
+        if repost_object is None:
+            return ()
+
         external_ids: set[str] = set()
-        for copied_post in self.data.event_object.copy_history:
+        for copied_post in repost_object.copy_history:
             post = self._to_wall_post_dto(copied_post=copied_post)
             if post is not None:
                 external_ids.update(post.external_id_variants)
         return tuple(sorted(external_ids))
 
     def get_wall_post(self) -> VKWallPostDTO | None:
-        if self.data.event_object.owner_id is None or self.data.event_object.post_id is None:
+        wall_post_object = self.get_wall_post_object()
+        if wall_post_object is None:
             return None
 
         return VKWallPostDTO(
-            owner_id=self.data.event_object.owner_id,
-            post_id=self.data.event_object.post_id,
+            owner_id=wall_post_object.owner_id,
+            post_id=wall_post_object.post_id,
         )
 
     def get_wall_post_text(self) -> str:
-        return self.data.event_object.text or ""
+        wall_post_object = self.get_wall_post_object()
+        return wall_post_object.text if wall_post_object and wall_post_object.text else ""
+
+    # Typed event object extraction
+
+    def get_like_object(self) -> VKLikeObjectSchema | None:
+        if not self.is_like():
+            return None
+        return self._parse_event_object(schema=VKLikeObjectSchema)
+
+    def get_repost_object(self) -> VKRepostObjectSchema | None:
+        if not self.is_repost():
+            return None
+        return self._parse_event_object(schema=VKRepostObjectSchema)
+
+    def get_wall_post_object(self) -> VKWallPostObjectSchema | None:
+        return self._parse_event_object(schema=VKWallPostObjectSchema)
+
+    def get_message_object(self) -> VKMessageObjectSchema | None:
+        return self._parse_event_object(schema=VKMessageObjectSchema)
+
+    def get_user_object(self) -> VKUserObjectSchema | None:
+        return self._parse_event_object(schema=VKUserObjectSchema)
 
     # Logging helpers
 
@@ -166,6 +222,12 @@ class VKCallbackPayload:
         if copied_post.owner_id is None or copied_post.post_id is None:
             return None
         return VKWallPostDTO(owner_id=copied_post.owner_id, post_id=copied_post.post_id)
+
+    def _parse_event_object(self, *, schema: Type[EventObjectT]) -> EventObjectT | None:
+        try:
+            return schema.model_validate(self.data.event_object.model_dump(by_alias=True))
+        except ValidationError:
+            return None
 
     @staticmethod
     def _get_present_keys(model: BaseModel) -> tuple[str, ...]:
