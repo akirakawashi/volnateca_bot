@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import json
 from typing import Any, Type, TypeVar
 
 from pydantic import BaseModel, ValidationError
@@ -136,6 +137,23 @@ class VKCallbackPayload:
         message_object = self.get_message_object()
         message = message_object.message if message_object is not None else None
         return message.text if message and message.text is not None else ""
+
+    def get_button_payload(self) -> dict[str, Any] | None:
+        """Возвращает распарсенный JSON payload нажатой кнопки клавиатуры VK.
+
+        VK передаёт payload как строку с JSON внутри message.payload.
+        Возвращает None если payload отсутствует или не является валидным JSON-объектом.
+        """
+        message_object = self.get_message_object()
+        message = message_object.message if message_object is not None else None
+        raw = message.payload if message and message.payload is not None else None
+        if raw is None:
+            return None
+        try:
+            parsed = json.loads(raw)
+        except (json.JSONDecodeError, ValueError):
+            return None
+        return parsed if isinstance(parsed, dict) else None
 
     # Извлечение постов
 

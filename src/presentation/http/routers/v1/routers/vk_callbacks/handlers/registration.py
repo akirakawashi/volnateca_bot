@@ -1,5 +1,13 @@
 from fastapi.responses import PlainTextResponse
 
+from application.command.answer_quiz_question import (
+    AnswerQuizQuestionCommand,
+    AnswerQuizQuestionHandler,
+)
+from application.command.get_quiz_first_question import (
+    GetQuizFirstQuestionCommand,
+    GetQuizFirstQuestionHandler,
+)
 from application.command.get_vk_user_tasks import GetVKUserTasksCommand, GetVKUserTasksHandler
 from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
 from application.command.register_vk_user_and_check_subscription import (
@@ -11,11 +19,19 @@ from application.common.dto.task import TaskCompletionResultStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
+from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
+    build_quiz_offer_keyboard,
+    build_quiz_question_keyboard,
+)
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     VKMessageText,
     build_balance_message,
     build_free_text_fallback_message,
     build_help_message,
+    build_quiz_answer_result_message,
+    build_quiz_completed_message,
+    build_quiz_offer_message,
+    build_quiz_question_message,
     build_registration_welcome_message,
     build_subscription_reward_message,
     build_tasks_message,
@@ -29,6 +45,8 @@ async def handle_registration_callback(
     data: VKCallbackPayload,
     interactor: RegisterVKUserAndCheckSubscriptionHandler,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+    get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
+    answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     message_client: IVKMessageClient,
     intent_classifier: IUserMessageIntentClassifier,
 ) -> PlainTextResponse:
@@ -62,6 +80,8 @@ async def handle_registration_callback(
             message_client=message_client,
             intent_classifier=intent_classifier,
             get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+            get_quiz_first_question_interactor=get_quiz_first_question_interactor,
+            answer_quiz_question_interactor=answer_quiz_question_interactor,
         )
     return vk_ok_response()
 
@@ -120,13 +140,67 @@ async def _handle_registered_user_message(
     message_client: IVKMessageClient,
     intent_classifier: IUserMessageIntentClassifier,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+    get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
+    answer_quiz_question_interactor: AnswerQuizQuestionHandler,
 ) -> None:
+    # Проверяем payload кнопки — приоритет выше текстового intent
+    button_payload = data.get_button_payload()
+    if button_payload is not None:
+        action = button_payload.get("action")
+        if action == "start_quiz":
+            tasks_id = button_payload.get("tasks_id")
+            if isinstance(tasks_id, int):
+                await _handle_start_quiz(
+                    data=data,
+                    result=result,
+                    tasks_id=tasks_id,
+                    message_client=message_client,
+                    get_quiz_first_question_interactor=get_quiz_first_question_interactor,
+                )
+                return
+        elif action == "skip_quiz":
+            await _handle_skip_quiz(
+                data=data,
+                result=result,
+                message_client=message_client,
+                get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+            )
+            return
+        elif action == "quiz_answer":
+            quiz_questions_id = button_payload.get("quiz_questions_id")
+            option_id = button_payload.get("option_id")
+            if isinstance(quiz_questions_id, int) and isinstance(option_id, int):
+                await _handle_quiz_answer(
+                    data=data,
+                    result=result,
+                    quiz_questions_id=quiz_questions_id,
+                    quiz_question_options_id=option_id,
+                    message_client=message_client,
+                    answer_quiz_question_interactor=answer_quiz_question_interactor,
+                )
+                return
+
     message_text = data.get_message_text()
     classified = await intent_classifier.classify(text=message_text)
     if classified.intent == UserMessageIntent.TASKS:
         tasks_result = await get_vk_user_tasks_interactor(
             command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
         )
+        if tasks_result.active_quiz is not None:
+            quiz = tasks_result.active_quiz
+            await send_vk_user_message(
+                data=data,
+                vk_user_id=result.registration.vk_user_id,
+                users_id=result.registration.users_id,
+                message=build_quiz_offer_message(
+                    task_name=quiz.task_name,
+                    points=quiz.points,
+                ),
+                keyboard=build_quiz_offer_keyboard(tasks_id=quiz.tasks_id),
+                message_client=message_client,
+                log_message="Предложение квиза VK",
+            )
+            return
         response = build_tasks_message(tasks=tasks_result.tasks)
     else:
         response = _build_registered_user_response(
@@ -141,6 +215,142 @@ async def _handle_registered_user_message(
         message_client=message_client,
         log_message="Ответ VK зарегистрированному пользователю",
     )
+
+
+async def _handle_start_quiz(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    tasks_id: int,
+    message_client: IVKMessageClient,
+    get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
+) -> None:
+    question = await get_quiz_first_question_interactor(
+        command_data=GetQuizFirstQuestionCommand(
+            tasks_id=tasks_id,
+            vk_user_id=result.registration.vk_user_id,
+        ),
+    )
+    if question is None:
+        # Квиз уже пройден или вопросов нет — показываем обычный список
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_tasks_message(tasks=()),
+            message_client=message_client,
+            log_message="Квиз не найден при старте",
+        )
+        return
+
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_quiz_question_message(
+            question_text=question.question_text,
+            question_number=question.question_number,
+            total_questions=question.total_questions,
+        ),
+        keyboard=build_quiz_question_keyboard(
+            quiz_questions_id=question.quiz_questions_id,
+            options=[(opt.quiz_question_options_id, opt.option_text) for opt in question.options],
+        ),
+        message_client=message_client,
+        log_message="Вопрос квиза VK",
+    )
+
+
+async def _handle_skip_quiz(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+    get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+) -> None:
+    tasks_result = await get_vk_user_tasks_interactor(
+        command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
+    )
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_tasks_message(tasks=tasks_result.tasks),
+        message_client=message_client,
+        log_message="Список заданий VK после пропуска квиза",
+    )
+
+
+async def _handle_quiz_answer(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    quiz_questions_id: int,
+    quiz_question_options_id: int,
+    message_client: IVKMessageClient,
+    answer_quiz_question_interactor: AnswerQuizQuestionHandler,
+) -> None:
+    answer_result = await answer_quiz_question_interactor(
+        command_data=AnswerQuizQuestionCommand(
+            vk_user_id=result.registration.vk_user_id,
+            quiz_questions_id=quiz_questions_id,
+            quiz_question_options_id=quiz_question_options_id,
+        ),
+    )
+
+    if answer_result.invalid_payload:
+        return
+
+    # Обратная связь по правильности ответа (не показываем при повторном нажатии)
+    if not answer_result.already_answered:
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_quiz_answer_result_message(
+                is_correct=answer_result.is_correct,
+                correct_option_text=answer_result.correct_option_text
+                if not answer_result.is_correct
+                else None,
+            ),
+            message_client=message_client,
+            log_message="Результат ответа на вопрос квиза VK",
+        )
+
+    # Если квиз завершён — показываем награду с главным меню
+    if answer_result.task_completed and answer_result.balance_points is not None:
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_quiz_completed_message(
+                points_awarded=answer_result.points_awarded,
+                balance_points=answer_result.balance_points,
+            ),
+            message_client=message_client,
+            log_message="Сообщение о завершении квиза VK",
+        )
+        return
+
+    # Если есть следующий вопрос — показываем его
+    next_q = answer_result.next_question
+    if next_q is not None:
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_quiz_question_message(
+                question_text=next_q.question_text,
+                question_number=next_q.question_number,
+                total_questions=next_q.total_questions,
+            ),
+            keyboard=build_quiz_question_keyboard(
+                quiz_questions_id=next_q.quiz_questions_id,
+                options=[(opt.quiz_question_options_id, opt.option_text) for opt in next_q.options],
+            ),
+            message_client=message_client,
+            log_message="Следующий вопрос квиза VK",
+        )
 
 
 def _build_registered_user_response(

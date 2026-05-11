@@ -10,7 +10,7 @@ class TaskType(str, Enum):
     VK_COMMENT = "vk_comment"  # Комментарий под постом ВКонтакте
     VK_POLL = "vk_poll"  # Участие в опросе ВКонтакте
     VK_STORY_MENTION = "vk_story_mention"  # Упоминание в истории ВКонтакте
-    QUIZ = "quiz" 
+    QUIZ = "quiz"
     CUSTOM = "custom"  # Нестандартное задание
 
 

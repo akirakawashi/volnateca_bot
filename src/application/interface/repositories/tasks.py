@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
 from application.common.dto.task import (
+    QuizTaskSummary,
+    TaskForAwardDTO,
     TaskSummary,
     VKLikeTaskCreationDTO,
     VKRepostTaskCreationDTO,
@@ -77,4 +79,18 @@ class ITaskRepository(ABC):
         self,
         vk_user_id: int,
     ) -> list[VKUserAvailableTaskDTO]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_active_quiz_task_for_vk_user(
+        self,
+        vk_user_id: int,
+    ) -> QuizTaskSummary | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_task_for_award(
+        self,
+        tasks_id: int,
+    ) -> TaskForAwardDTO | None:
         raise NotImplementedError

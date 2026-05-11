@@ -1,10 +1,12 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.interface.repositories.quiz import IQuizRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
+from infrastructure.database.repositories.quiz import QuizRepository
 from infrastructure.database.repositories.task_completions import TaskCompletionRepository
 from infrastructure.database.repositories.tasks import TaskRepository
 from infrastructure.database.repositories.transactions import TransactionRepository
@@ -39,3 +41,10 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> TransactionRepository:
         return TransactionRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IQuizRepository)
+    def get_quiz_repository(
+        self,
+        session: AsyncSession,
+    ) -> QuizRepository:
+        return QuizRepository(session=session)

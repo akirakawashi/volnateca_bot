@@ -1,7 +1,7 @@
 from loguru import logger
 
 from application.interface.clients import IVKMessageClient
-from presentation.http.routers.v1.routers.vk_callbacks.keyboards import build_main_menu_keyboard
+from presentation.http.routers.v1.routers.vk_callbacks.keyboards import VKKeyboard, build_main_menu_keyboard
 from presentation.http.routers.v1.routers.vk_callbacks.messages import VKMessageText
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 
@@ -14,12 +14,13 @@ async def send_vk_user_message(
     message: VKMessageText,
     message_client: IVKMessageClient,
     log_message: str,
+    keyboard: VKKeyboard | None = None,
 ) -> None:
     try:
         await message_client.send_message(
             vk_user_id=vk_user_id,
             message=message.text,
-            keyboard=build_main_menu_keyboard(),
+            keyboard=keyboard if keyboard is not None else build_main_menu_keyboard(),
         )
     except Exception:
         logger.exception(

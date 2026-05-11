@@ -101,10 +101,7 @@ class AwardTaskService:
             tasks_id=task.tasks_id,
             completion_key=completion_key,
         )
-        if (
-            completion is not None
-            and completion.task_completion_status == TaskCompletionStatus.COMPLETED
-        ):
+        if completion is not None and completion.task_completion_status == TaskCompletionStatus.COMPLETED:
             return AwardTaskOutcome(
                 status=AwardTaskOutcomeStatus.ALREADY_COMPLETED,
                 vk_user_id=vk_user_id,
@@ -204,10 +201,7 @@ class AwardTaskService:
             tasks_id=task.tasks_id,
             completion_key=completion_key,
         )
-        if (
-            completion is not None
-            and completion.task_completion_status == TaskCompletionStatus.COMPLETED
-        ):
+        if completion is not None and completion.task_completion_status == TaskCompletionStatus.COMPLETED:
             return AwardTaskOutcome(
                 status=AwardTaskOutcomeStatus.ALREADY_COMPLETED,
                 vk_user_id=vk_user_id,

@@ -1,9 +1,11 @@
 from dishka import Provider, Scope, provide
 
+from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
+from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
@@ -25,6 +27,8 @@ class PresentationProvider(Provider):
         create_vk_post_tasks_interactor: CreateVKPostTasksHandler,
         complete_vk_like_task_interactor: CompleteVKLikeTaskHandler,
         get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+        get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
+        answer_quiz_question_interactor: AnswerQuizQuestionHandler,
         vk_message_client: IVKMessageClient,
         user_message_intent_classifier: IUserMessageIntentClassifier,
     ) -> VKCallbackDispatcher:
@@ -38,6 +42,8 @@ class PresentationProvider(Provider):
             create_vk_post_tasks_interactor=create_vk_post_tasks_interactor,
             complete_vk_like_task_interactor=complete_vk_like_task_interactor,
             get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+            get_quiz_first_question_interactor=get_quiz_first_question_interactor,
+            answer_quiz_question_interactor=answer_quiz_question_interactor,
             vk_message_client=vk_message_client,
             user_message_intent_classifier=user_message_intent_classifier,
         )

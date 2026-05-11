@@ -14,6 +14,25 @@ class TaskCompletionResultStatus(str, Enum):
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
+class QuizTaskSummary:
+    tasks_id: int
+    task_name: str
+    points: int
+    repeat_policy: TaskRepeatPolicy
+    week_number: int | None
+    completion_key: str
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class TaskForAwardDTO:
+    tasks_id: int
+    task_name: str
+    points: int
+    repeat_policy: TaskRepeatPolicy
+    week_number: int | None
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
 class TaskSummary:
     tasks_id: int
     task_name: str

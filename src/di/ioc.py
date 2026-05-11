@@ -1,15 +1,18 @@
 from dishka import Provider, Scope, provide
 
+from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
+from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
 from application.interface.clients import IVKUserClient
+from application.interface.repositories.quiz import IQuizRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.users import IUserRepository
@@ -105,3 +108,25 @@ class InteractorProvider(Provider):
         task_repository: ITaskRepository,
     ) -> GetVKUserTasksHandler:
         return GetVKUserTasksHandler(task_repository=task_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_quiz_first_question_handler(
+        self,
+        quiz_repository: IQuizRepository,
+    ) -> GetQuizFirstQuestionHandler:
+        return GetQuizFirstQuestionHandler(quiz_repository=quiz_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_answer_quiz_question_handler(
+        self,
+        quiz_repository: IQuizRepository,
+        task_repository: ITaskRepository,
+        award_service: AwardTaskService,
+        uow: IUnitOfWork,
+    ) -> AnswerQuizQuestionHandler:
+        return AnswerQuizQuestionHandler(
+            quiz_repository=quiz_repository,
+            task_repository=task_repository,
+            award_service=award_service,
+            uow=uow,
+        )

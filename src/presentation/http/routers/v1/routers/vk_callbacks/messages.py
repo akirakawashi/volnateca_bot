@@ -126,15 +126,56 @@ def build_help_message() -> VKMessageText:
     )
 
 
-def build_free_text_fallback_message() -> VKMessageText:
+def build_quiz_offer_message(*, task_name: str, points: int) -> VKMessageText:
     return VKMessageText(
         text=(
-            "🤔 Пока я лучше всего понимаю команды:\n\n"
-            "💫 Баланс\n"
-            "🎯 Задания\n"
-            "🎁 Магазин\n"
-            "🤝 Рефералка"
+            f"🧠 {task_name}\n\n"
+            "Ответь на вопросы недели и получи баллы!\n\n"
+            f"Награда: +{points} {POINTS_SIGN}\n\n"
+            "Хочешь пройти квиз прямо сейчас?"
         ),
+    )
+
+
+def build_quiz_question_message(
+    *,
+    question_text: str,
+    question_number: int,
+    total_questions: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(f"🧠 Вопрос {question_number} из {total_questions}\n\n{question_text}"),
+    )
+
+
+def build_quiz_answer_result_message(
+    *,
+    is_correct: bool,
+    correct_option_text: str | None,
+) -> VKMessageText:
+    if is_correct:
+        return VKMessageText(text="✅ Верно!")
+    correct_hint = f"\nПравильный ответ: {correct_option_text}" if correct_option_text else ""
+    return VKMessageText(text=f"❌ Неверно.{correct_hint}")
+
+
+def build_quiz_completed_message(
+    *,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            "🎉 Квиз пройден!\n\n"
+            f"+{points_awarded} {POINTS_SIGN} за квиз\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
+def build_free_text_fallback_message() -> VKMessageText:
+    return VKMessageText(
+        text=("🤔 Пока я лучше всего понимаю команды:\n\n💫 Баланс\n🎯 Задания\n🎁 Магазин\n🤝 Рефералка"),
     )
 
 
@@ -151,6 +192,10 @@ __all__ = [
     "build_free_text_fallback_message",
     "build_help_message",
     "build_like_reward_message",
+    "build_quiz_answer_result_message",
+    "build_quiz_completed_message",
+    "build_quiz_offer_message",
+    "build_quiz_question_message",
     "build_registration_welcome_message",
     "build_repost_reward_message",
     "build_subscription_reward_message",

@@ -5,6 +5,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
 from application.common.dto.task import (
+    QuizTaskSummary,
+    TaskForAwardDTO,
     TaskSummary,
     VKLikeTaskCreationDTO,
     VKLikeTaskCreationStatus,
@@ -229,6 +231,48 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             )
         ]
 
+    async def get_active_quiz_task_for_vk_user(
+        self,
+        vk_user_id: int,
+    ) -> QuizTaskSummary | None:
+        """Возвращает первое активное задание типа QUIZ, которое пользователь ещё не выполнил.
+
+        Возвращает None если:
+        - пользователь не зарегистрирован,
+        - нет активных квиз-заданий,
+        - все квиз-задания уже выполнены.
+        """
+        users_id = await self._get_users_id_by_vk_user_id(vk_user_id=vk_user_id)
+        if users_id is None:
+            return None
+
+        now = datetime.now(tz=UTC)
+        result = await self._session.execute(
+            select(Task)
+            .where(
+                col(Task.task_type) == TaskType.QUIZ,
+                col(Task.is_active).is_(True),
+                or_(col(Task.starts_at).is_(None), col(Task.starts_at) <= now),
+                or_(col(Task.ends_at).is_(None), col(Task.ends_at) > now),
+            )
+            .order_by(col(Task.week_number), col(Task.tasks_id)),
+        )
+        quiz_tasks = list(result.scalars().all())
+        if not quiz_tasks:
+            return None
+
+        completed_keys = await self._list_completed_task_keys(users_id=users_id)
+
+        for task in quiz_tasks:
+            if not self._is_task_completed_for_current_period(
+                task=task,
+                checked_at=now,
+                completed_keys=completed_keys,
+            ):
+                return self._to_quiz_task_summary(task=task, checked_at=now)
+
+        return None
+
     async def _get_users_id_by_vk_user_id(self, vk_user_id: int) -> int | None:
         result = await self._session.execute(
             select(User).where(col(User.vk_user_id) == vk_user_id),
@@ -241,6 +285,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             select(Task)
             .where(
                 col(Task.is_active).is_(True),
+                col(Task.task_type) != TaskType.QUIZ,
                 or_(col(Task.starts_at).is_(None), col(Task.starts_at) <= now),
                 or_(col(Task.ends_at).is_(None), col(Task.ends_at) > now),
             )
@@ -255,10 +300,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
                 col(TaskCompletion.task_completion_status) == TaskCompletionStatus.COMPLETED,
             ),
         )
-        return {
-            (completion.tasks_id, completion.completion_key)
-            for completion in result.scalars().all()
-        }
+        return {(completion.tasks_id, completion.completion_key) for completion in result.scalars().all()}
 
     async def _get_task_by_code_or_external_id(
         self,
@@ -371,6 +413,25 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         )
 
     @staticmethod
+    def _to_quiz_task_summary(task: Task, checked_at: datetime) -> QuizTaskSummary:
+        if task.tasks_id is None:
+            raise RuntimeError("Первичный ключ задания не был сгенерирован")
+
+        completion_key = build_task_completion_key(
+            repeat_policy=task.repeat_policy,
+            week_number=task.week_number,
+            checked_at=checked_at,
+        )
+        return QuizTaskSummary(
+            tasks_id=task.tasks_id,
+            task_name=task.task_name,
+            points=task.points,
+            repeat_policy=task.repeat_policy,
+            week_number=task.week_number,
+            completion_key=completion_key,
+        )
+
+    @staticmethod
     def _to_repost_task_creation_dto(
         status: VKRepostTaskCreationStatus,
         task: Task,
@@ -405,5 +466,20 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             code=task.code,
             external_id=task.external_id,
             points=task.points,
+            week_number=task.week_number,
+        )
+
+    async def get_task_for_award(self, tasks_id: int) -> TaskForAwardDTO | None:
+        result = await self._session.execute(
+            select(Task).where(col(Task.tasks_id) == tasks_id),
+        )
+        task = result.scalar_one_or_none()
+        if task is None or task.tasks_id is None:
+            return None
+        return TaskForAwardDTO(
+            tasks_id=task.tasks_id,
+            task_name=task.task_name,
+            points=task.points,
+            repeat_policy=task.repeat_policy,
             week_number=task.week_number,
         )

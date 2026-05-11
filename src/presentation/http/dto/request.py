@@ -9,6 +9,7 @@ class VKCallbackMessageSchema(BaseModel):
     first_name: str | None = Field(default=None, description="Имя пользователя VK")
     last_name: str | None = Field(default=None, description="Фамилия пользователя VK")
     text: str | None = Field(default=None, description="Текст сообщения пользователя")
+    payload: str | None = Field(default=None, description="JSON-payload нажатой кнопки клавиатуры VK")
 
 
 class VKCallbackWallPostSchema(BaseModel):

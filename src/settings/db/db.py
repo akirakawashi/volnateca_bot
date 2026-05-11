@@ -16,7 +16,4 @@ class DBSettings(Settings):
     POOL_RECYCLE_SECONDS: int = 3000
 
     def dsn(self) -> str:
-        return (
-            f"postgresql+asyncpg://{self.USERNAME}:{self.PASSWORD}@"
-            f"{self.HOST}:{self.PORT}/{self.NAME}"
-        )
+        return f"postgresql+asyncpg://{self.USERNAME}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.NAME}"

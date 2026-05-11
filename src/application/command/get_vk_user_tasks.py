@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from application.base_interactor import Interactor
-from application.common.dto.task import VKUserAvailableTaskDTO
+from application.common.dto.task import QuizTaskSummary, VKUserAvailableTaskDTO
 from application.interface.repositories.tasks import ITaskRepository
 
 
@@ -14,6 +14,7 @@ class GetVKUserTasksCommand:
 class GetVKUserTasksDTO:
     vk_user_id: int
     tasks: tuple[VKUserAvailableTaskDTO, ...]
+    active_quiz: QuizTaskSummary | None
 
 
 class GetVKUserTasksHandler(Interactor[GetVKUserTasksCommand, GetVKUserTasksDTO]):
@@ -26,7 +27,11 @@ class GetVKUserTasksHandler(Interactor[GetVKUserTasksCommand, GetVKUserTasksDTO]
         tasks = await self.task_repository.list_available_tasks_for_vk_user(
             vk_user_id=command_data.vk_user_id,
         )
+        active_quiz = await self.task_repository.get_active_quiz_task_for_vk_user(
+            vk_user_id=command_data.vk_user_id,
+        )
         return GetVKUserTasksDTO(
             vk_user_id=command_data.vk_user_id,
             tasks=tuple(tasks),
+            active_quiz=active_quiz,
         )
