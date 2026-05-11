@@ -10,6 +10,9 @@ class VKCallbackMessageSchema(BaseModel):
     last_name: str | None = Field(default=None, description="Фамилия пользователя VK")
     text: str | None = Field(default=None, description="Текст сообщения пользователя")
     payload: str | None = Field(default=None, description="JSON-payload нажатой кнопки клавиатуры VK")
+    ref: str | None = Field(
+        default=None, description="Реферальный параметр из ссылки vk.com/write-ID?ref=VALUE"
+    )
 
 
 class VKCallbackWallPostSchema(BaseModel):

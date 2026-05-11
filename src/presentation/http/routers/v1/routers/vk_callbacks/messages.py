@@ -180,7 +180,7 @@ def build_free_text_fallback_message() -> VKMessageText:
 
 
 def build_referral_link_message(*, vk_user_id: int, group_id: int) -> VKMessageText:
-    link = f"https://vk.com/im?sel=-{group_id}&ref={vk_user_id}"
+    link = f"https://vk.com/write-{group_id}?ref={vk_user_id}"
     return VKMessageText(
         text=(
             "🤝 Рефералка\n\n"

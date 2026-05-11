@@ -141,23 +141,13 @@ class VKCallbackPayload:
     def get_ref_key(self) -> str | None:
         """Возвращает реферальный ключ из события VK.
 
-        VK передаёт его двумя способами:
-        - message_allow: object.key (строка, пришедшая как ref= в ссылке)
-        - message_new: message.payload = '{"ref":"VALUE"}'
+        VK передаёт ref как поле message.ref в событии message_new,
+        когда пользователь перешёл по ссылке vk.com/write-{group_id}?ref={value}.
         """
-        # message_allow path: event_object.key
-        extra = self.data.event_object.model_extra or {}
-        key = extra.get("key")
-        if key is not None and str(key):
-            return str(key)
-
-        # message_new path: message.payload = '{"ref":"VALUE"}'
-        button_payload = self.get_button_payload()
-        if button_payload is not None:
-            ref = button_payload.get("ref")
-            if ref is not None:
-                return str(ref)
-
+        message_object = self.get_message_object()
+        message = message_object.message if message_object is not None else None
+        if message is not None and message.ref is not None and message.ref.strip():
+            return message.ref.strip()
         return None
 
     def get_button_payload(self) -> dict[str, Any] | None:
