@@ -4,12 +4,7 @@ from settings.base import Settings
 
 
 class AppSettings(Settings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_prefix="APP_",
-        extra="ignore",
-    )
+    model_config = SettingsConfigDict(env_prefix="APP_")
 
     DEBUG: bool = False
     NAME: str = "volnateca-bot"
