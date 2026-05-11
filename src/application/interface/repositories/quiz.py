@@ -39,5 +39,14 @@ class IQuizRepository(ABC):
         """Возвращает количество активных неотвеченных вопросов в задании."""
         raise NotImplementedError
 
+    @abstractmethod
+    async def link_answer_to_task_completion(
+        self,
+        quiz_answers_id: int,
+        task_completions_id: int,
+    ) -> None:
+        """Проставляет task_completions_id на запись ответа, завершившего квиз."""
+        raise NotImplementedError
+
 
 __all__ = ["IQuizRepository"]

@@ -23,6 +23,7 @@ class QuizAnswerSavedDTO:
     correct_option_text: str
     tasks_id: int
     already_answered: bool
+    quiz_answers_id: int | None = None
 
 
 __all__ = ["QuizAnswerSavedDTO", "QuizQuestionDTO", "QuizQuestionOptionDTO"]

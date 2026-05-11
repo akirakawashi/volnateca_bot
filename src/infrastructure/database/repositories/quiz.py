@@ -151,6 +151,7 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
             correct_option_text=correct_text,
             tasks_id=question.tasks_id,
             already_answered=False,
+            quiz_answers_id=answer.quiz_answers_id,
         )
 
     async def get_remaining_questions_count(
@@ -181,6 +182,20 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
         )
         answered_count = len(answered_result.all())
         return max(0, len(all_ids) - answered_count)
+
+    async def link_answer_to_task_completion(
+        self,
+        quiz_answers_id: int,
+        task_completions_id: int,
+    ) -> None:
+        """Проставляет task_completions_id на запись ответа, завершившего квиз."""
+        result = await self._session.execute(
+            select(QuizAnswer).where(col(QuizAnswer.quiz_answers_id) == quiz_answers_id),
+        )
+        answer = result.scalar_one_or_none()
+        if answer is not None:
+            answer.task_completions_id = task_completions_id
+            self._session.add(answer)
 
     async def _get_users_id_by_vk_user_id(self, vk_user_id: int) -> int | None:
         result = await self._session.execute(

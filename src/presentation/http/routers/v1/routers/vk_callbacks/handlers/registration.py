@@ -156,6 +156,7 @@ async def _handle_registered_user_message(
                     tasks_id=tasks_id,
                     message_client=message_client,
                     get_quiz_first_question_interactor=get_quiz_first_question_interactor,
+                    get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
                 )
                 return
         elif action == "skip_quiz":
@@ -224,6 +225,7 @@ async def _handle_start_quiz(
     tasks_id: int,
     message_client: IVKMessageClient,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
+    get_vk_user_tasks_interactor: GetVKUserTasksHandler,
 ) -> None:
     question = await get_quiz_first_question_interactor(
         command_data=GetQuizFirstQuestionCommand(
@@ -232,14 +234,17 @@ async def _handle_start_quiz(
         ),
     )
     if question is None:
-        # Квиз уже пройден или вопросов нет — показываем обычный список
+        # Квиз уже пройден или вопросов нет — показываем актуальный список заданий
+        tasks_result = await get_vk_user_tasks_interactor(
+            command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
+        )
         await send_vk_user_message(
             data=data,
             vk_user_id=result.registration.vk_user_id,
             users_id=result.registration.users_id,
-            message=build_tasks_message(tasks=()),
+            message=build_tasks_message(tasks=tasks_result.tasks),
             message_client=message_client,
-            log_message="Квиз не найден при старте",
+            log_message="Квиз не найден при старте — показываем список заданий",
         )
         return
 
