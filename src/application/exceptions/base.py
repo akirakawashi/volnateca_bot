@@ -4,4 +4,4 @@ from domain.exceptions import AppError
 
 
 @dataclass(frozen=True, kw_only=True)
-class AppException(AppError): ...  # noqa: N818
+class AppException(AppError): ...
