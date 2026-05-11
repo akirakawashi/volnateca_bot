@@ -58,6 +58,13 @@ async def handle_registration_callback(
     message_client: IVKMessageClient,
     intent_classifier: IUserMessageIntentClassifier,
 ) -> PlainTextResponse:
+    """Обрабатывает первый контакт пользователя и обычные сообщения в бота.
+
+    Нового пользователя регистрирует и запускает приветственные сценарии.
+    Уже зарегистрированного пользователя обрабатывает только для message_new,
+    чтобы callback-и подписки/разрешения сообщений не дублировали ответы.
+    """
+
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
         return vk_ok_response()
@@ -159,6 +166,8 @@ async def _handle_registered_user_message(
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     group_id: int,
 ) -> None:
+    """Обрабатывает интерактивное меню и текстовые intent-ы зарегистрированного пользователя."""
+
     # Проверяем payload кнопки — приоритет выше текстового intent
     button_payload = data.get_button_payload()
     if button_payload is not None:

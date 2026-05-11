@@ -27,6 +27,13 @@ class CompleteVKSubscriptionTaskCommand:
 class CompleteVKSubscriptionTaskHandler(
     Interactor[CompleteVKSubscriptionTaskCommand, TaskCompletionResult],
 ):
+    """Проверяет подписку на VK-группу и фиксирует одноразовое задание.
+
+    В отличие от лайка/репоста, факт подписки перепроверяется через VK API:
+    callback может прийти не для нужного состояния или пользователь мог быть
+    подписан ещё до первого сообщения боту.
+    """
+
     def __init__(
         self,
         task_repository: ITaskRepository,

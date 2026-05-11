@@ -16,6 +16,8 @@ async def send_vk_user_message(
     log_message: str,
     keyboard: VKKeyboard | None = None,
 ) -> None:
+    """Отправляет VK-сообщение и логирует сбой, не ломая обработку callback-а."""
+
     try:
         await message_client.send_message(
             vk_user_id=vk_user_id,

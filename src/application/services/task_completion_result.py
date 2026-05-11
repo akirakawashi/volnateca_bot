@@ -3,6 +3,8 @@ from application.services.award_task_service import AwardTaskOutcome, AwardTaskO
 
 
 def build_task_completion_result(outcome: AwardTaskOutcome) -> TaskCompletionResult:
+    """Адаптирует внутренний результат AwardTaskService в публичный DTO задания."""
+
     return TaskCompletionResult(
         status=map_award_task_outcome_status(outcome=outcome.status),
         vk_user_id=outcome.vk_user_id,
@@ -22,6 +24,8 @@ def map_award_task_outcome_status(
     *,
     outcome: AwardTaskOutcomeStatus,
 ) -> TaskCompletionResultStatus:
+    """Мапит статусы сервиса начислений в статусы callback/use-case слоя."""
+
     match outcome:
         case AwardTaskOutcomeStatus.COMPLETED:
             return TaskCompletionResultStatus.COMPLETED

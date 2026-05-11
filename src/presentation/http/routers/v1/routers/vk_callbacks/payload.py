@@ -21,6 +21,13 @@ EventObjectT = TypeVar("EventObjectT", bound=VKCallbackEventObjectSchema)
 
 @dataclass(slots=True, frozen=True)
 class VKCallbackPayload:
+    """Удобная оболочка над сырым VK callback payload.
+
+    VK присылает разные формы object/message для похожих сценариев, поэтому
+    этот класс централизует распознавание типа события, нормализацию user_id
+    и безопасный разбор вложенных объектов без исключений наружу.
+    """
+
     data: VKCallbackSchema
 
     # Метаданные события VK
@@ -82,6 +89,8 @@ class VKCallbackPayload:
         return self.get_vk_user_id()
 
     def get_repost_user_id(self) -> int | None:
+        """Возвращает автора репоста только для репоста на собственной стене."""
+
         repost_object = self.get_repost_object()
         if repost_object is None:
             return None
@@ -96,6 +105,8 @@ class VKCallbackPayload:
         return from_id
 
     def get_vk_user_id(self) -> int | None:
+        """Достаёт user_id из message/user object с учётом разных форматов VK."""
+
         message_object = self.get_message_object()
         message = message_object.message if message_object is not None else None
         user_object = self.get_user_object()
@@ -199,6 +210,8 @@ class VKCallbackPayload:
         return post.external_id if post is not None else None
 
     def get_reposted_wall_post_external_ids(self) -> tuple[str, ...]:
+        """Возвращает все варианты external_id исходных постов из copy_history."""
+
         repost_object = self.get_repost_object()
         if repost_object is None:
             return ()

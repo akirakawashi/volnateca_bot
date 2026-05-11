@@ -12,6 +12,8 @@ async def handle_wall_post_new_callback(
     data: VKCallbackPayload,
     interactor: CreateVKPostTasksHandler,
 ) -> PlainTextResponse:
+    """Запускает создание заданий из нового поста группы и всегда отвечает VK ok."""
+
     post = data.get_wall_post()
     if post is None or data.group_id is None:
         return vk_ok_response()

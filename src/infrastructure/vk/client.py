@@ -55,6 +55,13 @@ class VKMessagesSendResponseSchema(BaseModel):
 
 
 class VKAPIClient(IVKUserClient, IVKMessageClient):
+    """Небросающий клиент VK API для application-слоя.
+
+    Методы возвращают None/False при недоступном токене, сетевой ошибке,
+    ошибке VK API или неожиданном формате ответа. Это позволяет use-case-ам
+    принимать решение без обработки инфраструктурных исключений.
+    """
+
     def __init__(
         self,
         settings: VKSettings,
@@ -79,11 +86,15 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
         await self.close()
 
     async def close(self) -> None:
+        """Закрывает aiohttp-сессию, если клиент создал её сам."""
+
         if self._own_session and self._session is not None:
             await self._session.close()
             self._session = None
 
     async def get_user_profile(self, vk_user_id: int) -> VKUserProfileDTO | None:
+        """Запрашивает профиль пользователя через users.get."""
+
         if not self._settings.GROUP_ACCESS_TOKEN:
             return None
 
@@ -119,6 +130,8 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
         )
 
     async def is_group_member(self, vk_user_id: int, group_id: int) -> bool | None:
+        """Проверяет членство пользователя в группе через groups.isMember."""
+
         if not self._settings.GROUP_ACCESS_TOKEN:
             return None
 
@@ -152,6 +165,8 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
         random_id: int | None = None,
         keyboard: dict[str, object] | None = None,
     ) -> bool:
+        """Отправляет сообщение VK и возвращает факт успешного ответа API."""
+
         if not self._settings.GROUP_ACCESS_TOKEN:
             return False
         if not message:

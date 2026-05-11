@@ -4,6 +4,8 @@ from application.interface.uow import IUnitOfWork
 
 
 class SQLAlchemyBaseUoW(IUnitOfWork):
+    """Unit of Work поверх одной AsyncSession SQLAlchemy."""
+
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 

@@ -9,6 +9,12 @@ def build_task_completion_key(
     week_number: int | None,
     checked_at: datetime,
 ) -> str:
+    """Возвращает идемпотентный ключ выполнения задания для текущего периода.
+
+    ONCE всегда даёт один ключ, DAILY привязан к календарной дате, WEEKLY
+    использует номер недели проекта, а если его нет — ISO-неделю checked_at.
+    """
+
     if repeat_policy == TaskRepeatPolicy.ONCE:
         return "once"
     if repeat_policy == TaskRepeatPolicy.DAILY:

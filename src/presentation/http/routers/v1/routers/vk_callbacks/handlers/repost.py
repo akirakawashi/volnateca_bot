@@ -21,6 +21,8 @@ async def handle_repost_callback(
     interactor: CompleteVKRepostTaskHandler,
     message_client: IVKMessageClient,
 ) -> PlainTextResponse:
+    """Засчитывает репост, если callback содержит автора и исходный пост задания."""
+
     vk_user_id = data.get_repost_user_id()
     if vk_user_id is None:
         return vk_ok_response()

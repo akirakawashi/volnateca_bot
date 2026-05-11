@@ -19,6 +19,8 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
         tasks_id: int,
         vk_user_id: int,
     ) -> QuizQuestionDTO | None:
+        """Возвращает первый активный вопрос задания, на который пользователь ещё не отвечал."""
+
         users_id = await self._get_users_id_by_vk_user_id(vk_user_id=vk_user_id)
         if users_id is None:
             return None

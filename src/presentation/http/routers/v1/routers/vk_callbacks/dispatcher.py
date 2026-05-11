@@ -32,6 +32,12 @@ from settings.vk import VKSettings
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class VKCallbackDispatcher:
+    """Единая точка маршрутизации VK Callback API событий.
+
+    Сначала проверяет group_id, затем confirmation или secret, после чего
+    передаёт типизированный payload в обработчик конкретной группы событий.
+    """
+
     vk_settings: VKSettings
     register_vk_user_and_check_subscription_interactor: RegisterVKUserAndCheckSubscriptionHandler
     complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
@@ -46,6 +52,8 @@ class VKCallbackDispatcher:
     user_message_intent_classifier: IUserMessageIntentClassifier
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
+        """Валидирует callback и возвращает VK-совместимый plain text response."""
+
         payload = VKCallbackPayload(data=data)
         self._validate_group(payload=payload)
 

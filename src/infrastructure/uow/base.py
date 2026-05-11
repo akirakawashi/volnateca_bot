@@ -4,6 +4,8 @@ from application.interface.uow import IUnitOfWork
 
 
 class UnitOfWork(IUnitOfWork):
+    """Композитный Unit of Work для нескольких инфраструктурных UoW."""
+
     def __init__(self, uows: Sequence[IUnitOfWork]) -> None:
         self._uows = uows
 

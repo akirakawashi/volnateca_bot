@@ -6,6 +6,8 @@ from re import Pattern
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class VKPostTaskMarkerRules:
+    """Настройки служебных тегов, по которым VK-пост превращается в задания."""
+
     marker: str = "#volnateca"
     default_repost_points: int = 20
     default_like_points: int = 10
@@ -14,6 +16,8 @@ class VKPostTaskMarkerRules:
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class ParsedVKPostMarker:
+    """Результат разбора служебных тегов в тексте VK-поста."""
+
     repost_points: int
     like_points: int
     week_number: int | None
@@ -21,6 +25,8 @@ class ParsedVKPostMarker:
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class VKPostTaskMarkerPatterns:
+    """Скомпилированные regexp для одного набора VKPostTaskMarkerRules."""
+
     marker: Pattern[str]
     repost_points: Pattern[str]
     like_points: Pattern[str]
@@ -29,11 +35,20 @@ class VKPostTaskMarkerPatterns:
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class VKPostTaskMarkerParser:
+    """Парсер служебных тегов из VK-постов.
+
+    Понимает базовый маркер, переопределение очков для лайка/репоста и номер
+    недели. Если в тексте нет базового маркера, пост не должен создавать
+    задания.
+    """
+
     rules: VKPostTaskMarkerRules
     patterns: VKPostTaskMarkerPatterns
 
     @classmethod
     def from_rules(cls, rules: VKPostTaskMarkerRules) -> "VKPostTaskMarkerParser":
+        """Создаёт парсер и компилирует regexp под конкретный маркер."""
+
         escaped_marker = re.escape(rules.marker)
         return cls(
             rules=rules,
@@ -52,6 +67,8 @@ class VKPostTaskMarkerParser:
         )
 
     def parse(self, *, text: str) -> ParsedVKPostMarker | None:
+        """Возвращает параметры заданий из текста поста или None без маркера."""
+
         if not self.patterns.marker.search(text):
             return None
 
@@ -82,6 +99,8 @@ class VKPostTaskMarkerParser:
         post_external_id: str,
         text: str,
     ) -> str:
+        """Строит описание задания без служебных строк с маркерами."""
+
         normalized_marker = self.rules.marker.casefold()
         cleaned_text = "\n".join(
             line for line in text.splitlines() if not line.strip().casefold().startswith(normalized_marker)
@@ -97,6 +116,8 @@ def parse_vk_post_task_marker(
     text: str,
     rules: VKPostTaskMarkerRules | None = None,
 ) -> ParsedVKPostMarker | None:
+    """Разбирает служебные теги VK-поста стандартными или переданными правилами."""
+
     return _get_parser(rules=rules).parse(text=text)
 
 
@@ -106,6 +127,8 @@ def build_vk_post_task_description(
     text: str,
     rules: VKPostTaskMarkerRules | None = None,
 ) -> str:
+    """Формирует пользовательское описание задания из текста VK-поста."""
+
     return _get_parser(rules=rules).build_description(
         post_external_id=post_external_id,
         text=text,

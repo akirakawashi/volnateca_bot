@@ -29,6 +29,13 @@ class CreateVKPostTasksCommand:
 class CreateVKPostTasksHandler(
     Interactor[CreateVKPostTasksCommand, VKPostTasksCreationDTO],
 ):
+    """Создаёт пару заданий лайк/репост из нового поста VK-группы.
+
+    Пост должен принадлежать callback-группе и содержать служебный маркер.
+    Один пост создаёт два задания с общим external_id, чтобы последующие
+    callback-и лайка и репоста могли найти свою задачу.
+    """
+
     def __init__(
         self,
         task_repository: ITaskRepository,

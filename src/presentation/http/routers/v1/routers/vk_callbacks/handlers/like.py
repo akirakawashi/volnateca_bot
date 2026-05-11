@@ -21,6 +21,8 @@ async def handle_like_callback(
     interactor_complete: CompleteVKLikeTaskHandler,
     message_client: IVKMessageClient,
 ) -> PlainTextResponse:
+    """Засчитывает только like_add и отправляет награду при успешном начислении."""
+
     if data.type != "like_add":
         return vk_ok_response()
 

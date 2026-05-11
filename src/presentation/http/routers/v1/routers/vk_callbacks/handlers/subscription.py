@@ -21,6 +21,8 @@ async def handle_subscription_callback(
     interactor: CompleteVKSubscriptionTaskHandler,
     message_client: IVKMessageClient,
 ) -> PlainTextResponse:
+    """Проверяет подписку через use-case и уведомляет пользователя о награде."""
+
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
         return vk_ok_response()

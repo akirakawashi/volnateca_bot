@@ -26,6 +26,13 @@ class CompleteVKLikeTaskCommand:
 class CompleteVKLikeTaskHandler(
     Interactor[CompleteVKLikeTaskCommand, TaskCompletionResult],
 ):
+    """Засчитывает лайк VK-поста, если по нему есть активное задание.
+
+    Само событие like_add считается достаточным доказательством действия,
+    поэтому обработчик только находит задание по external_id поста и передаёт
+    начисление в AwardTaskService.
+    """
+
     def __init__(
         self,
         task_repository: ITaskRepository,

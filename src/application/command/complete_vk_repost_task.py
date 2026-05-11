@@ -27,6 +27,14 @@ class CompleteVKRepostTaskCommand:
 class CompleteVKRepostTaskHandler(
     Interactor[CompleteVKRepostTaskCommand, TaskCompletionResult],
 ):
+    """Засчитывает репост VK-поста, если он связан с активным заданием.
+
+    VK callback приходит после факта репоста, а payload содержит исходный пост
+    в copy_history. Поэтому обработчик ищет задание по вариантам external_id
+    исходного поста и сохраняет external_id пользовательского репоста как
+    evidence.
+    """
+
     def __init__(
         self,
         task_repository: ITaskRepository,

@@ -33,3 +33,4 @@ mypy = ">=1.20.2,<2.0.0"
 
 [tool.ruff]
 line-length = 110
+extend-exclude = ["migrations/versions"]

@@ -12,6 +12,8 @@ from infrastructure.database.repositories.base import SQLAlchemyRepository
 
 
 class UserRepository(SQLAlchemyRepository, IUserRepository):
+    """Data access для пользователей VK и их баланса."""
+
     async def get_by_vk_user_id(
         self,
         vk_user_id: int,
@@ -33,6 +35,12 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         vk_screen_name: str | None,
         bonus_points: int,
     ) -> VKUserRegistrationDTO:
+        """Создаёт пользователя с регистрационным бонусом идемпотентно.
+
+        При гонке по уникальному vk_user_id возвращает уже созданного
+        пользователя и дозаполняет профиль, если callback принёс новые данные.
+        """
+
         try:
             async with self._session.begin_nested():
                 user = User(
@@ -96,6 +104,8 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         self,
         vk_user_id: int,
     ) -> UserBalanceSnapshot | None:
+        """Блокирует пользователя и возвращает баланс для последующего начисления."""
+
         result = await self._session.execute(
             select(User).where(col(User.vk_user_id) == vk_user_id).with_for_update(),
         )
