@@ -65,6 +65,7 @@ class VKCallbackDispatcher:
             return await handle_repost_callback(
                 data=payload,
                 interactor=self.complete_vk_repost_task_interactor,
+                message_client=self.vk_message_client,
             )
 
         if payload.is_subscription_event():
