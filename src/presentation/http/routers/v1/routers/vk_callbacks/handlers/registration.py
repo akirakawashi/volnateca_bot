@@ -36,7 +36,7 @@ async def handle_registration_callback(
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
         logger.warning(
-            "TEMP VK registration callback without user id: event_id={}, event_type={}",
+            "ВРЕМЕННО Событие регистрации VK без ID пользователя: event_id={}, event_type={}",
             data.event_id,
             data.type,
         )
@@ -51,7 +51,7 @@ async def handle_registration_callback(
         ),
     )
     logger.info(
-        "TEMP VK registration callback processed: "
+        "ВРЕМЕННО Событие регистрации VK обработано: "
         "event_id={}, event_type={}, vk_user_id={}, users_id={}, created={}, screen_name={}",
         data.event_id,
         data.type,
@@ -62,7 +62,7 @@ async def handle_registration_callback(
     )
     if result.subscription is None:
         logger.info(
-            "VK subscription check after registration skipped (user already registered): "
+            "Проверка подписки VK после регистрации пропущена, пользователь уже был зарегистрирован: "
             "event_id={}, event_type={}, vk_user_id={}, users_id={}",
             data.event_id,
             data.type,
@@ -71,7 +71,7 @@ async def handle_registration_callback(
         )
     else:
         logger.info(
-            "VK subscription check after registration processed: "
+            "Проверка подписки VK после регистрации обработана: "
             "event_id={}, event_type={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
             "task_completions_id={}, transactions_id={}, "
             "points_awarded={}, balance_points={}, rejected_reason={}",
@@ -126,7 +126,7 @@ async def _send_registration_welcome_message(
         users_id=result.registration.users_id,
         message=message,
         message_client=message_client,
-        log_message="VK registration welcome message",
+        log_message="Приветственное сообщение VK после регистрации",
     )
 
 
@@ -141,7 +141,8 @@ async def _send_subscription_reward_message_after_registration(
         return
     if subscription.balance_points is None:
         logger.warning(
-            "VK subscription reward message skipped without balance: event_id={}, vk_user_id={}, users_id={}",
+            "Сообщение о награде за подписку VK пропущено из-за отсутствия баланса: "
+            "event_id={}, vk_user_id={}, users_id={}",
             data.event_id,
             result.registration.vk_user_id,
             result.registration.users_id,
@@ -158,7 +159,7 @@ async def _send_subscription_reward_message_after_registration(
         users_id=result.registration.users_id,
         message=message,
         message_client=message_client,
-        log_message="VK subscription reward message after registration",
+        log_message="Сообщение о награде за подписку VK после регистрации",
     )
 
 
@@ -188,10 +189,11 @@ async def _handle_registered_user_message(
         users_id=result.registration.users_id,
         message=response,
         message_client=message_client,
-        log_message="VK registered user message response",
+        log_message="Ответ VK зарегистрированному пользователю",
     )
     logger.info(
-        "VK registered user message handled: event_id={}, vk_user_id={}, users_id={}, intent={}, confidence={}",
+        "Сообщение зарегистрированного пользователя VK обработано: "
+        "event_id={}, vk_user_id={}, users_id={}, intent={}, confidence={}",
         data.event_id,
         result.registration.vk_user_id,
         result.registration.users_id,
@@ -229,7 +231,7 @@ async def _send_user_message(
         )
     except Exception:
         logger.exception(
-            "{} failed: event_id={}, vk_user_id={}, users_id={}",
+            "{} не отправлено из-за ошибки: event_id={}, vk_user_id={}, users_id={}",
             log_message,
             data.event_id,
             vk_user_id,
@@ -239,7 +241,7 @@ async def _send_user_message(
 
     if not sent:
         logger.warning(
-            "{} was not sent: event_id={}, vk_user_id={}, users_id={}",
+            "{} не отправлено: event_id={}, vk_user_id={}, users_id={}",
             log_message,
             data.event_id,
             vk_user_id,

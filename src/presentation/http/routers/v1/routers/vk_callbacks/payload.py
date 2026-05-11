@@ -22,7 +22,7 @@ EventObjectT = TypeVar("EventObjectT", bound=VKCallbackEventObjectSchema)
 class VKCallbackPayload:
     data: VKCallbackSchema
 
-    # Callback metadata
+    # Метаданные события VK
 
     @property
     def type(self) -> str | None:
@@ -36,7 +36,7 @@ class VKCallbackPayload:
     def event_id(self) -> str | None:
         return self.data.event_id
 
-    # Event classification
+    # Классификация событий
 
     def is_confirmation(self) -> bool:
         return self.type == VKEventType.CONFIRMATION
@@ -59,7 +59,7 @@ class VKCallbackPayload:
     def is_message_new(self) -> bool:
         return self.type == VKEventType.MESSAGE_NEW
 
-    # Callback validation
+    # Проверка события VK
 
     def is_expected_group(self, expected_group_id: int) -> bool:
         return self.group_id == expected_group_id
@@ -67,7 +67,7 @@ class VKCallbackPayload:
     def has_valid_secret(self, expected_secret: str) -> bool:
         return self.data.secret == expected_secret
 
-    # User extraction
+    # Извлечение пользователя
 
     def get_like_user_id(self) -> int | None:
         like_object = self.get_like_object()
@@ -88,7 +88,7 @@ class VKCallbackPayload:
         from_id = self._normalize_vk_user_id(raw_user_id=repost_object.from_id)
         wall_owner_id = self._normalize_vk_user_id(raw_user_id=repost_object.owner_id)
 
-        # Count only reposts published on the reposting user's own wall.
+        # Засчитываем только репосты, опубликованные на стене самого пользователя.
         if from_id is None or wall_owner_id is None or from_id != wall_owner_id:
             return None
 
@@ -137,7 +137,7 @@ class VKCallbackPayload:
         message = message_object.message if message_object is not None else None
         return message.text if message and message.text is not None else ""
 
-    # Post extraction
+    # Извлечение постов
 
     def get_liked_post(self) -> VKWallPostDTO | None:
         like_object = self.get_like_object()
@@ -184,7 +184,7 @@ class VKCallbackPayload:
         wall_post_object = self.get_wall_post_object()
         return wall_post_object.text if wall_post_object and wall_post_object.text else ""
 
-    # Typed event object extraction
+    # Извлечение типизированного объекта события
 
     def get_like_object(self) -> VKLikeObjectSchema | None:
         if not self.is_like():
@@ -205,7 +205,7 @@ class VKCallbackPayload:
     def get_user_object(self) -> VKUserObjectSchema | None:
         return self._parse_event_object(schema=VKUserObjectSchema)
 
-    # Logging helpers
+    # Помощники для логирования
 
     def get_event_object_keys(self) -> tuple[str, ...]:
         return self._get_present_keys(model=self.data.event_object)
@@ -215,7 +215,7 @@ class VKCallbackPayload:
             return ()
         return self._get_present_keys(model=self.data.event_object.message)
 
-    # Internals
+    # Внутренняя логика
 
     @staticmethod
     def _to_wall_post_dto(copied_post: VKCallbackWallPostSchema) -> VKWallPostDTO | None:

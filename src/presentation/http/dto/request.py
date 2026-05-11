@@ -33,7 +33,7 @@ class VKCallbackObjectSchema(BaseModel):
     liker_id: int | None = Field(default=None, description="ID пользователя VK, поставившего лайк")
     object_id: int | None = Field(default=None, description="ID объекта, которому поставлен лайк")
     object_owner_id: int | None = Field(default=None, description="ID владельца объекта лайка")
-    object_type: str | None = Field(default=None, description="Тип объекта лайка (post, comment, etc.)")
+    object_type: str | None = Field(default=None, description="Тип объекта лайка: post, comment и т.д.")
     first_name: str | None = Field(default=None, description="Имя пользователя VK")
     last_name: str | None = Field(default=None, description="Фамилия пользователя VK")
     copy_history: list[VKCallbackWallPostSchema] = Field(

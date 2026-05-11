@@ -16,7 +16,7 @@ async def handle_wall_post_new_callback(
     post = data.get_wall_post()
     if post is None or data.group_id is None:
         logger.warning(
-            "TEMP VK wall_post_new callback without post data: event_id={}, event_type={}, group_id={}",
+            "ВРЕМЕННО Событие VK wall_post_new без данных поста: event_id={}, event_type={}, group_id={}",
             data.event_id,
             data.type,
             data.group_id,
@@ -32,7 +32,7 @@ async def handle_wall_post_new_callback(
         ),
     )
     logger.info(
-        "TEMP VK wall_post_new callback processed: "
+        "ВРЕМЕННО Событие VK wall_post_new обработано: "
         "event_id={}, event_type={}, status={}, external_id={}, "
         "repost_tasks_id={}, like_tasks_id={}, "
         "repost_points={}, like_points={}, week_number={}, reason={}",

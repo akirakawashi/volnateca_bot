@@ -21,16 +21,16 @@ async def pydantic_validation_error_handler(
     if not isinstance(err, RequestValidationError | ValidationError):
         raise err
 
-    logger.warning("Validation error: {}", err)
+    logger.warning("Ошибка валидации: {}", err)
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"status": False, "message": "Validation error", "context": err.errors()},
+        content={"status": False, "message": "Ошибка валидации", "context": err.errors()},
     )
 
 
 async def unknown_exception_handler(request: Request, err: Exception) -> JSONResponse:
-    logger.exception("Unhandled exception")
+    logger.exception("Необработанное исключение")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"status": False, "message": "Internal server error", "context": None},
+        content={"status": False, "message": "Внутренняя ошибка сервера", "context": None},
     )

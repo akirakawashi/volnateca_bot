@@ -16,7 +16,7 @@ async def handle_repost_callback(
     vk_user_id = data.get_repost_user_id()
     if vk_user_id is None:
         logger.warning(
-            "TEMP VK repost callback without user id: event_id={}, event_type={}",
+            "ВРЕМЕННО Событие репоста VK без ID пользователя: event_id={}, event_type={}",
             data.event_id,
             data.type,
         )
@@ -25,7 +25,7 @@ async def handle_repost_callback(
     target_post_external_ids = data.get_reposted_wall_post_external_ids()
     if not target_post_external_ids:
         logger.warning(
-            "TEMP VK repost callback without copy_history target: "
+            "ВРЕМЕННО Событие репоста VK без целевого поста в copy_history: "
             "event_id={}, event_type={}, vk_user_id={}, repost_external_id={}",
             data.event_id,
             data.type,
@@ -43,7 +43,7 @@ async def handle_repost_callback(
         ),
     )
     logger.info(
-        "TEMP VK repost callback processed: "
+        "ВРЕМЕННО Событие репоста VK обработано: "
         "event_id={}, event_type={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
         "task_completions_id={}, transactions_id={}, points_awarded={}, balance_points={}",
         data.event_id,

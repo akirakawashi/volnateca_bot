@@ -33,7 +33,7 @@ class TransactionRepository(SQLAlchemyRepository, ITransactionRepository):
         self._session.add(transaction)
         await self._session.flush()
         if transaction.transactions_id is None:
-            raise RuntimeError("Transaction primary key was not generated")
+            raise RuntimeError("Первичный ключ транзакции не был сгенерирован")
 
         return TransactionRecord(
             transactions_id=transaction.transactions_id,

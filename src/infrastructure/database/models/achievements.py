@@ -27,7 +27,7 @@ class Achievement(BaseModel, table=True):
         nullable=False,
         unique=True,
         index=True,
-        description="Стабильный уникальный код достижения для seed-данных и логики приложения",
+        description="Стабильный уникальный код достижения для исходных данных и логики приложения",
     )
     achievement_name: str = Field(nullable=False, description="Название достижения для пользователя")
     description: str | None = Field(

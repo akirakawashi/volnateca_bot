@@ -72,7 +72,7 @@ class RegisterVKUserAndCheckSubscriptionHandler(
         )
         if not registration.created:
             logger.info(
-                "TEMP VK subscription insurance check skipped (user already registered): "
+                "ВРЕМЕННО Страховочная проверка подписки VK пропущена, пользователь уже зарегистрирован: "
                 "event_id={}, vk_user_id={}, users_id={}",
                 command_data.event_id,
                 command_data.vk_user_id,

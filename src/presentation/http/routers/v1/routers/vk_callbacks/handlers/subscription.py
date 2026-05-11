@@ -24,7 +24,7 @@ async def handle_subscription_callback(
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
         logger.warning(
-            "VK subscription callback without user id: event_id={}, event_type={}",
+            "Событие подписки VK без ID пользователя: event_id={}, event_type={}",
             data.event_id,
             data.type,
         )
@@ -37,7 +37,7 @@ async def handle_subscription_callback(
         ),
     )
     logger.info(
-        "VK subscription callback processed: "
+        "Событие подписки VK обработано: "
         "event_id={}, event_type={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
         "task_completions_id={}, transactions_id={}, points_awarded={}, balance_points={}, rejected_reason={}",
         data.event_id,
@@ -69,7 +69,8 @@ async def _send_subscription_reward_message(
 ) -> None:
     if result.users_id is None or result.balance_points is None:
         logger.warning(
-            "VK subscription reward message skipped without user/balance: event_id={}, vk_user_id={}, users_id={}",
+            "Сообщение о награде за подписку VK пропущено без пользователя или баланса: "
+            "event_id={}, vk_user_id={}, users_id={}",
             data.event_id,
             result.vk_user_id,
             result.users_id,
@@ -86,7 +87,7 @@ async def _send_subscription_reward_message(
         users_id=result.users_id,
         message=message,
         message_client=message_client,
-        log_message="VK subscription reward message",
+        log_message="Сообщение о награде за подписку VK",
     )
 
 
@@ -107,7 +108,7 @@ async def _send_user_message(
         )
     except Exception:
         logger.exception(
-            "{} failed: event_id={}, vk_user_id={}, users_id={}",
+            "{} не отправлено из-за ошибки: event_id={}, vk_user_id={}, users_id={}",
             log_message,
             data.event_id,
             vk_user_id,
@@ -117,7 +118,7 @@ async def _send_user_message(
 
     if not sent:
         logger.warning(
-            "{} was not sent: event_id={}, vk_user_id={}, users_id={}",
+            "{} не отправлено: event_id={}, vk_user_id={}, users_id={}",
             log_message,
             data.event_id,
             vk_user_id,

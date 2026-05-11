@@ -52,7 +52,7 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
         )
         if existing_user is not None:
             logger.info(
-                "TEMP VK user already registered, skipping VK API and DB writes: "
+                "ВРЕМЕННО Пользователь VK уже зарегистрирован, вызов VK API и запись в БД пропущены: "
                 "vk_user_id={}, users_id={}, screen_name={}",
                 command_data.vk_user_id,
                 existing_user.users_id,
@@ -80,7 +80,7 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
         )
         await self.uow.commit()
         logger.info(
-            "TEMP VK user registered: vk_user_id={}, users_id={}, screen_name={}, bonus_points={}",
+            "ВРЕМЕННО Пользователь VK зарегистрирован: vk_user_id={}, users_id={}, screen_name={}, bonus_points={}",
             command_data.vk_user_id,
             user.users_id,
             user.vk_screen_name,

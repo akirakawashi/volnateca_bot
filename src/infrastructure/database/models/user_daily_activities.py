@@ -38,7 +38,7 @@ class UserDailyActivity(BaseModel, table=True):
     activity_date: date = Field(
         nullable=False,
         index=True,
-        description="Календарная дата активности в timezone проекта",
+        description="Календарная дата активности в часовом поясе проекта",
     )
     streak_days: int = Field(
         default=1,

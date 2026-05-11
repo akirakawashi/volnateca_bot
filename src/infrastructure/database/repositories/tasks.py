@@ -333,7 +333,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         completed_keys: set[tuple[int, str]],
     ) -> bool:
         if task.tasks_id is None:
-            raise RuntimeError("Task primary key was not generated")
+            raise RuntimeError("Первичный ключ задания не был сгенерирован")
         completion_key = build_task_completion_key(
             repeat_policy=task.repeat_policy,
             week_number=task.week_number,
@@ -344,7 +344,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
     @staticmethod
     def _to_user_available_task_dto(task: Task) -> VKUserAvailableTaskDTO:
         if task.tasks_id is None:
-            raise RuntimeError("Task primary key was not generated")
+            raise RuntimeError("Первичный ключ задания не был сгенерирован")
 
         return VKUserAvailableTaskDTO(
             tasks_id=task.tasks_id,
@@ -359,7 +359,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
     @staticmethod
     def _to_task_summary(task: Task) -> TaskSummary:
         if task.tasks_id is None:
-            raise RuntimeError("Task primary key was not generated")
+            raise RuntimeError("Первичный ключ задания не был сгенерирован")
 
         return TaskSummary(
             tasks_id=task.tasks_id,
@@ -377,7 +377,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         event_id: str | None,
     ) -> VKRepostTaskCreationDTO:
         if task.tasks_id is None:
-            raise RuntimeError("Task primary key was not generated")
+            raise RuntimeError("Первичный ключ задания не был сгенерирован")
 
         return VKRepostTaskCreationDTO(
             status=status,
@@ -396,7 +396,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         event_id: str | None,
     ) -> VKLikeTaskCreationDTO:
         if task.tasks_id is None:
-            raise RuntimeError("Task primary key was not generated")
+            raise RuntimeError("Первичный ключ задания не был сгенерирован")
 
         return VKLikeTaskCreationDTO(
             status=status,

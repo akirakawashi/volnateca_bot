@@ -7,77 +7,77 @@ class AppError(Exception):
 
     @property
     def title(self) -> str:
-        return "An application error occurred"
+        return "Произошла ошибка приложения"
 
 
 @dataclass(frozen=True, kw_only=True)
 class DomainError(AppError):
     @property
     def title(self) -> str:
-        return "A domain error occurred"
+        return "Произошла доменная ошибка"
 
 
 @dataclass(frozen=True, kw_only=True)
 class DomainValidationError(DomainError):
     @property
     def title(self) -> str:
-        return "A domain validation error occurred"
+        return "Произошла ошибка проверки доменного правила"
 
 
 @dataclass(frozen=True, kw_only=True)
 class DomainNotFoundError(DomainError):
     @property
     def title(self) -> str:
-        return "Domain entity not found"
+        return "Доменная сущность не найдена"
 
 
 @dataclass(frozen=True, kw_only=True)
 class UserNotFoundError(DomainNotFoundError):
     @property
     def title(self) -> str:
-        return "User not found"
+        return "Пользователь не найден"
 
 
 @dataclass(frozen=True, kw_only=True)
 class PrizeNotFoundError(DomainNotFoundError):
     @property
     def title(self) -> str:
-        return "Prize not found"
+        return "Приз не найден"
 
 
 @dataclass(frozen=True, kw_only=True)
 class TaskNotFoundError(DomainNotFoundError):
     @property
     def title(self) -> str:
-        return "Task not found"
+        return "Задание не найдено"
 
 
 @dataclass(frozen=True, kw_only=True)
 class PrizeNotAvailableError(DomainValidationError):
     @property
     def title(self) -> str:
-        return "Prize is not available or already sold out"
+        return "Приз недоступен или уже разобран"
 
 
 @dataclass(frozen=True, kw_only=True)
 class InsufficientBalanceError(DomainValidationError):
     @property
     def title(self) -> str:
-        return "Insufficient balance to redeem prize"
+        return "Недостаточно баллов для получения приза"
 
 
 @dataclass(frozen=True, kw_only=True)
 class TaskAlreadyCompletedError(DomainValidationError):
     @property
     def title(self) -> str:
-        return "Task has already been completed"
+        return "Задание уже выполнено"
 
 
 @dataclass(frozen=True, kw_only=True)
 class ReferralAlreadyExistsError(DomainValidationError):
     @property
     def title(self) -> str:
-        return "Referral already exists"
+        return "Реферальная связь уже существует"
 
 
 __all__ = [

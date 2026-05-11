@@ -86,7 +86,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
 
     async def get_user_profile(self, vk_user_id: int) -> VKUserProfileDTO | None:
         if not self._settings.GROUP_ACCESS_TOKEN:
-            logger.warning("TEMP VK users.get skipped: group access token is not configured")
+            logger.warning("ВРЕМЕННО VK users.get пропущен: токен доступа сообщества не настроен")
             return None
 
         response_data = await self._request(
@@ -105,7 +105,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
             parsed_response = VKUsersGetResponseSchema.model_validate(response_data)
         except ValidationError as err:
             logger.warning(
-                "TEMP VK users.get response validation failed: vk_user_id={}, error={}",
+                "ВРЕМЕННО Валидация ответа VK users.get не пройдена: vk_user_id={}, error={}",
                 vk_user_id,
                 err,
             )
@@ -113,7 +113,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
 
         if parsed_response.error is not None:
             logger.warning(
-                "TEMP VK users.get returned error: vk_user_id={}, error_code={}, error_msg={}",
+                "ВРЕМЕННО VK users.get вернул ошибку: vk_user_id={}, error_code={}, error_msg={}",
                 vk_user_id,
                 parsed_response.error.error_code,
                 parsed_response.error.error_msg,
@@ -121,7 +121,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
             return None
 
         if not parsed_response.response:
-            logger.warning("TEMP VK users.get returned empty profile: vk_user_id={}", vk_user_id)
+            logger.warning("ВРЕМЕННО VK users.get вернул пустой профиль: vk_user_id={}", vk_user_id)
             return None
 
         user = parsed_response.response[0]
@@ -132,7 +132,8 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
             screen_name=user.screen_name,
         )
         logger.info(
-            "TEMP VK user profile fetched: vk_user_id={}, screen_name={}, profile_url={}, stable_profile_url={}",
+            "ВРЕМЕННО Профиль пользователя VK получен: "
+            "vk_user_id={}, screen_name={}, profile_url={}, stable_profile_url={}",
             profile.vk_user_id,
             profile.screen_name,
             profile.profile_url,
@@ -142,7 +143,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
 
     async def is_group_member(self, vk_user_id: int, group_id: int) -> bool | None:
         if not self._settings.GROUP_ACCESS_TOKEN:
-            logger.warning("TEMP VK groups.isMember skipped: group access token is not configured")
+            logger.warning("ВРЕМЕННО VK groups.isMember пропущен: токен доступа сообщества не настроен")
             return None
 
         response_data = await self._request(
@@ -161,7 +162,8 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
             parsed_response = VKGroupsIsMemberResponseSchema.model_validate(response_data)
         except ValidationError as err:
             logger.warning(
-                "TEMP VK groups.isMember response validation failed: vk_user_id={}, group_id={}, error={}",
+                "ВРЕМЕННО Валидация ответа VK groups.isMember не пройдена: "
+                "vk_user_id={}, group_id={}, error={}",
                 vk_user_id,
                 group_id,
                 err,
@@ -170,7 +172,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
 
         if parsed_response.error is not None:
             logger.warning(
-                "TEMP VK groups.isMember returned error: "
+                "ВРЕМЕННО VK groups.isMember вернул ошибку: "
                 "vk_user_id={}, group_id={}, error_code={}, error_msg={}",
                 vk_user_id,
                 group_id,
@@ -190,10 +192,10 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
         keyboard: dict[str, object] | None = None,
     ) -> bool:
         if not self._settings.GROUP_ACCESS_TOKEN:
-            logger.warning("VK messages.send skipped: group access token is not configured")
+            logger.warning("VK messages.send пропущен: токен доступа сообщества не настроен")
             return False
         if not message:
-            logger.warning("VK messages.send skipped: empty message, vk_user_id={}", vk_user_id)
+            logger.warning("VK messages.send пропущен: пустое сообщение, vk_user_id={}", vk_user_id)
             return False
 
         params = {
@@ -214,7 +216,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
             parsed_response = VKMessagesSendResponseSchema.model_validate(response_data)
         except ValidationError as err:
             logger.warning(
-                "VK messages.send response validation failed: vk_user_id={}, error={}",
+                "Валидация ответа VK messages.send не пройдена: vk_user_id={}, error={}",
                 vk_user_id,
                 err,
             )
@@ -222,7 +224,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
 
         if parsed_response.error is not None:
             logger.warning(
-                "VK messages.send returned error: vk_user_id={}, error_code={}, error_msg={}",
+                "VK messages.send вернул ошибку: vk_user_id={}, error_code={}, error_msg={}",
                 vk_user_id,
                 parsed_response.error.error_code,
                 parsed_response.error.error_msg,
@@ -237,23 +239,23 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
         params: dict[str, str],
     ) -> dict[str, Any] | None:
         if self._session is None:
-            raise RuntimeError("VK API client session is not initialized")
+            raise RuntimeError("Сессия клиента VK API не инициализирована")
 
         url = f"{self._settings.API_BASE_URL.rstrip('/')}/{method}"
         try:
             async with self._session.get(url=url, params=params) as response:
                 if response.status != HTTPStatus.OK:
                     logger.warning(
-                        "TEMP VK API request failed: method={}, status_code={}",
+                        "ВРЕМЕННО Запрос к VK API завершился ошибкой: method={}, status_code={}",
                         method,
                         response.status,
                     )
                     return None
                 data: Any = await response.json(content_type=None)
                 if not isinstance(data, dict):
-                    logger.warning("TEMP VK API returned non-object response: method={}", method)
+                    logger.warning("ВРЕМЕННО VK API вернул ответ не в виде объекта: method={}", method)
                     return None
                 return data
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            logger.warning("TEMP VK API request error: method={}, error={}", method, err)
+            logger.warning("ВРЕМЕННО Ошибка запроса к VK API: method={}, error={}", method, err)
             return None

@@ -46,7 +46,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
                 self._session.add(user)
                 await self._session.flush()
                 if user.users_id is None:
-                    raise RuntimeError("User primary key was not generated")
+                    raise RuntimeError("Первичный ключ пользователя не был сгенерирован")
                 self._session.add(
                     Transaction(
                         users_id=user.users_id,
@@ -81,7 +81,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
     ) -> VKUserRegistrationDTO:
         user = await self._session.get(User, users_id)
         if user is None:
-            raise RuntimeError(f"User with users_id={users_id} was not found")
+            raise RuntimeError(f"Пользователь с users_id={users_id} не найден")
 
         if first_name is not None:
             user.first_name = first_name
@@ -103,7 +103,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         if user is None:
             return None
         if user.users_id is None:
-            raise RuntimeError("User primary key was not generated")
+            raise RuntimeError("Первичный ключ пользователя не был сгенерирован")
 
         return UserBalanceSnapshot(
             users_id=user.users_id,
@@ -135,7 +135,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         created: bool,
     ) -> VKUserRegistrationDTO:
         if user.users_id is None:
-            raise RuntimeError("User primary key was not generated")
+            raise RuntimeError("Первичный ключ пользователя не был сгенерирован")
 
         return VKUserRegistrationDTO(
             users_id=user.users_id,

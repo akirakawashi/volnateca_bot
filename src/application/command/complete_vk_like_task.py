@@ -47,7 +47,7 @@ class CompleteVKLikeTaskHandler(
         )
         if task is None:
             logger.info(
-                "TEMP VK like task not found: event_id={}, vk_user_id={}, liked_post_external_ids={}",
+                "ВРЕМЕННО Задание на лайк VK не найдено: event_id={}, vk_user_id={}, liked_post_external_ids={}",
                 command_data.event_id,
                 command_data.vk_user_id,
                 command_data.liked_post_external_ids,
@@ -76,7 +76,7 @@ class CompleteVKLikeTaskHandler(
 
         result = build_task_completion_result(outcome=outcome)
         logger.info(
-            "TEMP VK like task completion handled: "
+            "ВРЕМЕННО Выполнение задания на лайк VK обработано: "
             "event_id={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
             "task_completions_id={}, transactions_id={}, points_awarded={}, balance_points={}",
             command_data.event_id,

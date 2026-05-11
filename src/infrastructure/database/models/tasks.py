@@ -38,7 +38,7 @@ class Task(BaseModel, table=True):
         nullable=False,
         unique=True,
         index=True,
-        description="Стабильный уникальный код задания для seed-данных, логики приложения и админки",
+        description="Стабильный уникальный код задания для исходных данных, логики приложения и админки",
     )
     task_name: str = Field(nullable=False, description="Название задания для пользователя")
     description: str | None = Field(

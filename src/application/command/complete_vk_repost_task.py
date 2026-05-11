@@ -48,7 +48,7 @@ class CompleteVKRepostTaskHandler(
         )
         if task is None:
             logger.info(
-                "TEMP VK repost task not found: event_id={}, vk_user_id={}, target_post_external_ids={}",
+                "ВРЕМЕННО Задание на репост VK не найдено: event_id={}, vk_user_id={}, target_post_external_ids={}",
                 command_data.event_id,
                 command_data.vk_user_id,
                 command_data.target_post_external_ids,
@@ -58,7 +58,7 @@ class CompleteVKRepostTaskHandler(
                 vk_user_id=command_data.vk_user_id,
             )
 
-        # wall_repost arrives from VK at repost time, so no extra repost verification is needed.
+        # wall_repost приходит от VK в момент репоста, поэтому дополнительная проверка не нужна.
         outcome = await self.award_service.award(
             vk_user_id=command_data.vk_user_id,
             task=TaskAwardSpec(

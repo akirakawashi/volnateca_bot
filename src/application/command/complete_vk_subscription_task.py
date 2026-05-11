@@ -78,7 +78,7 @@ class CompleteVKSubscriptionTaskHandler(
         )
         if is_member is None:
             logger.warning(
-                "VK subscription task check unavailable: event_id={}, vk_user_id={}, group_id={}",
+                "Проверка задания на подписку VK недоступна: event_id={}, vk_user_id={}, group_id={}",
                 command_data.event_id,
                 command_data.vk_user_id,
                 self.required_subscription_group_id,

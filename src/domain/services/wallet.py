@@ -33,11 +33,11 @@ class WalletService:
         amount: int,
     ) -> AccrualResult:
         if amount <= 0:
-            raise ValueError("Accrual amount must be positive")
+            raise ValueError("Сумма начисления должна быть положительной")
         if balance_before < 0:
-            raise ValueError("Balance before accrual must be non-negative")
+            raise ValueError("Баланс до начисления не может быть отрицательным")
         if earned_points_total_before < 0:
-            raise ValueError("Earned points total must be non-negative")
+            raise ValueError("Суммарно заработанные баллы не могут быть отрицательными")
 
         return AccrualResult(
             amount=amount,

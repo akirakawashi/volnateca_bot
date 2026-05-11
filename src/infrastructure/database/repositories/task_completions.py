@@ -78,7 +78,7 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
         completion = await self._session.get(TaskCompletion, task_completions_id)
         if completion is None:
             raise RuntimeError(
-                f"TaskCompletion with task_completions_id={task_completions_id} was not found",
+                f"Выполнение задания с task_completions_id={task_completions_id} не найдено",
             )
 
         completion.task_completion_status = task_completion_status
@@ -114,7 +114,7 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
     @staticmethod
     def _to_record(completion: TaskCompletion) -> TaskCompletionRecord:
         if completion.task_completions_id is None:
-            raise RuntimeError("TaskCompletion primary key was not generated")
+            raise RuntimeError("Первичный ключ выполнения задания не был сгенерирован")
 
         return TaskCompletionRecord(
             task_completions_id=completion.task_completions_id,

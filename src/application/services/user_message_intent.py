@@ -7,7 +7,8 @@ from application.interface.services import IUserMessageIntentClassifier
 class RuleBasedUserMessageIntentClassifier(IUserMessageIntentClassifier):
     """
         Временный классификатор на правилах до подключения AI-ассистента.
-        Async без await, чтобы не ломать интерфейс, когда там будет AI-ассистент.
+        Асинхронная сигнатура оставлена без await, чтобы не ломать интерфейс,
+        когда там будет AI-ассистент.
     """
 
     async def classify(self, *, text: str) -> UserMessageIntentResult:

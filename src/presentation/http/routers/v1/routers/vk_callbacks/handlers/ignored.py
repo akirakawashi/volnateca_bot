@@ -7,7 +7,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_re
 
 def handle_ignored_callback(data: VKCallbackPayload) -> PlainTextResponse:
     logger.info(
-        "TEMP VK callback ignored: event_id={}, event_type={}",
+        "ВРЕМЕННО Событие VK проигнорировано: event_id={}, event_type={}",
         data.event_id,
         data.type,
     )

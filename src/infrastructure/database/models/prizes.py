@@ -36,7 +36,7 @@ class Prize(BaseModel, table=True):
         nullable=False,
         unique=True,
         index=True,
-        description="Стабильный уникальный код приза для seed-данных, логики приложения и админки",
+        description="Стабильный уникальный код приза для исходных данных, логики приложения и админки",
     )
     prize_name: str = Field(nullable=False, description="Название приза для пользователя")
     description: str | None = Field(
@@ -76,7 +76,7 @@ class Prize(BaseModel, table=True):
         nullable=False,
         description="Количество единиц приза, уже выданных или зарезервированных пользователями",
     )
-    sort_order: int = Field(  # TODO уточнить у Влада нужно ли
+    sort_order: int = Field(  # Нужно уточнить у Влада, нужно ли это поле
         default=0, nullable=False, description="Порядок отображения в магазине"
     )
     is_active: bool = Field(

@@ -91,13 +91,13 @@ class VKCallbackDispatcher:
             return
 
         logger.warning(
-            "TEMP VK callback rejected by group_id: event_type={}, group_id={}",
+            "ВРЕМЕННО Событие VK отклонено из-за group_id: event_type={}, group_id={}",
             payload.type,
             payload.group_id,
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Unexpected VK group id",
+            detail="Неожиданный ID сообщества VK",
         )
 
     def _validate_secret(self, payload: VKCallbackPayload) -> None:
@@ -105,20 +105,20 @@ class VKCallbackDispatcher:
             return
 
         logger.warning(
-            "TEMP VK callback rejected by secret: event_id={}, event_type={}, group_id={}",
+            "ВРЕМЕННО Событие VK отклонено из-за secret: event_id={}, event_type={}, group_id={}",
             payload.event_id,
             payload.type,
             payload.group_id,
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid VK callback secret",
+            detail="Некорректный секретный ключ события VK",
         )
 
     @staticmethod
     def _log_callback(payload: VKCallbackPayload) -> None:
         logger.info(
-            "TEMP VK callback received: "
+            "ВРЕМЕННО Событие VK получено: "
             "event_id={}, event_type={}, group_id={}, vk_user_id={}, object_keys={}, message_keys={}",
             payload.event_id,
             payload.type,

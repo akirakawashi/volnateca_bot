@@ -125,7 +125,7 @@ class CreateVKPostTasksHandler(
             week_number=parsed_marker.week_number,
         )
         logger.info(
-            "TEMP VK post tasks creation handled: "
+            "ВРЕМЕННО Создание заданий по посту VK обработано: "
             "event_id={}, status={}, external_id={}, "
             "repost_tasks_id={}, like_tasks_id={}, "
             "repost_points={}, like_points={}, week_number={}",

@@ -15,7 +15,7 @@ async def handle_like_callback(
 ) -> PlainTextResponse:
     if data.type != "like_add":
         logger.info(
-            "TEMP VK like callback ignored (not like_add): event_type={}, liker_id={}",
+            "ВРЕМЕННО Событие лайка VK проигнорировано, событие не like_add: event_type={}, liker_id={}",
             data.type,
             data.get_like_user_id(),
         )
@@ -24,7 +24,7 @@ async def handle_like_callback(
     liker_id = data.get_like_user_id()
     if liker_id is None:
         logger.warning(
-            "TEMP VK like_add callback without liker_id: event_id={}",
+            "ВРЕМЕННО Событие VK like_add без liker_id: event_id={}",
             data.event_id,
         )
         return vk_ok_response()
@@ -38,7 +38,7 @@ async def handle_like_callback(
         ),
     )
     logger.info(
-        "TEMP VK like_add callback processed: "
+        "ВРЕМЕННО Событие VK like_add обработано: "
         "event_id={}, liker_id={}, status={}, users_id={}, tasks_id={}, "
         "task_completions_id={}, transactions_id={}, points_awarded={}, balance_points={}",
         data.event_id,

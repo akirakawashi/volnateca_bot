@@ -17,8 +17,8 @@ def build_task_completion_key(
         if week_number is not None:
             return f"week_{week_number:02d}"
 
-        # Weekly tasks without a project week use the calendar ISO week.
+        # Недельные задания без номера недели проекта используют календарную ISO-неделю.
         iso_calendar = checked_at.isocalendar()
         return f"{iso_calendar.year}-W{iso_calendar.week:02d}"
 
-    raise ValueError(f"Unsupported task repeat policy: {repeat_policy}")
+    raise ValueError(f"Неподдерживаемая политика повторения задания: {repeat_policy}")
