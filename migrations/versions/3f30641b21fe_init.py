@@ -1,8 +1,8 @@
-"""init schema
+"""init
 
-Revision ID: 4b29a945199c
+Revision ID: 3f30641b21fe
 Revises: 
-Create Date: 2026-05-10 09:07:06.583451
+Create Date: 2026-05-11 12:16:32.864197
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = '4b29a945199c'
+revision: str = '3f30641b21fe'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -92,16 +92,31 @@ def upgrade() -> None:
     sa.Column('balance_points', sa.Integer(), nullable=False),
     sa.Column('earned_points_total', sa.Integer(), nullable=False),
     sa.Column('spent_points_total', sa.Integer(), nullable=False),
+    sa.Column('current_level', sa.Integer(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.CheckConstraint('balance_points >= 0', name=op.f('ck_users_balance_points_non_negative')),
+    sa.CheckConstraint('current_level BETWEEN 1 AND 4', name=op.f('ck_users_current_level_between_1_and_4')),
     sa.CheckConstraint('earned_points_total >= 0', name=op.f('ck_users_earned_points_total_non_negative')),
     sa.CheckConstraint('spent_points_total >= 0', name=op.f('ck_users_spent_points_total_non_negative')),
     sa.PrimaryKeyConstraint('users_id', name=op.f('pk_users'))
     )
     op.create_index(op.f('ix_users_vk_screen_name'), 'users', ['vk_screen_name'], unique=False)
     op.create_index(op.f('ix_users_vk_user_id'), 'users', ['vk_user_id'], unique=True)
+    op.create_table('quiz_questions',
+    sa.Column('quiz_questions_id', sa.Integer(), nullable=False),
+    sa.Column('tasks_id', sa.Integer(), nullable=False),
+    sa.Column('question_text', sa.Text(), nullable=False),
+    sa.Column('image_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['tasks_id'], ['tasks.tasks_id'], name=op.f('fk_quiz_questions_tasks_id_tasks')),
+    sa.PrimaryKeyConstraint('quiz_questions_id', name=op.f('pk_quiz_questions'))
+    )
+    op.create_index(op.f('ix_quiz_questions_is_active'), 'quiz_questions', ['is_active'], unique=False)
+    op.create_index(op.f('ix_quiz_questions_tasks_id'), 'quiz_questions', ['tasks_id'], unique=False)
     op.create_table('transactions',
     sa.Column('transactions_id', sa.Integer(), nullable=False),
     sa.Column('users_id', sa.Integer(), nullable=False),
@@ -160,6 +175,17 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_prize_redemptions_prizes_id'), 'prize_redemptions', ['prizes_id'], unique=False)
     op.create_index(op.f('ix_prize_redemptions_users_id'), 'prize_redemptions', ['users_id'], unique=False)
+    op.create_table('quiz_question_options',
+    sa.Column('quiz_question_options_id', sa.Integer(), nullable=False),
+    sa.Column('quiz_questions_id', sa.Integer(), nullable=False),
+    sa.Column('option_text', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('is_correct', sa.Boolean(), nullable=False),
+    sa.Column('sort_order', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['quiz_questions_id'], ['quiz_questions.quiz_questions_id'], name=op.f('fk_quiz_question_options_quiz_questions_id_quiz_questions')),
+    sa.PrimaryKeyConstraint('quiz_question_options_id', name=op.f('pk_quiz_question_options'))
+    )
+    op.create_index(op.f('ix_quiz_question_options_quiz_questions_id'), 'quiz_question_options', ['quiz_questions_id'], unique=False)
     op.create_table('referrals',
     sa.Column('referrals_id', sa.Integer(), nullable=False),
     sa.Column('inviter_users_id', sa.Integer(), nullable=False),
@@ -239,11 +265,34 @@ def upgrade() -> None:
     op.create_index(op.f('ix_prize_promo_codes_prizes_id'), 'prize_promo_codes', ['prizes_id'], unique=False)
     op.create_index(op.f('ix_prize_promo_codes_promo_code'), 'prize_promo_codes', ['promo_code'], unique=True)
     op.create_index(op.f('ix_prize_promo_codes_promo_code_status'), 'prize_promo_codes', ['promo_code_status'], unique=False)
+    op.create_table('quiz_answers',
+    sa.Column('quiz_answers_id', sa.Integer(), nullable=False),
+    sa.Column('users_id', sa.Integer(), nullable=False),
+    sa.Column('quiz_questions_id', sa.Integer(), nullable=False),
+    sa.Column('quiz_question_options_id', sa.Integer(), nullable=False),
+    sa.Column('is_correct', sa.Boolean(), nullable=False),
+    sa.Column('task_completions_id', sa.Integer(), nullable=True),
+    sa.Column('answered_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['quiz_question_options_id'], ['quiz_question_options.quiz_question_options_id'], name=op.f('fk_quiz_answers_quiz_question_options_id_quiz_question_options')),
+    sa.ForeignKeyConstraint(['quiz_questions_id'], ['quiz_questions.quiz_questions_id'], name=op.f('fk_quiz_answers_quiz_questions_id_quiz_questions')),
+    sa.ForeignKeyConstraint(['task_completions_id'], ['task_completions.task_completions_id'], name=op.f('fk_quiz_answers_task_completions_id_task_completions')),
+    sa.ForeignKeyConstraint(['users_id'], ['users.users_id'], name=op.f('fk_quiz_answers_users_id_users')),
+    sa.PrimaryKeyConstraint('quiz_answers_id', name=op.f('pk_quiz_answers')),
+    sa.UniqueConstraint('task_completions_id', name=op.f('uq_quiz_answers_task_completions_id')),
+    sa.UniqueConstraint('users_id', 'quiz_questions_id', name='uq_quiz_answers_users_question')
+    )
+    op.create_index(op.f('ix_quiz_answers_quiz_question_options_id'), 'quiz_answers', ['quiz_question_options_id'], unique=False)
+    op.create_index(op.f('ix_quiz_answers_quiz_questions_id'), 'quiz_answers', ['quiz_questions_id'], unique=False)
+    op.create_index(op.f('ix_quiz_answers_users_id'), 'quiz_answers', ['users_id'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f('ix_quiz_answers_users_id'), table_name='quiz_answers')
+    op.drop_index(op.f('ix_quiz_answers_quiz_questions_id'), table_name='quiz_answers')
+    op.drop_index(op.f('ix_quiz_answers_quiz_question_options_id'), table_name='quiz_answers')
+    op.drop_table('quiz_answers')
     op.drop_index(op.f('ix_prize_promo_codes_promo_code_status'), table_name='prize_promo_codes')
     op.drop_index(op.f('ix_prize_promo_codes_promo_code'), table_name='prize_promo_codes')
     op.drop_index(op.f('ix_prize_promo_codes_prizes_id'), table_name='prize_promo_codes')
@@ -261,6 +310,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_referrals_inviter_users_id'), table_name='referrals')
     op.drop_index(op.f('ix_referrals_invited_users_id'), table_name='referrals')
     op.drop_table('referrals')
+    op.drop_index(op.f('ix_quiz_question_options_quiz_questions_id'), table_name='quiz_question_options')
+    op.drop_table('quiz_question_options')
     op.drop_index(op.f('ix_prize_redemptions_users_id'), table_name='prize_redemptions')
     op.drop_index(op.f('ix_prize_redemptions_prizes_id'), table_name='prize_redemptions')
     op.drop_table('prize_redemptions')
@@ -271,6 +322,9 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_transactions_tasks_id'), table_name='transactions')
     op.drop_index(op.f('ix_transactions_prizes_id'), table_name='transactions')
     op.drop_table('transactions')
+    op.drop_index(op.f('ix_quiz_questions_tasks_id'), table_name='quiz_questions')
+    op.drop_index(op.f('ix_quiz_questions_is_active'), table_name='quiz_questions')
+    op.drop_table('quiz_questions')
     op.drop_index(op.f('ix_users_vk_user_id'), table_name='users')
     op.drop_index(op.f('ix_users_vk_screen_name'), table_name='users')
     op.drop_table('users')

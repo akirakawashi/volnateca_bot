@@ -7,6 +7,7 @@ from sqlmodel import Column, Field, Relationship
 from infrastructure.database.base import BaseModel
 
 if TYPE_CHECKING:
+    from infrastructure.database.models.quiz_answers import QuizAnswer
     from infrastructure.database.models.user_achievements import UserAchievement
     from infrastructure.database.models.prize_redemptions import PrizeRedemption
     from infrastructure.database.models.referrals import Referral
@@ -28,6 +29,7 @@ class User(BaseModel, table=True):
         CheckConstraint("balance_points >= 0", name="balance_points_non_negative"),
         CheckConstraint("earned_points_total >= 0", name="earned_points_total_non_negative"),
         CheckConstraint("spent_points_total >= 0", name="spent_points_total_non_negative"),
+        CheckConstraint("current_level BETWEEN 1 AND 4", name="current_level_between_1_and_4"),
     )
 
     users_id: int | None = Field(default=None, primary_key=True)
@@ -58,6 +60,11 @@ class User(BaseModel, table=True):
         default=0,
         nullable=False,
         description="Суммарное количество очков, потраченных пользователем на призы и списания",
+    )
+    current_level: int = Field(
+        default=1,
+        nullable=False,
+        description="Текущий уровень участника (1–4): зависит от earned_points_total и не снижается при тратах",
     )
     is_active: bool = Field(
         default=True,
@@ -92,3 +99,4 @@ class User(BaseModel, table=True):
     prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="user")
     task_completions: list["TaskCompletion"] = Relationship(back_populates="user")
     transactions: list["Transaction"] = Relationship(back_populates="user")
+    quiz_answers: list["QuizAnswer"] = Relationship(back_populates="user")

@@ -8,6 +8,7 @@ from domain.enums.task import TaskCompletionStatus
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
+    from infrastructure.database.models.quiz_answers import QuizAnswer
     from infrastructure.database.models.tasks import Task
     from infrastructure.database.models.transactions import Transaction
     from infrastructure.database.models.users import User
@@ -118,3 +119,4 @@ class TaskCompletion(BaseModel, table=True):
     user: "User" = Relationship(back_populates="task_completions")
     task: "Task" = Relationship(back_populates="task_completions")
     transaction: Optional["Transaction"] = Relationship(back_populates="task_completion")
+    quiz_answer: Optional["QuizAnswer"] = Relationship(back_populates="task_completion")

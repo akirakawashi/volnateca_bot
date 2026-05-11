@@ -17,6 +17,9 @@ from infrastructure.database.models.achievements import Achievement
 from infrastructure.database.models.prize_promo_codes import PrizePromoCode
 from infrastructure.database.models.prize_redemptions import PrizeRedemption
 from infrastructure.database.models.prizes import Prize
+from infrastructure.database.models.quiz_answers import QuizAnswer
+from infrastructure.database.models.quiz_question_options import QuizQuestionOption
+from infrastructure.database.models.quiz_questions import QuizQuestion
 from infrastructure.database.models.referrals import Referral
 from infrastructure.database.models.task_completions import TaskCompletion
 from infrastructure.database.models.tasks import Task
@@ -38,6 +41,9 @@ __all__ = [
     "PrizeRedemptionStatus",
     "PrizeStatus",
     "PrizeType",
+    "QuizAnswer",
+    "QuizQuestion",
+    "QuizQuestionOption",
     "Referral",
     "Task",
     "TaskCompletion",
