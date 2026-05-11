@@ -138,6 +138,28 @@ class VKCallbackPayload:
         message = message_object.message if message_object is not None else None
         return message.text if message and message.text is not None else ""
 
+    def get_ref_key(self) -> str | None:
+        """Возвращает реферальный ключ из события VK.
+
+        VK передаёт его двумя способами:
+        - message_allow: object.key (строка, пришедшая как ref= в ссылке)
+        - message_new: message.payload = '{"ref":"VALUE"}'
+        """
+        # message_allow path: event_object.key
+        extra = self.data.event_object.model_extra or {}
+        key = extra.get("key")
+        if key is not None and str(key):
+            return str(key)
+
+        # message_new path: message.payload = '{"ref":"VALUE"}'
+        button_payload = self.get_button_payload()
+        if button_payload is not None:
+            ref = button_payload.get("ref")
+            if ref is not None:
+                return str(ref)
+
+        return None
+
     def get_button_payload(self) -> dict[str, Any] | None:
         """Возвращает распарсенный JSON payload нажатой кнопки клавиатуры VK.
 

@@ -248,11 +248,7 @@ async def _process_referral_on_registration(
 
     VK передаёт ref-параметр ссылки в message.payload как {'ref': '<value>'}.
     """
-    button_payload = data.get_button_payload()
-    if button_payload is None:
-        return
-
-    raw_ref = button_payload.get("ref")
+    raw_ref = data.get_ref_key()
     if raw_ref is None:
         return
     try:
