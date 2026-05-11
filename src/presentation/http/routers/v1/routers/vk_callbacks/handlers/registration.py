@@ -9,6 +9,7 @@ from application.command.get_quiz_first_question import (
     GetQuizFirstQuestionHandler,
 )
 from application.command.get_vk_user_tasks import GetVKUserTasksCommand, GetVKUserTasksHandler
+from application.command.process_referral import ProcessReferralCommand, ProcessReferralHandler
 from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionCommand,
@@ -32,6 +33,9 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_quiz_completed_message,
     build_quiz_offer_message,
     build_quiz_question_message,
+    build_referral_bonus_message,
+    build_referral_link_message,
+    build_referral_milestone_message,
     build_registration_welcome_message,
     build_subscription_reward_message,
     build_tasks_message,
@@ -47,6 +51,8 @@ async def handle_registration_callback(
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
+    process_referral_interactor: ProcessReferralHandler,
+    group_id: int,
     message_client: IVKMessageClient,
     intent_classifier: IUserMessageIntentClassifier,
 ) -> PlainTextResponse:
@@ -73,6 +79,12 @@ async def handle_registration_callback(
             result=result,
             message_client=message_client,
         )
+        await _process_referral_on_registration(
+            data=data,
+            result=result,
+            process_referral_interactor=process_referral_interactor,
+            message_client=message_client,
+        )
     elif data.is_message_new():
         await _handle_registered_user_message(
             data=data,
@@ -82,6 +94,7 @@ async def handle_registration_callback(
             get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
             get_quiz_first_question_interactor=get_quiz_first_question_interactor,
             answer_quiz_question_interactor=answer_quiz_question_interactor,
+            group_id=group_id,
         )
     return vk_ok_response()
 
@@ -142,6 +155,7 @@ async def _handle_registered_user_message(
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
+    group_id: int,
 ) -> None:
     # Проверяем payload кнопки — приоритет выше текстового intent
     button_payload = data.get_button_payload()
@@ -203,6 +217,11 @@ async def _handle_registered_user_message(
             )
             return
         response = build_tasks_message(tasks=tasks_result.tasks)
+    elif classified.intent == UserMessageIntent.REFERRAL:
+        response = build_referral_link_message(
+            vk_user_id=result.registration.vk_user_id,
+            group_id=group_id,
+        )
     else:
         response = _build_registered_user_response(
             intent=classified.intent,
@@ -216,6 +235,72 @@ async def _handle_registered_user_message(
         message_client=message_client,
         log_message="Ответ VK зарегистрированному пользователю",
     )
+
+
+async def _process_referral_on_registration(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    process_referral_interactor: ProcessReferralHandler,
+    message_client: IVKMessageClient,
+) -> None:
+    """Обрабатывает реф-ссылку при первой регистрации нового пользователя.
+
+    VK передаёт ref-параметр ссылки в message.payload как {'ref': '<value>'}.
+    """
+    button_payload = data.get_button_payload()
+    if button_payload is None:
+        return
+
+    raw_ref = button_payload.get("ref")
+    if raw_ref is None:
+        return
+    try:
+        inviter_vk_user_id = int(raw_ref)
+    except (ValueError, TypeError):
+        return
+
+    referral_result = await process_referral_interactor(
+        command_data=ProcessReferralCommand(
+            invited_vk_user_id=result.registration.vk_user_id,
+            inviter_vk_user_id=inviter_vk_user_id,
+        ),
+    )
+
+    if not referral_result.created or referral_result.inviter_users_id is None:
+        return
+    if referral_result.inviter_balance_points is None:
+        return
+
+    # Уведомляем пригласившего о +30 ✦
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=referral_result.inviter_vk_user_id,
+        users_id=referral_result.inviter_users_id,
+        message=build_referral_bonus_message(
+            bonus_points=referral_result.bonus_points,
+            balance_points=referral_result.inviter_balance_points,
+        ),
+        message_client=message_client,
+        log_message="Уведомление о реферальном бонусе VK",
+    )
+
+    # Дополнительно уведомляем о milestone-бонусе, если достигнут
+    if referral_result.milestone_reached is not None and referral_result.milestone_bonus_points is not None:
+        # Баланс после milestone — складываем оба бонуса
+        milestone_balance = referral_result.inviter_balance_points
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=referral_result.inviter_vk_user_id,
+            users_id=referral_result.inviter_users_id,
+            message=build_referral_milestone_message(
+                milestone_count=referral_result.milestone_reached,
+                bonus_points=referral_result.milestone_bonus_points,
+                balance_points=milestone_balance,
+            ),
+            message_client=message_client,
+            log_message="Уведомление о milestone рефералки VK",
+        )
 
 
 async def _handle_start_quiz(

@@ -10,6 +10,7 @@ from application.command.complete_vk_subscription_task import CompleteVKSubscrip
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
+from application.command.process_referral import ProcessReferralHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
@@ -40,6 +41,7 @@ class VKCallbackDispatcher:
     get_vk_user_tasks_interactor: GetVKUserTasksHandler
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler
     answer_quiz_question_interactor: AnswerQuizQuestionHandler
+    process_referral_interactor: ProcessReferralHandler
     vk_message_client: IVKMessageClient
     user_message_intent_classifier: IUserMessageIntentClassifier
 
@@ -86,6 +88,8 @@ class VKCallbackDispatcher:
                 get_vk_user_tasks_interactor=self.get_vk_user_tasks_interactor,
                 get_quiz_first_question_interactor=self.get_quiz_first_question_interactor,
                 answer_quiz_question_interactor=self.answer_quiz_question_interactor,
+                process_referral_interactor=self.process_referral_interactor,
+                group_id=self.vk_settings.GROUP_ID,
                 message_client=self.vk_message_client,
                 intent_classifier=self.user_message_intent_classifier,
             )

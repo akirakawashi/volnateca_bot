@@ -1,12 +1,16 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.quiz import IQuizRepository
+from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
+from infrastructure.database.repositories.achievements import AchievementRepository
 from infrastructure.database.repositories.quiz import QuizRepository
+from infrastructure.database.repositories.referrals import ReferralRepository
 from infrastructure.database.repositories.task_completions import TaskCompletionRepository
 from infrastructure.database.repositories.tasks import TaskRepository
 from infrastructure.database.repositories.transactions import TransactionRepository
@@ -48,3 +52,17 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> QuizRepository:
         return QuizRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IReferralRepository)
+    def get_referral_repository(
+        self,
+        session: AsyncSession,
+    ) -> ReferralRepository:
+        return ReferralRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IAchievementRepository)
+    def get_achievement_repository(
+        self,
+        session: AsyncSession,
+    ) -> AchievementRepository:
+        return AchievementRepository(session=session)

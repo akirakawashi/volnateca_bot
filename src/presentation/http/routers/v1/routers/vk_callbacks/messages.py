@@ -179,6 +179,50 @@ def build_free_text_fallback_message() -> VKMessageText:
     )
 
 
+def build_referral_link_message(*, vk_user_id: int, group_id: int) -> VKMessageText:
+    link = f"https://vk.com/im?sel=-{group_id}&ref={vk_user_id}"
+    return VKMessageText(
+        text=(
+            "🤝 Рефералка\n\n"
+            "Пригласи друзей в Волнатеку и получай бонусы:\n\n"
+            f"• +30 {POINTS_SIGN} за каждого друга\n"
+            f"• +100 {POINTS_SIGN} за 3 друзей\n"
+            f"• +200 {POINTS_SIGN} за 5 друзей\n"
+            f"• +400 {POINTS_SIGN} за 10 друзей\n\n"
+            f"Твоя ссылка:\n{link}"
+        ),
+    )
+
+
+def build_referral_bonus_message(
+    *,
+    bonus_points: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            "🎉 Новый друг зарегистрировался по твоей ссылке!\n\n"
+            f"+{bonus_points} {POINTS_SIGN} за приглашение\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
+def build_referral_milestone_message(
+    *,
+    milestone_count: int,
+    bonus_points: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🏆 Достижение: {milestone_count} приглашённых друзей!\n\n"
+            f"+{bonus_points} {POINTS_SIGN} бонус\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def _build_greeting(*, first_name: str | None) -> str:
     clean_first_name = first_name.strip() if first_name is not None else ""
     if clean_first_name:
@@ -196,6 +240,9 @@ __all__ = [
     "build_quiz_completed_message",
     "build_quiz_offer_message",
     "build_quiz_question_message",
+    "build_referral_bonus_message",
+    "build_referral_link_message",
+    "build_referral_milestone_message",
     "build_registration_welcome_message",
     "build_repost_reward_message",
     "build_subscription_reward_message",

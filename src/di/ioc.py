@@ -7,14 +7,18 @@ from application.command.complete_vk_subscription_task import CompleteVKSubscrip
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
+from application.command.process_referral import ProcessReferralHandler
 from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
 from application.interface.clients import IVKUserClient
+from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.quiz import IQuizRepository
+from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
+from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
 from application.services.award_task_service import AwardTaskService
@@ -128,5 +132,22 @@ class InteractorProvider(Provider):
             quiz_repository=quiz_repository,
             task_repository=task_repository,
             award_service=award_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_process_referral_handler(
+        self,
+        user_repository: IUserRepository,
+        referral_repository: IReferralRepository,
+        achievement_repository: IAchievementRepository,
+        transaction_repository: ITransactionRepository,
+        uow: IUnitOfWork,
+    ) -> ProcessReferralHandler:
+        return ProcessReferralHandler(
+            user_repository=user_repository,
+            referral_repository=referral_repository,
+            achievement_repository=achievement_repository,
+            transaction_repository=transaction_repository,
             uow=uow,
         )

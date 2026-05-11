@@ -113,10 +113,7 @@ class AnswerQuizQuestionHandler(
                         task_completed = True
                         points_awarded = outcome.points_awarded
                         balance_points = outcome.balance_points
-                        if (
-                            outcome.task_completions_id is not None
-                            and saved.quiz_answers_id is not None
-                        ):
+                        if outcome.task_completions_id is not None and saved.quiz_answers_id is not None:
                             await self.quiz_repository.link_answer_to_task_completion(
                                 quiz_answers_id=saved.quiz_answers_id,
                                 task_completions_id=outcome.task_completions_id,
