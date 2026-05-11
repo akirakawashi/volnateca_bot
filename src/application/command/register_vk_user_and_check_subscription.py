@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from loguru import logger
-
 from application.base_interactor import Interactor
 from application.command.complete_vk_subscription_task import (
     CompleteVKSubscriptionTaskCommand,
@@ -71,13 +69,6 @@ class RegisterVKUserAndCheckSubscriptionHandler(
             ),
         )
         if not registration.created:
-            logger.info(
-                "ВРЕМЕННО Страховочная проверка подписки VK пропущена, пользователь уже зарегистрирован: "
-                "event_id={}, vk_user_id={}, users_id={}",
-                command_data.event_id,
-                command_data.vk_user_id,
-                registration.users_id,
-            )
             return RegisterVKUserAndCheckSubscriptionDTO(
                 registration=registration,
                 subscription=None,

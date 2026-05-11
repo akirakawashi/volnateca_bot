@@ -16,7 +16,7 @@ async def send_vk_user_message(
     log_message: str,
 ) -> None:
     try:
-        sent = await message_client.send_message(
+        await message_client.send_message(
             vk_user_id=vk_user_id,
             message=message.text,
             keyboard=build_main_menu_keyboard(),
@@ -30,15 +30,6 @@ async def send_vk_user_message(
             users_id,
         )
         return
-
-    if not sent:
-        logger.warning(
-            "{} не отправлено: event_id={}, vk_user_id={}, users_id={}",
-            log_message,
-            data.event_id,
-            vk_user_id,
-            users_id,
-        )
 
 
 __all__ = ["send_vk_user_message"]

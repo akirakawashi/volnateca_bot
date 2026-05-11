@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from loguru import logger
-
 from application.base_interactor import Interactor
 from application.common.dto.user import VKUserRegistrationDTO
 from application.interface.clients import IVKUserClient
@@ -51,13 +49,6 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
             vk_user_id=command_data.vk_user_id,
         )
         if existing_user is not None:
-            logger.info(
-                "ВРЕМЕННО Пользователь VK уже зарегистрирован, вызов VK API и запись в БД пропущены: "
-                "vk_user_id={}, users_id={}, screen_name={}",
-                command_data.vk_user_id,
-                existing_user.users_id,
-                existing_user.vk_screen_name,
-            )
             return existing_user
 
         profile = await self.vk_user_client.get_user_profile(vk_user_id=command_data.vk_user_id)
@@ -79,13 +70,6 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
             bonus_points=REGISTRATION_BONUS_POINTS,
         )
         await self.uow.commit()
-        logger.info(
-            "ВРЕМЕННО Пользователь VK зарегистрирован: vk_user_id={}, users_id={}, screen_name={}, bonus_points={}",
-            command_data.vk_user_id,
-            user.users_id,
-            user.vk_screen_name,
-            REGISTRATION_BONUS_POINTS,
-        )
         return user
 
     @staticmethod

@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from loguru import logger
-
 from application.base_interactor import Interactor
 from application.common.dto.task import (
     VKLikeTaskCreationStatus,
@@ -123,20 +121,6 @@ class CreateVKPostTasksHandler(
             repost_points=parsed_marker.repost_points,
             like_points=parsed_marker.like_points,
             week_number=parsed_marker.week_number,
-        )
-        logger.info(
-            "ВРЕМЕННО Создание заданий по посту VK обработано: "
-            "event_id={}, status={}, external_id={}, "
-            "repost_tasks_id={}, like_tasks_id={}, "
-            "repost_points={}, like_points={}, week_number={}",
-            command_data.event_id,
-            result.status,
-            result.external_id,
-            result.repost_tasks_id,
-            result.like_tasks_id,
-            result.repost_points,
-            result.like_points,
-            result.week_number,
         )
         return result
 

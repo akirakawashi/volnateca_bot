@@ -1,14 +1,8 @@
 from fastapi.responses import PlainTextResponse
-from loguru import logger
 
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 
 
 def handle_ignored_callback(data: VKCallbackPayload) -> PlainTextResponse:
-    logger.info(
-        "ВРЕМЕННО Событие VK проигнорировано: event_id={}, event_type={}",
-        data.event_id,
-        data.type,
-    )
     return vk_ok_response()

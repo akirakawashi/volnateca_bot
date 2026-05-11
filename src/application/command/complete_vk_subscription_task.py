@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from loguru import logger
-
 from application.base_interactor import Interactor
 from application.common.dto.task import (
     TaskCompletionResult,
@@ -77,12 +75,6 @@ class CompleteVKSubscriptionTaskHandler(
             group_id=self.required_subscription_group_id,
         )
         if is_member is None:
-            logger.warning(
-                "Проверка задания на подписку VK недоступна: event_id={}, vk_user_id={}, group_id={}",
-                command_data.event_id,
-                command_data.vk_user_id,
-                self.required_subscription_group_id,
-            )
             return TaskCompletionResult(
                 status=TaskCompletionResultStatus.EXTERNAL_API_UNAVAILABLE,
                 vk_user_id=command_data.vk_user_id,

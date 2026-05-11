@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from loguru import logger
-
 from application.base_interactor import Interactor
 from application.common.dto.task import (
     TaskCompletionResult,
@@ -47,12 +45,6 @@ class CompleteVKRepostTaskHandler(
             external_ids=command_data.target_post_external_ids,
         )
         if task is None:
-            logger.info(
-                "ВРЕМЕННО Задание на репост VK не найдено: event_id={}, vk_user_id={}, target_post_external_ids={}",
-                command_data.event_id,
-                command_data.vk_user_id,
-                command_data.target_post_external_ids,
-            )
             return TaskCompletionResult(
                 status=TaskCompletionResultStatus.TASK_NOT_FOUND,
                 vk_user_id=command_data.vk_user_id,

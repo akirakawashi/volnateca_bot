@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from fastapi import HTTPException, status
 from fastapi.responses import PlainTextResponse
-from loguru import logger
 
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
@@ -48,7 +47,6 @@ class VKCallbackDispatcher:
             return handle_confirmation_callback(vk_settings=self.vk_settings)
 
         self._validate_secret(payload=payload)
-        self._log_callback(payload=payload)
 
         if payload.is_like():
             return await handle_like_callback(
@@ -91,11 +89,6 @@ class VKCallbackDispatcher:
         if payload.is_expected_group(expected_group_id=self.vk_settings.GROUP_ID):
             return
 
-        logger.warning(
-            "ВРЕМЕННО Событие VK отклонено из-за group_id: event_type={}, group_id={}",
-            payload.type,
-            payload.group_id,
-        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Неожиданный ID сообщества VK",
@@ -105,26 +98,7 @@ class VKCallbackDispatcher:
         if payload.has_valid_secret(expected_secret=self.vk_settings.SECRET_KEY):
             return
 
-        logger.warning(
-            "ВРЕМЕННО Событие VK отклонено из-за secret: event_id={}, event_type={}, group_id={}",
-            payload.event_id,
-            payload.type,
-            payload.group_id,
-        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Некорректный секретный ключ события VK",
-        )
-
-    @staticmethod
-    def _log_callback(payload: VKCallbackPayload) -> None:
-        logger.info(
-            "ВРЕМЕННО Событие VK получено: "
-            "event_id={}, event_type={}, group_id={}, vk_user_id={}, object_keys={}, message_keys={}",
-            payload.event_id,
-            payload.type,
-            payload.group_id,
-            payload.get_primary_vk_user_id(),
-            payload.get_event_object_keys(),
-            payload.get_message_keys(),
         )

@@ -1,5 +1,4 @@
 from fastapi.responses import PlainTextResponse
-from loguru import logger
 
 from application.command.get_vk_user_tasks import GetVKUserTasksCommand, GetVKUserTasksHandler
 from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
@@ -35,11 +34,6 @@ async def handle_registration_callback(
 ) -> PlainTextResponse:
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
-        logger.warning(
-            "ВРЕМЕННО Событие регистрации VK без ID пользователя: event_id={}, event_type={}",
-            data.event_id,
-            data.type,
-        )
         return vk_ok_response()
 
     result = await interactor(
@@ -50,43 +44,6 @@ async def handle_registration_callback(
             last_name=data.get_last_name(),
         ),
     )
-    logger.info(
-        "ВРЕМЕННО Событие регистрации VK обработано: "
-        "event_id={}, event_type={}, vk_user_id={}, users_id={}, created={}, screen_name={}",
-        data.event_id,
-        data.type,
-        result.registration.vk_user_id,
-        result.registration.users_id,
-        result.registration.created,
-        result.registration.vk_screen_name,
-    )
-    if result.subscription is None:
-        logger.info(
-            "Проверка подписки VK после регистрации пропущена, пользователь уже был зарегистрирован: "
-            "event_id={}, event_type={}, vk_user_id={}, users_id={}",
-            data.event_id,
-            data.type,
-            result.registration.vk_user_id,
-            result.registration.users_id,
-        )
-    else:
-        logger.info(
-            "Проверка подписки VK после регистрации обработана: "
-            "event_id={}, event_type={}, vk_user_id={}, status={}, users_id={}, tasks_id={}, "
-            "task_completions_id={}, transactions_id={}, "
-            "points_awarded={}, balance_points={}, rejected_reason={}",
-            data.event_id,
-            data.type,
-            result.subscription.vk_user_id,
-            result.subscription.status,
-            result.subscription.users_id,
-            result.subscription.tasks_id,
-            result.subscription.task_completions_id,
-            result.subscription.transactions_id,
-            result.subscription.points_awarded,
-            result.subscription.balance_points,
-            result.subscription.rejected_reason,
-        )
     if result.registration.created:
         await _send_registration_welcome_message(
             data=data,
@@ -140,13 +97,6 @@ async def _send_subscription_reward_message_after_registration(
     if subscription is None or subscription.status != TaskCompletionResultStatus.COMPLETED:
         return
     if subscription.balance_points is None:
-        logger.warning(
-            "Сообщение о награде за подписку VK пропущено из-за отсутствия баланса: "
-            "event_id={}, vk_user_id={}, users_id={}",
-            data.event_id,
-            result.registration.vk_user_id,
-            result.registration.users_id,
-        )
         return
 
     message = build_subscription_reward_message(
@@ -190,15 +140,6 @@ async def _handle_registered_user_message(
         message=response,
         message_client=message_client,
         log_message="Ответ VK зарегистрированному пользователю",
-    )
-    logger.info(
-        "Сообщение зарегистрированного пользователя VK обработано: "
-        "event_id={}, vk_user_id={}, users_id={}, intent={}, confidence={}",
-        data.event_id,
-        result.registration.vk_user_id,
-        result.registration.users_id,
-        classified.intent,
-        classified.confidence,
     )
 
 
