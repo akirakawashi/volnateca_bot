@@ -20,6 +20,7 @@ from application.common.dto.task import TaskCompletionResultStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
+from domain.services.level import get_level_name
 from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
     build_quiz_offer_keyboard,
     build_quiz_question_keyboard,
@@ -29,6 +30,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_balance_message,
     build_free_text_fallback_message,
     build_help_message,
+    build_level_up_message,
     build_quiz_answer_result_message,
     build_quiz_completed_message,
     build_quiz_offer_message,
@@ -281,6 +283,21 @@ async def _process_referral_on_registration(
         log_message="Уведомление о реферальном бонусе VK",
     )
 
+    # Уведомление о новом уровне после реферального бонуса
+    if referral_result.level_up is not None:
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=referral_result.inviter_vk_user_id,
+            users_id=referral_result.inviter_users_id,
+            message=build_level_up_message(
+                new_level=referral_result.level_up,
+                level_name=get_level_name(referral_result.level_up),
+                balance_points=referral_result.inviter_balance_points,
+            ),
+            message_client=message_client,
+            log_message="Уведомление о новом уровне (реферал) VK",
+        )
+
     # Дополнительно уведомляем о milestone-бонусе, если достигнут
     if referral_result.milestone_reached is not None and referral_result.milestone_bonus_points is not None:
         # Баланс после milestone — складываем оба бонуса
@@ -416,6 +433,19 @@ async def _handle_quiz_answer(
             message_client=message_client,
             log_message="Сообщение о завершении квиза VK",
         )
+        if answer_result.level_up is not None:
+            await send_vk_user_message(
+                data=data,
+                vk_user_id=result.registration.vk_user_id,
+                users_id=result.registration.users_id,
+                message=build_level_up_message(
+                    new_level=answer_result.level_up,
+                    level_name=get_level_name(answer_result.level_up),
+                    balance_points=answer_result.balance_points,
+                ),
+                message_client=message_client,
+                log_message="Сообщение о новом уровне (квиз) VK",
+            )
         return
 
     # Если есть следующий вопрос — показываем его

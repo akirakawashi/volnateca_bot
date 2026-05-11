@@ -223,6 +223,16 @@ def build_referral_milestone_message(
     )
 
 
+def build_level_up_message(*, new_level: int, level_name: str, balance_points: int) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🌊 Новый уровень!\n\n"
+            f"Уровень {new_level} — {level_name}\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def _build_greeting(*, first_name: str | None) -> str:
     clean_first_name = first_name.strip() if first_name is not None else ""
     if clean_first_name:
@@ -235,6 +245,7 @@ __all__ = [
     "build_balance_message",
     "build_free_text_fallback_message",
     "build_help_message",
+    "build_level_up_message",
     "build_like_reward_message",
     "build_quiz_answer_result_message",
     "build_quiz_completed_message",

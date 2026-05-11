@@ -13,6 +13,7 @@ def build_task_completion_result(outcome: AwardTaskOutcome) -> TaskCompletionRes
         transactions_id=outcome.transactions_id,
         points_awarded=outcome.points_awarded,
         balance_points=outcome.balance_points,
+        level_up=outcome.level_up,
         rejected_reason=outcome.rejected_reason,
     )
 

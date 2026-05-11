@@ -118,6 +118,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         users_id: int,
         balance_points: int,
         earned_points_total: int,
+        current_level: int,
     ) -> None:
         await self._session.execute(
             update(User)
@@ -125,6 +126,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             .values(
                 balance_points=balance_points,
                 earned_points_total=earned_points_total,
+                current_level=current_level,
             ),
         )
         await self._session.flush()

@@ -54,6 +54,7 @@ class IUserRepository(ABC):
         users_id: int,
         balance_points: int,
         earned_points_total: int,
+        current_level: int,
     ) -> None:
         """Записывает в таблицу users новые значения баланса и накопленных
         очков, рассчитанные WalletService.

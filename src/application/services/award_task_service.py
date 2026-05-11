@@ -7,6 +7,7 @@ from application.interface.repositories.transactions import ITransactionReposito
 from application.interface.repositories.users import IUserRepository
 from domain.enums.task import TaskCompletionStatus
 from domain.enums.transaction import TransactionSource, TransactionType
+from domain.services.level import get_level
 from domain.services.wallet import WalletService
 
 
@@ -50,6 +51,7 @@ class AwardTaskOutcome:
     transactions_id: int | None = None
     points_awarded: int = 0
     balance_points: int | None = None
+    level_up: int | None = None  # новый уровень, если произошёл апгрейд
     rejected_reason: str | None = None
 
 
@@ -120,10 +122,15 @@ class AwardTaskService:
             amount=task.points,
         )
 
+        level_before = get_level(snapshot.earned_points_total)
+        level_after = get_level(accrual.earned_points_total_after)
+        level_up = level_after if level_after > level_before else None
+
         await self._users.apply_balance_change(
             users_id=snapshot.users_id,
             balance_points=accrual.balance_after,
             earned_points_total=accrual.earned_points_total_after,
+            current_level=level_after,
         )
 
         transaction = await self._transactions.create(
@@ -174,6 +181,7 @@ class AwardTaskService:
             transactions_id=transaction.transactions_id,
             points_awarded=accrual.amount,
             balance_points=accrual.balance_after,
+            level_up=level_up,
         )
 
     async def reject(

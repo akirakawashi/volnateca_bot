@@ -29,6 +29,7 @@ class AnswerQuizQuestionDTO:
     task_completed: bool
     points_awarded: int
     balance_points: int | None
+    level_up: int | None
     already_answered: bool
     invalid_payload: bool
 
@@ -71,6 +72,7 @@ class AnswerQuizQuestionHandler(
                 task_completed=False,
                 points_awarded=0,
                 balance_points=None,
+                level_up=None,
                 already_answered=False,
                 invalid_payload=True,
             )
@@ -78,6 +80,7 @@ class AnswerQuizQuestionHandler(
         task_completed = False
         points_awarded = 0
         balance_points: int | None = None
+        level_up: int | None = None
 
         if not saved.already_answered:
             remaining = await self.quiz_repository.get_remaining_questions_count(
@@ -113,6 +116,7 @@ class AnswerQuizQuestionHandler(
                         task_completed = True
                         points_awarded = outcome.points_awarded
                         balance_points = outcome.balance_points
+                        level_up = outcome.level_up
                         if outcome.task_completions_id is not None and saved.quiz_answers_id is not None:
                             await self.quiz_repository.link_answer_to_task_completion(
                                 quiz_answers_id=saved.quiz_answers_id,
@@ -135,6 +139,7 @@ class AnswerQuizQuestionHandler(
             task_completed=task_completed,
             points_awarded=points_awarded,
             balance_points=balance_points,
+            level_up=level_up,
             already_answered=saved.already_answered,
             invalid_payload=False,
         )

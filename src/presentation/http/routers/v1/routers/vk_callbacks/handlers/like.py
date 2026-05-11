@@ -6,7 +6,9 @@ from application.command.complete_vk_like_task import (
 )
 from application.common.dto.task import TaskCompletionResult, TaskCompletionResultStatus
 from application.interface.clients import IVKMessageClient
+from domain.services.level import get_level_name
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+    build_level_up_message,
     build_like_reward_message,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
@@ -40,6 +42,19 @@ async def handle_like_callback(
             result=result,
             message_client=message_client,
         )
+        if result.level_up is not None and result.users_id is not None:
+            await send_vk_user_message(
+                data=data,
+                vk_user_id=result.vk_user_id,
+                users_id=result.users_id,
+                message=build_level_up_message(
+                    new_level=result.level_up,
+                    level_name=get_level_name(result.level_up),
+                    balance_points=result.balance_points or 0,
+                ),
+                message_client=message_client,
+                log_message="Сообщение о новом уровне (лайк)",
+            )
     return vk_ok_response()
 
 

@@ -70,6 +70,7 @@ class TaskCompletionResult:
     transactions_id: int | None = None
     points_awarded: int = 0
     balance_points: int | None = None
+    level_up: int | None = None
     rejected_reason: str | None = None
 
 

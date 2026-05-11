@@ -8,6 +8,7 @@ from application.interface.repositories.transactions import ITransactionReposito
 from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
 from domain.enums.transaction import TransactionSource, TransactionType
+from domain.services.level import get_level
 from domain.services.wallet import WalletService
 
 REFERRAL_BONUS_POINTS = 30
@@ -100,10 +101,14 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
             earned_points_total_before=snapshot.earned_points_total,
             amount=REFERRAL_BONUS_POINTS,
         )
+        level_before = get_level(snapshot.earned_points_total)
+        level_after = get_level(accrual.earned_points_total_after)
+        level_up: int | None = level_after if level_after > level_before else None
         await self.user_repository.apply_balance_change(
             users_id=snapshot.users_id,
             balance_points=accrual.balance_after,
             earned_points_total=accrual.earned_points_total_after,
+            current_level=level_after,
         )
         referral_transaction = await self.transaction_repository.create(
             users_id=snapshot.users_id,
@@ -143,6 +148,7 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
                     users_id=snapshot.users_id,
                     balance_points=milestone_accrual.balance_after,
                     earned_points_total=milestone_accrual.earned_points_total_after,
+                    current_level=get_level(milestone_accrual.earned_points_total_after),
                 )
                 milestone_transaction = await self.transaction_repository.create(
                     users_id=snapshot.users_id,
@@ -175,6 +181,7 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
             inviter_balance_points=current_balance,
             milestone_reached=milestone_reached,
             milestone_bonus_points=milestone_bonus_points,
+            level_up=level_up,
         )
 
     @staticmethod
