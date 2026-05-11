@@ -30,6 +30,10 @@ class AnswerQuizQuestionDTO:
     points_awarded: int
     balance_points: int | None
     level_up: int | None
+    week_completion_week_number: int | None
+    week_completion_points_awarded: int
+    week_completion_balance_points: int | None
+    week_completion_level_up: int | None
     already_answered: bool
     invalid_payload: bool
 
@@ -73,6 +77,10 @@ class AnswerQuizQuestionHandler(
                 points_awarded=0,
                 balance_points=None,
                 level_up=None,
+                week_completion_week_number=None,
+                week_completion_points_awarded=0,
+                week_completion_balance_points=None,
+                week_completion_level_up=None,
                 already_answered=False,
                 invalid_payload=True,
             )
@@ -81,6 +89,10 @@ class AnswerQuizQuestionHandler(
         points_awarded = 0
         balance_points: int | None = None
         level_up: int | None = None
+        week_completion_week_number: int | None = None
+        week_completion_points_awarded = 0
+        week_completion_balance_points: int | None = None
+        week_completion_level_up: int | None = None
 
         if not saved.already_answered:
             remaining = await self.quiz_repository.get_remaining_questions_count(
@@ -104,6 +116,7 @@ class AnswerQuizQuestionHandler(
                             tasks_id=task_spec.tasks_id,
                             task_name=task_spec.task_name,
                             points=task_spec.points,
+                            week_number=task_spec.week_number,
                         ),
                         completion_key=completion_key,
                         event_id=None,
@@ -117,6 +130,10 @@ class AnswerQuizQuestionHandler(
                         points_awarded = outcome.points_awarded
                         balance_points = outcome.balance_points
                         level_up = outcome.level_up
+                        week_completion_week_number = outcome.week_completion_week_number
+                        week_completion_points_awarded = outcome.week_completion_points_awarded
+                        week_completion_balance_points = outcome.week_completion_balance_points
+                        week_completion_level_up = outcome.week_completion_level_up
                         if outcome.task_completions_id is not None and saved.quiz_answers_id is not None:
                             await self.quiz_repository.link_answer_to_task_completion(
                                 quiz_answers_id=saved.quiz_answers_id,
@@ -140,6 +157,10 @@ class AnswerQuizQuestionHandler(
             points_awarded=points_awarded,
             balance_points=balance_points,
             level_up=level_up,
+            week_completion_week_number=week_completion_week_number,
+            week_completion_points_awarded=week_completion_points_awarded,
+            week_completion_balance_points=week_completion_balance_points,
+            week_completion_level_up=week_completion_level_up,
             already_answered=saved.already_answered,
             invalid_payload=False,
         )

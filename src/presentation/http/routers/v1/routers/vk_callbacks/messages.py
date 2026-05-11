@@ -223,6 +223,36 @@ def build_referral_milestone_message(
     )
 
 
+def build_week_completion_reward_message(
+    *,
+    week_number: int,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🏆 Все задания недели {week_number} выполнены!\n\n"
+            f"+{points_awarded} {POINTS_SIGN} бонус\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
+def build_daily_streak_reward_message(
+    *,
+    streak_days: int,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🔥 Стрик {streak_days} дней!\n\n"
+            f"+{points_awarded} {POINTS_SIGN} бонус\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def build_level_up_message(*, new_level: int, level_name: str, balance_points: int) -> VKMessageText:
     return VKMessageText(
         text=(
@@ -243,6 +273,7 @@ def _build_greeting(*, first_name: str | None) -> str:
 __all__ = [
     "VKMessageText",
     "build_balance_message",
+    "build_daily_streak_reward_message",
     "build_free_text_fallback_message",
     "build_help_message",
     "build_level_up_message",
@@ -259,4 +290,5 @@ __all__ = [
     "build_subscription_reward_message",
     "build_task_accrual_message",
     "build_tasks_message",
+    "build_week_completion_reward_message",
 ]

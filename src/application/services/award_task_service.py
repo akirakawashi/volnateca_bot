@@ -5,6 +5,8 @@ from enum import Enum
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
+from application.services.award_achievement_service import AwardAchievementOutcome
+from application.services.week_completion_achievement_service import WeekCompletionAchievementService
 from domain.enums.task import TaskCompletionStatus
 from domain.enums.transaction import TransactionSource, TransactionType
 from domain.services.level import get_level
@@ -36,6 +38,7 @@ class TaskAwardSpec:
     tasks_id: int
     task_name: str
     points: int
+    week_number: int | None = None
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -53,6 +56,10 @@ class AwardTaskOutcome:
     balance_points: int | None = None
     level_up: int | None = None  # новый уровень, если произошёл апгрейд
     rejected_reason: str | None = None
+    week_completion_week_number: int | None = None
+    week_completion_points_awarded: int = 0
+    week_completion_balance_points: int | None = None
+    week_completion_level_up: int | None = None
 
 
 class AwardTaskService:
@@ -75,10 +82,12 @@ class AwardTaskService:
         users: IUserRepository,
         task_completions: ITaskCompletionRepository,
         transactions: ITransactionRepository,
+        week_completion_achievements: WeekCompletionAchievementService | None = None,
     ) -> None:
         self._users = users
         self._task_completions = task_completions
         self._transactions = transactions
+        self._week_completion_achievements = week_completion_achievements
 
     async def award(
         self,
@@ -171,6 +180,11 @@ class AwardTaskService:
                 checked_at=now,
             )
 
+        week_completion = await self._award_week_completion_if_needed(
+            vk_user_id=vk_user_id,
+            week_number=task.week_number,
+        )
+
         return AwardTaskOutcome(
             status=AwardTaskOutcomeStatus.COMPLETED,
             vk_user_id=vk_user_id,
@@ -182,6 +196,10 @@ class AwardTaskService:
             points_awarded=accrual.amount,
             balance_points=accrual.balance_after,
             level_up=level_up,
+            week_completion_week_number=task.week_number if week_completion is not None else None,
+            week_completion_points_awarded=week_completion.points_awarded if week_completion is not None else 0,
+            week_completion_balance_points=week_completion.balance_points if week_completion is not None else None,
+            week_completion_level_up=week_completion.level_up if week_completion is not None else None,
         )
 
     async def reject(
@@ -259,4 +277,17 @@ class AwardTaskService:
             points_awarded=0,
             balance_points=snapshot.balance_points,
             rejected_reason=rejected_reason,
+        )
+
+    async def _award_week_completion_if_needed(
+        self,
+        *,
+        vk_user_id: int,
+        week_number: int | None,
+    ) -> AwardAchievementOutcome | None:
+        if self._week_completion_achievements is None:
+            return None
+        return await self._week_completion_achievements.award_if_week_completed(
+            vk_user_id=vk_user_id,
+            week_number=week_number,
         )

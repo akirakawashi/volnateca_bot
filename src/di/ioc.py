@@ -8,6 +8,7 @@ from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
+from application.command.record_vk_user_activity import RecordVKUserActivityHandler
 from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
@@ -19,9 +20,12 @@ from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
+from application.interface.repositories.user_daily_activities import IUserDailyActivityRepository
 from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
+from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
+from application.services.daily_streak_achievement_service import DailyStreakAchievementService
 from settings.vk import VKSettings
 
 
@@ -142,6 +146,7 @@ class InteractorProvider(Provider):
         referral_repository: IReferralRepository,
         achievement_repository: IAchievementRepository,
         transaction_repository: ITransactionRepository,
+        award_achievement_service: AwardAchievementService,
         uow: IUnitOfWork,
     ) -> ProcessReferralHandler:
         return ProcessReferralHandler(
@@ -149,5 +154,21 @@ class InteractorProvider(Provider):
             referral_repository=referral_repository,
             achievement_repository=achievement_repository,
             transaction_repository=transaction_repository,
+            award_achievement_service=award_achievement_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_record_vk_user_activity_handler(
+        self,
+        user_repository: IUserRepository,
+        daily_activity_repository: IUserDailyActivityRepository,
+        daily_streak_achievement_service: DailyStreakAchievementService,
+        uow: IUnitOfWork,
+    ) -> RecordVKUserActivityHandler:
+        return RecordVKUserActivityHandler(
+            user_repository=user_repository,
+            daily_activity_repository=daily_activity_repository,
+            daily_streak_achievement_service=daily_streak_achievement_service,
             uow=uow,
         )

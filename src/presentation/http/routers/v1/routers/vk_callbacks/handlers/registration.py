@@ -21,6 +21,9 @@ from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
 from domain.services.level import get_level_name
+from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
+    send_week_completion_reward_if_needed,
+)
 from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
     build_quiz_offer_keyboard,
     build_quiz_question_keyboard,
@@ -152,6 +155,16 @@ async def _send_subscription_reward_message_after_registration(
         message=message,
         message_client=message_client,
         log_message="Сообщение о награде за подписку VK после регистрации",
+    )
+    await send_week_completion_reward_if_needed(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        week_number=subscription.week_completion_week_number,
+        points_awarded=subscription.week_completion_points_awarded,
+        balance_points=subscription.week_completion_balance_points,
+        level_up=subscription.week_completion_level_up,
+        message_client=message_client,
     )
 
 
@@ -455,6 +468,16 @@ async def _handle_quiz_answer(
                 message_client=message_client,
                 log_message="Сообщение о новом уровне (квиз) VK",
             )
+        await send_week_completion_reward_if_needed(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            week_number=answer_result.week_completion_week_number,
+            points_awarded=answer_result.week_completion_points_awarded,
+            balance_points=answer_result.week_completion_balance_points,
+            level_up=answer_result.week_completion_level_up,
+            message_client=message_client,
+        )
         return
 
     # Если есть следующий вопрос — показываем его

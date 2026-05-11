@@ -72,6 +72,10 @@ class TaskCompletionResult:
     balance_points: int | None = None
     level_up: int | None = None
     rejected_reason: str | None = None
+    week_completion_week_number: int | None = None
+    week_completion_points_awarded: int = 0
+    week_completion_balance_points: int | None = None
+    week_completion_level_up: int | None = None
 
 
 class VKRepostTaskCreationStatus(str, Enum):

@@ -94,3 +94,13 @@ class ITaskRepository(ABC):
         tasks_id: int,
     ) -> TaskForAwardDTO | None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def is_week_completed_by_vk_user(
+        self,
+        *,
+        vk_user_id: int,
+        week_number: int,
+    ) -> bool:
+        """Возвращает True, если пользователь выполнил все активные задания недели."""
+        raise NotImplementedError

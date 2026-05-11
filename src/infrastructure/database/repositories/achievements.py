@@ -25,6 +25,22 @@ class AchievementRepository(SQLAlchemyRepository, IAchievementRepository):
             points=achievement.points,
         )
 
+    async def is_awarded(
+        self,
+        *,
+        users_id: int,
+        achievements_id: int,
+        achievement_key: str,
+    ) -> bool:
+        result = await self._session.execute(
+            select(UserAchievement).where(
+                col(UserAchievement.users_id) == users_id,
+                col(UserAchievement.achievements_id) == achievements_id,
+                col(UserAchievement.achievement_key) == achievement_key,
+            ),
+        )
+        return result.scalar_one_or_none() is not None
+
     async def award_if_not_exists(
         self,
         *,

@@ -62,6 +62,7 @@ class CompleteVKLikeTaskHandler(
                 tasks_id=task.tasks_id,
                 task_name=task.task_name,
                 points=task.points,
+                week_number=task.week_number,
             ),
             completion_key=build_task_completion_key(
                 repeat_policy=task.repeat_policy,

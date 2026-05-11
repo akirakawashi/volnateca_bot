@@ -7,6 +7,11 @@ from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
+from application.services.award_achievement_service import (
+    AchievementAwardSpec,
+    AwardAchievementOutcomeStatus,
+    AwardAchievementService,
+)
 from domain.enums.transaction import TransactionSource, TransactionType
 from domain.services.level import get_level
 from domain.services.wallet import WalletService
@@ -40,12 +45,14 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
         referral_repository: IReferralRepository,
         achievement_repository: IAchievementRepository,
         transaction_repository: ITransactionRepository,
+        award_achievement_service: AwardAchievementService,
         uow: IUnitOfWork,
     ) -> None:
         self.user_repository = user_repository
         self.referral_repository = referral_repository
         self.achievement_repository = achievement_repository
         self.transaction_repository = transaction_repository
+        self.award_achievement_service = award_achievement_service
         self.uow = uow
 
     async def __call__(self, command_data: ProcessReferralCommand) -> ProcessReferralDTO:
@@ -136,39 +143,21 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
         if milestone_code is not None:
             achievement = await self.achievement_repository.get_by_code(code=milestone_code)
             if achievement is not None:
-                milestone_accrual = WalletService.accrue(
-                    balance_before=current_balance,
-                    earned_points_total_before=current_earned,
-                    amount=achievement.points,
-                )
-                await self.user_repository.apply_balance_change(
-                    users_id=snapshot.users_id,
-                    balance_points=milestone_accrual.balance_after,
-                    earned_points_total=milestone_accrual.earned_points_total_after,
-                    current_level=get_level(milestone_accrual.earned_points_total_after),
-                )
-                milestone_transaction = await self.transaction_repository.create(
-                    users_id=snapshot.users_id,
-                    tasks_id=None,
-                    prizes_id=None,
-                    transaction_type=TransactionType.ACCRUAL,
-                    transaction_source=TransactionSource.ACHIEVEMENT,
-                    amount=milestone_accrual.amount,
-                    balance_before=milestone_accrual.balance_before,
-                    balance_after=milestone_accrual.balance_after,
-                    description=f"Достижение: {achievement.achievement_name}",
-                )
-                await self.achievement_repository.award_if_not_exists(
-                    users_id=snapshot.users_id,
-                    achievements_id=achievement.achievements_id,
-                    transactions_id=milestone_transaction.transactions_id,
+                achievement_outcome = await self.award_achievement_service.award(
+                    vk_user_id=command_data.inviter_vk_user_id,
+                    achievement=AchievementAwardSpec(
+                        achievements_id=achievement.achievements_id,
+                        achievement_name=achievement.achievement_name,
+                        points=achievement.points,
+                    ),
                     achievement_key="once",
-                    points=achievement.points,
                 )
-                milestone_reached = referral_count
-                milestone_bonus_points = achievement.points
-                current_balance = milestone_accrual.balance_after
-                current_earned = milestone_accrual.earned_points_total_after
+                if achievement_outcome.status == AwardAchievementOutcomeStatus.COMPLETED:
+                    milestone_reached = referral_count
+                    milestone_bonus_points = achievement_outcome.points_awarded
+                    if achievement_outcome.balance_points is not None:
+                        current_balance = achievement_outcome.balance_points
+                    current_earned += achievement_outcome.points_awarded
 
         # Итоговый level_up — сравниваем начальный уровень с финальным
         # (учитывает как реферальный бонус, так и возможный milestone-бонус)

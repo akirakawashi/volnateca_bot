@@ -91,6 +91,7 @@ class CompleteVKSubscriptionTaskHandler(
             tasks_id=task.tasks_id,
             task_name=task.task_name,
             points=task.points,
+            week_number=task.week_number,
         )
         if not is_member:
             outcome = await self.award_service.reject(

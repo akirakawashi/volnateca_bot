@@ -43,7 +43,7 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
         # ID уже отвеченных вопросов для этого пользователя в этом задании
         question_ids = [q.quiz_questions_id for q in all_questions]
         answered_result = await self._session.execute(
-            select(QuizAnswer.quiz_questions_id).where(
+            select(col(QuizAnswer.quiz_questions_id)).where(
                 col(QuizAnswer.users_id) == users_id,
                 col(QuizAnswer.quiz_questions_id).in_(question_ids),
             ),
@@ -167,7 +167,7 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
             return 0
 
         all_ids_result = await self._session.execute(
-            select(QuizQuestion.quiz_questions_id).where(
+            select(col(QuizQuestion.quiz_questions_id)).where(
                 col(QuizQuestion.tasks_id) == tasks_id,
                 col(QuizQuestion.is_active).is_(True),
             ),
@@ -177,7 +177,7 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
             return 0
 
         answered_result = await self._session.execute(
-            select(QuizAnswer.quiz_questions_id).where(
+            select(col(QuizAnswer.quiz_questions_id)).where(
                 col(QuizAnswer.users_id) == users_id,
                 col(QuizAnswer.quiz_questions_id).in_(all_ids),
             ),

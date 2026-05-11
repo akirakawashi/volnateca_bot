@@ -17,6 +17,17 @@ class IAchievementRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def is_awarded(
+        self,
+        *,
+        users_id: int,
+        achievements_id: int,
+        achievement_key: str,
+    ) -> bool:
+        """Возвращает True, если пользователь уже получил достижение за период."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def award_if_not_exists(
         self,
         *,

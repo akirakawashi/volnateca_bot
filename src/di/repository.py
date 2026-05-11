@@ -7,6 +7,7 @@ from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
+from application.interface.repositories.user_daily_activities import IUserDailyActivityRepository
 from application.interface.repositories.users import IUserRepository
 from infrastructure.database.repositories.achievements import AchievementRepository
 from infrastructure.database.repositories.quiz import QuizRepository
@@ -14,6 +15,7 @@ from infrastructure.database.repositories.referrals import ReferralRepository
 from infrastructure.database.repositories.task_completions import TaskCompletionRepository
 from infrastructure.database.repositories.tasks import TaskRepository
 from infrastructure.database.repositories.transactions import TransactionRepository
+from infrastructure.database.repositories.user_daily_activities import UserDailyActivityRepository
 from infrastructure.database.repositories.users import UserRepository
 
 
@@ -66,3 +68,10 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> AchievementRepository:
         return AchievementRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IUserDailyActivityRepository)
+    def get_user_daily_activity_repository(
+        self,
+        session: AsyncSession,
+    ) -> UserDailyActivityRepository:
+        return UserDailyActivityRepository(session=session)

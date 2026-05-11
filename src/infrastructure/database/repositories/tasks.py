@@ -273,6 +273,31 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
 
         return None
 
+    async def is_week_completed_by_vk_user(
+        self,
+        *,
+        vk_user_id: int,
+        week_number: int,
+    ) -> bool:
+        users_id = await self._get_users_id_by_vk_user_id(vk_user_id=vk_user_id)
+        if users_id is None:
+            return False
+
+        now = datetime.now(tz=UTC)
+        weekly_tasks = await self._list_active_tasks_by_week(week_number=week_number)
+        if not weekly_tasks:
+            return False
+
+        completed_keys = await self._list_completed_task_keys(users_id=users_id)
+        return all(
+            self._is_task_completed_for_current_period(
+                task=task,
+                checked_at=now,
+                completed_keys=completed_keys,
+            )
+            for task in weekly_tasks
+        )
+
     async def _get_users_id_by_vk_user_id(self, vk_user_id: int) -> int | None:
         result = await self._session.execute(
             select(User).where(col(User.vk_user_id) == vk_user_id),
@@ -290,6 +315,21 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
                 or_(col(Task.ends_at).is_(None), col(Task.ends_at) > now),
             )
             .order_by(col(Task.week_number), col(Task.tasks_id)),
+        )
+        return list(result.scalars().all())
+
+    async def _list_active_tasks_by_week(
+        self,
+        *,
+        week_number: int,
+    ) -> list[Task]:
+        result = await self._session.execute(
+            select(Task)
+            .where(
+                col(Task.is_active).is_(True),
+                col(Task.week_number) == week_number,
+            )
+            .order_by(col(Task.tasks_id)),
         )
         return list(result.scalars().all())
 
