@@ -1,6 +1,7 @@
 from dishka import Provider, Scope, provide
 
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
+from application.command.award_monthly_top import AwardMonthlyTopHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
@@ -173,5 +174,20 @@ class InteractorProvider(Provider):
             user_repository=user_repository,
             daily_activity_repository=daily_activity_repository,
             daily_streak_achievement_service=daily_streak_achievement_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_award_monthly_top_handler(
+        self,
+        transaction_repository: ITransactionRepository,
+        achievement_repository: IAchievementRepository,
+        award_achievement_service: AwardAchievementService,
+        uow: IUnitOfWork,
+    ) -> AwardMonthlyTopHandler:
+        return AwardMonthlyTopHandler(
+            transaction_repository=transaction_repository,
+            achievement_repository=achievement_repository,
+            award_achievement_service=award_achievement_service,
             uow=uow,
         )

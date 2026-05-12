@@ -1,3 +1,4 @@
+from application.command.award_monthly_top import AwardMonthlyTopHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
@@ -10,6 +11,7 @@ from application.command.register_vk_user_and_check_subscription import (
 )
 
 __all__ = [
+    "AwardMonthlyTopHandler",
     "CompleteVKLikeTaskHandler",
     "CompleteVKRepostTaskHandler",
     "CompleteVKSubscriptionTaskHandler",
