@@ -5,6 +5,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.message_sender import sen
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_daily_streak_reward_message,
     build_level_up_message,
+    build_project_completion_reward_message,
     build_quiz_streak_reward_message,
     build_week_completion_reward_message,
 )
@@ -136,8 +137,49 @@ async def send_quiz_streak_reward_if_needed(
         )
 
 
+async def send_project_completion_reward_if_needed(
+    *,
+    data: VKCallbackPayload,
+    vk_user_id: int,
+    users_id: int | None,
+    points_awarded: int,
+    balance_points: int | None,
+    level_up: int | None,
+    message_client: IVKMessageClient,
+) -> None:
+    if users_id is None or points_awarded <= 0 or balance_points is None:
+        return
+
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=vk_user_id,
+        users_id=users_id,
+        message=build_project_completion_reward_message(
+            points_awarded=points_awarded,
+            balance_points=balance_points,
+        ),
+        message_client=message_client,
+        log_message="Сообщение о финальном бонусе за 12 недель VK",
+    )
+
+    if level_up is not None:
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=vk_user_id,
+            users_id=users_id,
+            message=build_level_up_message(
+                new_level=level_up,
+                level_name=get_level_name(level_up),
+                balance_points=balance_points,
+            ),
+            message_client=message_client,
+            log_message="Сообщение о новом уровне (12 недель)",
+        )
+
+
 __all__ = [
     "send_daily_streak_rewards_if_needed",
+    "send_project_completion_reward_if_needed",
     "send_quiz_streak_reward_if_needed",
     "send_week_completion_reward_if_needed",
 ]

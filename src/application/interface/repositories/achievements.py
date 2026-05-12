@@ -28,6 +28,17 @@ class IAchievementRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def count_awarded_keys_by_code(
+        self,
+        *,
+        users_id: int,
+        achievement_code: str,
+        achievement_keys: tuple[str, ...],
+    ) -> int:
+        """Возвращает количество выданных пользователю ключей достижения."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def award_if_not_exists(
         self,
         *,

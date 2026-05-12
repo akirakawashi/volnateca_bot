@@ -21,6 +21,9 @@ def build_task_completion_result(outcome: AwardTaskOutcome) -> TaskCompletionRes
         week_completion_points_awarded=outcome.week_completion_points_awarded,
         week_completion_balance_points=outcome.week_completion_balance_points,
         week_completion_level_up=outcome.week_completion_level_up,
+        project_completion_points_awarded=outcome.project_completion_points_awarded,
+        project_completion_balance_points=outcome.project_completion_balance_points,
+        project_completion_level_up=outcome.project_completion_level_up,
     )
 
 

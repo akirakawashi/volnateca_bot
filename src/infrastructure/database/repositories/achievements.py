@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
@@ -40,6 +40,30 @@ class AchievementRepository(SQLAlchemyRepository, IAchievementRepository):
             ),
         )
         return result.scalar_one_or_none() is not None
+
+    async def count_awarded_keys_by_code(
+        self,
+        *,
+        users_id: int,
+        achievement_code: str,
+        achievement_keys: tuple[str, ...],
+    ) -> int:
+        if not achievement_keys:
+            return 0
+
+        result = await self._session.execute(
+            select(func.count(func.distinct(UserAchievement.achievement_key)))
+            .join(
+                Achievement,
+                col(UserAchievement.achievements_id) == col(Achievement.achievements_id),
+            )
+            .where(
+                col(UserAchievement.users_id) == users_id,
+                col(Achievement.code) == achievement_code,
+                col(UserAchievement.achievement_key).in_(achievement_keys),
+            ),
+        )
+        return int(result.scalar_one())
 
     async def award_if_not_exists(
         self,

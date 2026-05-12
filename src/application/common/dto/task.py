@@ -76,6 +76,9 @@ class TaskCompletionResult:
     week_completion_points_awarded: int = 0
     week_completion_balance_points: int | None = None
     week_completion_level_up: int | None = None
+    project_completion_points_awarded: int = 0
+    project_completion_balance_points: int | None = None
+    project_completion_level_up: int | None = None
 
 
 class VKRepostTaskCreationStatus(str, Enum):

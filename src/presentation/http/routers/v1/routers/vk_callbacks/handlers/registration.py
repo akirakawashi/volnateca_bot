@@ -22,6 +22,7 @@ from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
 from domain.services.level import get_level_name
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
+    send_project_completion_reward_if_needed,
     send_quiz_streak_reward_if_needed,
     send_week_completion_reward_if_needed,
 )
@@ -166,6 +167,15 @@ async def _send_subscription_reward_message_after_registration(
         points_awarded=subscription.week_completion_points_awarded,
         balance_points=subscription.week_completion_balance_points,
         level_up=subscription.week_completion_level_up,
+        message_client=message_client,
+    )
+    await send_project_completion_reward_if_needed(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        points_awarded=subscription.project_completion_points_awarded,
+        balance_points=subscription.project_completion_balance_points,
+        level_up=subscription.project_completion_level_up,
         message_client=message_client,
     )
 
@@ -498,6 +508,15 @@ async def _handle_quiz_answer(
             points_awarded=answer_result.week_completion_points_awarded,
             balance_points=answer_result.week_completion_balance_points,
             level_up=answer_result.week_completion_level_up,
+            message_client=message_client,
+        )
+        await send_project_completion_reward_if_needed(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            points_awarded=answer_result.project_completion_points_awarded,
+            balance_points=answer_result.project_completion_balance_points,
+            level_up=answer_result.project_completion_level_up,
             message_client=message_client,
         )
         await send_quiz_streak_reward_if_needed(

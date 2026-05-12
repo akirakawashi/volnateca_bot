@@ -8,6 +8,7 @@ from application.common.dto.task import TaskCompletionResult, TaskCompletionResu
 from application.interface.clients import IVKMessageClient
 from domain.services.level import get_level_name
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
+    send_project_completion_reward_if_needed,
     send_week_completion_reward_if_needed,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
@@ -63,6 +64,15 @@ async def handle_subscription_callback(
             points_awarded=result.week_completion_points_awarded,
             balance_points=result.week_completion_balance_points,
             level_up=result.week_completion_level_up,
+            message_client=message_client,
+        )
+        await send_project_completion_reward_if_needed(
+            data=data,
+            vk_user_id=result.vk_user_id,
+            users_id=result.users_id,
+            points_awarded=result.project_completion_points_awarded,
+            balance_points=result.project_completion_balance_points,
+            level_up=result.project_completion_level_up,
             message_client=message_client,
         )
     return vk_ok_response()

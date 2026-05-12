@@ -278,6 +278,20 @@ def build_quiz_streak_reward_message(
     )
 
 
+def build_project_completion_reward_message(
+    *,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            "🏆 Все 12 недель проекта пройдены!\n\n"
+            f"+{points_awarded} {POINTS_SIGN} финальный бонус\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def build_level_up_message(*, new_level: int, level_name: str, balance_points: int) -> VKMessageText:
     return VKMessageText(
         text=(
@@ -307,6 +321,7 @@ __all__ = [
     "build_quiz_completed_message",
     "build_quiz_offer_message",
     "build_quiz_question_message",
+    "build_project_completion_reward_message",
     "build_quiz_streak_reward_message",
     "build_quiz_unavailable_message",
     "build_referral_bonus_message",

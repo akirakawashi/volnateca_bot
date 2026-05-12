@@ -10,6 +10,7 @@ from application.interface.services import IUserMessageIntentClassifier
 from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
 from application.services.daily_streak_achievement_service import DailyStreakAchievementService
+from application.services.project_completion_achievement_service import ProjectCompletionAchievementService
 from application.services.quiz_streak_achievement_service import QuizStreakAchievementService
 from application.services.user_message_intent import RuleBasedUserMessageIntentClassifier
 from application.services.week_completion_achievement_service import WeekCompletionAchievementService
@@ -36,12 +37,14 @@ class ServicesProvider(Provider):
         task_completions: ITaskCompletionRepository,
         transactions: ITransactionRepository,
         week_completion_achievements: WeekCompletionAchievementService,
+        project_completion_achievements: ProjectCompletionAchievementService,
     ) -> AwardTaskService:
         return AwardTaskService(
             users=users,
             task_completions=task_completions,
             transactions=transactions,
             week_completion_achievements=week_completion_achievements,
+            project_completion_achievements=project_completion_achievements,
         )
 
     @provide(scope=Scope.REQUEST)
@@ -53,6 +56,17 @@ class ServicesProvider(Provider):
     ) -> WeekCompletionAchievementService:
         return WeekCompletionAchievementService(
             tasks=tasks,
+            achievements=achievements,
+            award_achievement_service=award_achievement_service,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_project_completion_achievement_service(
+        self,
+        achievements: IAchievementRepository,
+        award_achievement_service: AwardAchievementService,
+    ) -> ProjectCompletionAchievementService:
+        return ProjectCompletionAchievementService(
             achievements=achievements,
             award_achievement_service=award_achievement_service,
         )

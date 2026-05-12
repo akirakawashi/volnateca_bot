@@ -15,6 +15,13 @@ from application.services.daily_streak_achievement_service import (
     DailyStreakAchievementService,
     DailyStreakAward,
 )
+from application.services.project_completion_achievement_service import (
+    PROJECT_COMPLETION_ACHIEVEMENT_CODE,
+    PROJECT_COMPLETION_REQUIRED_WEEK_COUNT,
+    PROJECT_COMPLETION_REQUIRED_WEEK_KEYS,
+    ProjectCompletionAchievementService,
+    ProjectCompletionAward,
+)
 from application.services.quiz_streak_achievement_service import (
     QUIZ_STREAK_ACHIEVEMENT_CODE,
     QUIZ_STREAK_TARGET,
@@ -39,6 +46,11 @@ __all__ = [
     "DAILY_STREAK_ACHIEVEMENTS",
     "DailyStreakAchievementService",
     "DailyStreakAward",
+    "PROJECT_COMPLETION_ACHIEVEMENT_CODE",
+    "PROJECT_COMPLETION_REQUIRED_WEEK_COUNT",
+    "PROJECT_COMPLETION_REQUIRED_WEEK_KEYS",
+    "ProjectCompletionAchievementService",
+    "ProjectCompletionAward",
     "QUIZ_STREAK_ACHIEVEMENT_CODE",
     "QUIZ_STREAK_TARGET",
     "QuizStreakAchievementService",

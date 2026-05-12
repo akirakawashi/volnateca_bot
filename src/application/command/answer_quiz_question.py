@@ -35,6 +35,9 @@ class AnswerQuizQuestionDTO:
     week_completion_points_awarded: int
     week_completion_balance_points: int | None
     week_completion_level_up: int | None
+    project_completion_points_awarded: int
+    project_completion_balance_points: int | None
+    project_completion_level_up: int | None
     quiz_streak_count: int | None
     quiz_streak_points_awarded: int
     quiz_streak_balance_points: int | None
@@ -89,6 +92,9 @@ class AnswerQuizQuestionHandler(
                 week_completion_points_awarded=0,
                 week_completion_balance_points=None,
                 week_completion_level_up=None,
+                project_completion_points_awarded=0,
+                project_completion_balance_points=None,
+                project_completion_level_up=None,
                 quiz_streak_count=None,
                 quiz_streak_points_awarded=0,
                 quiz_streak_balance_points=None,
@@ -111,6 +117,9 @@ class AnswerQuizQuestionHandler(
                 week_completion_points_awarded=0,
                 week_completion_balance_points=None,
                 week_completion_level_up=None,
+                project_completion_points_awarded=0,
+                project_completion_balance_points=None,
+                project_completion_level_up=None,
                 quiz_streak_count=None,
                 quiz_streak_points_awarded=0,
                 quiz_streak_balance_points=None,
@@ -128,6 +137,9 @@ class AnswerQuizQuestionHandler(
         week_completion_points_awarded = 0
         week_completion_balance_points: int | None = None
         week_completion_level_up: int | None = None
+        project_completion_points_awarded = 0
+        project_completion_balance_points: int | None = None
+        project_completion_level_up: int | None = None
         quiz_streak_count: int | None = None
         quiz_streak_points_awarded = 0
         quiz_streak_balance_points: int | None = None
@@ -173,6 +185,9 @@ class AnswerQuizQuestionHandler(
                         week_completion_points_awarded = outcome.week_completion_points_awarded
                         week_completion_balance_points = outcome.week_completion_balance_points
                         week_completion_level_up = outcome.week_completion_level_up
+                        project_completion_points_awarded = outcome.project_completion_points_awarded
+                        project_completion_balance_points = outcome.project_completion_balance_points
+                        project_completion_level_up = outcome.project_completion_level_up
                         if outcome.task_completions_id is not None and saved.quiz_answers_id is not None:
                             await self.quiz_repository.link_answer_to_task_completion(
                                 quiz_answers_id=saved.quiz_answers_id,
@@ -209,6 +224,9 @@ class AnswerQuizQuestionHandler(
             week_completion_points_awarded=week_completion_points_awarded,
             week_completion_balance_points=week_completion_balance_points,
             week_completion_level_up=week_completion_level_up,
+            project_completion_points_awarded=project_completion_points_awarded,
+            project_completion_balance_points=project_completion_balance_points,
+            project_completion_level_up=project_completion_level_up,
             quiz_streak_count=quiz_streak_count,
             quiz_streak_points_awarded=quiz_streak_points_awarded,
             quiz_streak_balance_points=quiz_streak_balance_points,
