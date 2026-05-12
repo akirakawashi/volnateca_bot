@@ -17,9 +17,9 @@ async def truncate_db(
     handler: FromDishka[TruncateDBHandler],
     app_settings: FromDishka[AppSettings],
 ) -> None:
-    if not app_settings.DEBUG:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Доступно только в DEBUG-режиме",
-        )
+    # if not app_settings.DEBUG:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Доступно только в DEBUG-режиме",
+    #     ) # TODO: убарть все что с этим связано
     await handler(TruncateDBCommand())
