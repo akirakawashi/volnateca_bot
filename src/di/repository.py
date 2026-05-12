@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.quiz import IQuizRepository
+from application.admin.interface.db_manager import IDBManager
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
@@ -12,6 +13,7 @@ from application.interface.repositories.user_daily_activities import IUserDailyA
 from application.interface.repositories.users import IUserRepository
 from infrastructure.database.repositories.achievements import AchievementRepository
 from infrastructure.database.repositories.quiz import QuizRepository
+from infrastructure.database.db_manager import DBManager
 from infrastructure.database.repositories.admin.quiz import QuizAdminRepository
 from infrastructure.database.repositories.referrals import ReferralRepository
 from infrastructure.database.repositories.task_completions import TaskCompletionRepository
@@ -84,3 +86,10 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> QuizAdminRepository:
         return QuizAdminRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IDBManager)
+    def get_db_manager(
+        self,
+        session: AsyncSession,
+    ) -> DBManager:
+        return DBManager(session=session)

@@ -6,6 +6,7 @@ from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.admin.command.create_quiz import CreateQuizHandler
+from application.admin.command.truncate_db import TruncateDBHandler
 from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
@@ -18,6 +19,7 @@ from application.command.register_vk_user_and_check_subscription import (
 from application.interface.clients import IVKUserClient
 from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.quiz import IQuizRepository
+from application.admin.interface.db_manager import IDBManager
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
@@ -204,3 +206,10 @@ class InteractorProvider(Provider):
             quiz_admin_repository=quiz_admin_repository,
             uow=uow,
         )
+
+    @provide(scope=Scope.REQUEST)
+    def get_truncate_db_handler(
+        self,
+        db_manager: IDBManager,
+    ) -> TruncateDBHandler:
+        return TruncateDBHandler(db_manager=db_manager)
