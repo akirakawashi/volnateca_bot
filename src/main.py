@@ -6,7 +6,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from di.providers import make_providers
 from presentation.http.exception_handlers import setup_exception_handlers
-from presentation.http.routers import api_v1_router, healthcheck_router
+from presentation.http.routers import admin_router, api_v1_router, healthcheck_router
 from settings.factory import ConfigFactory
 
 config = ConfigFactory()
@@ -14,6 +14,7 @@ config = ConfigFactory()
 
 def include_routers(application: FastAPI) -> None:
     application.include_router(api_v1_router)
+    application.include_router(admin_router)
     application.include_router(healthcheck_router)
 
 
