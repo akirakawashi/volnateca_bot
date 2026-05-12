@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from application.admin.command.truncate_db import TruncateDBCommand, TruncateDBHandler
 from settings.app.app import AppSettings
 
+# TODO: удалить db_admin_router (truncate) перед релизом — только для локальной отладки.
 db_admin_router = APIRouter(route_class=DishkaRoute)
 
 

@@ -1,5 +1,8 @@
 from dishka import Provider, Scope, provide
+from sqlalchemy.ext.asyncio import AsyncSession
 
+# TODO: удалить SeedDevScenarioHandler и get_seed_dev_scenario_handler перед релизом.
+from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.award_monthly_top import AwardMonthlyTopHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
@@ -213,3 +216,12 @@ class InteractorProvider(Provider):
         db_manager: IDBManager,
     ) -> TruncateDBHandler:
         return TruncateDBHandler(db_manager=db_manager)
+
+    @provide(scope=Scope.REQUEST)
+    def get_seed_dev_scenario_handler(
+        self,
+        session: AsyncSession,
+        vk_settings: VKSettings,
+    ) -> "SeedDevScenarioHandler":
+        from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
+        return SeedDevScenarioHandler(session=session, vk_settings=vk_settings)

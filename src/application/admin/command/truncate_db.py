@@ -4,6 +4,7 @@ from application.base_interactor import Interactor
 from application.admin.interface.db_manager import IDBManager
 
 
+# TODO: удалить TruncateDBCommand и TruncateDBHandler перед релизом — только для локальной отладки.
 @dataclass(slots=True, frozen=True, kw_only=True)
 class TruncateDBCommand:
     pass
