@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.award_monthly_top import AwardMonthlyTopHandler
+from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
@@ -114,6 +115,19 @@ class InteractorProvider(Provider):
         uow: IUnitOfWork,
     ) -> CompleteVKLikeTaskHandler:
         return CompleteVKLikeTaskHandler(
+            task_repository=task_repository,
+            award_service=award_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_complete_vk_comment_task_handler(
+        self,
+        task_repository: ITaskRepository,
+        award_service: AwardTaskService,
+        uow: IUnitOfWork,
+    ) -> CompleteVKCommentTaskHandler:
+        return CompleteVKCommentTaskHandler(
             task_repository=task_repository,
             award_service=award_service,
             uow=uow,

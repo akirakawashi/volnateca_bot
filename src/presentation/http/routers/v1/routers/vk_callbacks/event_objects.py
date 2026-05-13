@@ -5,8 +5,25 @@ from pydantic import BaseModel, ConfigDict, Field
 from presentation.http.dto.request import VKCallbackMessageSchema, VKCallbackWallPostSchema
 
 
+__all__ = [
+    "VKCallbackEventObjectSchema",
+    "VKCommentObjectSchema",
+    "VKLikeObjectSchema",
+    "VKMessageObjectSchema",
+    "VKRepostObjectSchema",
+    "VKUserObjectSchema",
+    "VKWallPostObjectSchema",
+]
+
+
 class VKCallbackEventObjectSchema(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="allow")
+
+
+class VKCommentObjectSchema(VKCallbackEventObjectSchema):
+    post_id: int
+    from_id: int
+    owner_id: int
 
 
 class VKLikeObjectSchema(VKCallbackEventObjectSchema):

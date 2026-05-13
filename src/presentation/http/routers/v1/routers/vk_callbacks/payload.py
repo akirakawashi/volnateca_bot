@@ -8,6 +8,7 @@ from application.common.dto.vk import VKWallPostDTO
 from presentation.http.dto.request import VKCallbackSchema, VKCallbackWallPostSchema
 from presentation.http.routers.v1.routers.vk_callbacks.event_objects import (
     VKCallbackEventObjectSchema,
+    VKCommentObjectSchema,
     VKLikeObjectSchema,
     VKMessageObjectSchema,
     VKRepostObjectSchema,
@@ -58,6 +59,9 @@ class VKCallbackPayload:
     def is_subscription_event(self) -> bool:
         return self.type in VKEventGroups.SUBSCRIPTION
 
+    def is_comment_event(self) -> bool:
+        return self.type in VKEventGroups.COMMENT
+
     def is_wall_post_new(self) -> bool:
         return self.type in VKEventGroups.WALL_POST
 
@@ -81,11 +85,17 @@ class VKCallbackPayload:
         like_object = self.get_like_object()
         return self._normalize_vk_user_id(raw_user_id=like_object.liker_id if like_object else None)
 
+    def get_comment_user_id(self) -> int | None:
+        comment_object = self.get_comment_object()
+        return self._normalize_vk_user_id(raw_user_id=comment_object.from_id if comment_object else None)
+
     def get_primary_vk_user_id(self) -> int | None:
         if self.is_like():
             return self.get_like_user_id()
         if self.is_repost():
             return self.get_repost_user_id()
+        if self.is_comment_event():
+            return self.get_comment_user_id()
         return self.get_vk_user_id()
 
     def get_repost_user_id(self) -> int | None:
@@ -190,6 +200,16 @@ class VKCallbackPayload:
 
     # Извлечение постов
 
+    def get_commented_post_external_ids(self) -> tuple[str, ...]:
+        comment_object = self.get_comment_object()
+        if comment_object is None:
+            return ()
+        post = VKWallPostDTO(
+            owner_id=comment_object.owner_id,
+            post_id=comment_object.post_id,
+        )
+        return post.external_id_variants
+
     def get_liked_post(self) -> VKWallPostDTO | None:
         like_object = self.get_like_object()
         if like_object is None:
@@ -238,6 +258,11 @@ class VKCallbackPayload:
         return wall_post_object.text if wall_post_object and wall_post_object.text else ""
 
     # Извлечение типизированного объекта события
+
+    def get_comment_object(self) -> VKCommentObjectSchema | None:
+        if not self.is_comment_event():
+            return None
+        return self._parse_event_object(schema=VKCommentObjectSchema)
 
     def get_like_object(self) -> VKLikeObjectSchema | None:
         if not self.is_like():

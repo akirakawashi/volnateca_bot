@@ -91,6 +91,21 @@ def build_repost_reward_message(
     )
 
 
+def build_comment_reward_message(
+    *,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            "✅ Комментарий засчитан\n"
+            "Ты оставил комментарий под записью Волны.\n\n"
+            f"+{points_awarded} {POINTS_SIGN} за комментарий\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def build_balance_message(*, balance_points: int) -> VKMessageText:
     return VKMessageText(text=f"💫 Баланс\n\n{balance_points} {POINTS_SIGN}")
 
@@ -292,6 +307,22 @@ def build_project_completion_reward_message(
     )
 
 
+def build_monthly_top_reward_message(
+    *,
+    rank: int,
+    points_awarded: int,
+    balance_points: int,
+) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🏆 Ты в топ-10 месяца!\n\n"
+            f"Место: #{rank}\n\n"
+            f"+{points_awarded} {POINTS_SIGN} бонус за топ-10 месяца\n\n"
+            f"💫 Баланс: {balance_points} {POINTS_SIGN}"
+        ),
+    )
+
+
 def build_level_up_message(*, new_level: int, level_name: str, balance_points: int) -> VKMessageText:
     return VKMessageText(
         text=(
@@ -312,11 +343,13 @@ def _build_greeting(*, first_name: str | None) -> str:
 __all__ = [
     "VKMessageText",
     "build_balance_message",
+    "build_comment_reward_message",
     "build_daily_streak_reward_message",
     "build_free_text_fallback_message",
     "build_help_message",
     "build_level_up_message",
     "build_like_reward_message",
+    "build_monthly_top_reward_message",
     "build_quiz_answer_result_message",
     "build_quiz_completed_message",
     "build_quiz_offer_message",

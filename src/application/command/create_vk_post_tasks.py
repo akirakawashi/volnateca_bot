@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from application.base_interactor import Interactor
 from application.common.dto.task import (
+    VKCommentTaskCreationDTO,
+    VKCommentTaskCreationStatus,
     VKLikeTaskCreationStatus,
     VKPostTasksCreationDTO,
     VKPostTasksCreationStatus,
@@ -74,6 +76,9 @@ class CreateVKPostTasksHandler(
                 external_id=canonical_post.external_id,
                 reason="points_must_be_positive",
             )
+        comment_allowed = (
+            parsed_marker.week_number is None or parsed_marker.week_number >= 3
+        )
         if parsed_marker.week_number is not None and not 1 <= parsed_marker.week_number <= 12:
             return VKPostTasksCreationDTO(
                 status=VKPostTasksCreationStatus.INVALID_MARKER,
@@ -109,11 +114,25 @@ class CreateVKPostTasksHandler(
             event_id=command_data.event_id,
         )
 
+        comment_result: VKCommentTaskCreationDTO | None = None
+        if comment_allowed and parsed_marker.comment_points > 0:
+            comment_result = await self.task_repository.create_comment_task_if_not_exists(
+                code=f"vk_comment_wall_{abs(canonical_post.owner_id)}_{canonical_post.post_id}",
+                task_name=self._build_comment_task_name(parsed_marker=parsed_marker),
+                description=description,
+                external_id=canonical_post.external_id,
+                points=parsed_marker.comment_points,
+                week_number=parsed_marker.week_number,
+                repeat_policy=TaskRepeatPolicy.ONCE,
+                event_id=command_data.event_id,
+            )
+
         await self.uow.commit()
 
         if (
             repost_result.status == VKRepostTaskCreationStatus.ALREADY_EXISTS
             and like_result.status == VKLikeTaskCreationStatus.ALREADY_EXISTS
+            and (comment_result is None or comment_result.status == VKCommentTaskCreationStatus.ALREADY_EXISTS)
         ):
             overall_status = VKPostTasksCreationStatus.ALREADY_EXISTS
         else:
@@ -125,8 +144,10 @@ class CreateVKPostTasksHandler(
             external_id=canonical_post.external_id,
             repost_tasks_id=repost_result.tasks_id,
             like_tasks_id=like_result.tasks_id,
+            comment_tasks_id=comment_result.tasks_id if comment_result is not None else None,
             repost_points=parsed_marker.repost_points,
             like_points=parsed_marker.like_points,
+            comment_points=parsed_marker.comment_points if comment_result is not None else None,
             week_number=parsed_marker.week_number,
         )
         return result
@@ -153,3 +174,9 @@ class CreateVKPostTasksHandler(
         if parsed_marker.week_number is not None:
             return f"Поставить лайк посту недели {parsed_marker.week_number}"
         return "Поставить лайк посту"
+
+    @staticmethod
+    def _build_comment_task_name(parsed_marker: ParsedVKPostMarker) -> str:
+        if parsed_marker.week_number is not None:
+            return f"Оставить комментарий под постом недели {parsed_marker.week_number}"
+        return "Оставить комментарий под постом"

@@ -114,10 +114,30 @@ class VKPostTasksCreationDTO:
     status: VKPostTasksCreationStatus
     event_id: str | None
     external_id: str | None = None
+    comment_tasks_id: int | None = None
     repost_tasks_id: int | None = None
     like_tasks_id: int | None = None
+    comment_points: int | None = None
     repost_points: int | None = None
     like_points: int | None = None
+    week_number: int | None = None
+    reason: str | None = None
+
+
+class VKCommentTaskCreationStatus(str, Enum):
+    CREATED = "created"
+    ALREADY_EXISTS = "already_exists"
+    TOO_EARLY = "too_early"
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class VKCommentTaskCreationDTO:
+    status: VKCommentTaskCreationStatus
+    event_id: str | None
+    tasks_id: int | None = None
+    code: str | None = None
+    external_id: str | None = None
+    points: int | None = None
     week_number: int | None = None
     reason: str | None = None
 

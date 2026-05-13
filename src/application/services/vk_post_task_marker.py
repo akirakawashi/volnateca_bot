@@ -9,6 +9,7 @@ class VKPostTaskMarkerRules:
     """Настройки служебных тегов, по которым VK-пост превращается в задания."""
 
     marker: str = "#volnateca"
+    default_comment_points: int = 30
     default_repost_points: int = 20
     default_like_points: int = 10
     max_description_length: int = 500
@@ -18,6 +19,7 @@ class VKPostTaskMarkerRules:
 class ParsedVKPostMarker:
     """Результат разбора служебных тегов в тексте VK-поста."""
 
+    comment_points: int
     repost_points: int
     like_points: int
     week_number: int | None
@@ -27,6 +29,7 @@ class ParsedVKPostMarker:
 class VKPostTaskMarkerPatterns:
     """Скомпилированные regexp для одного набора VKPostTaskMarkerRules."""
 
+    comment_points: Pattern[str]
     marker: Pattern[str]
     repost_points: Pattern[str]
     like_points: Pattern[str]
@@ -53,6 +56,10 @@ class VKPostTaskMarkerParser:
         return cls(
             rules=rules,
             patterns=VKPostTaskMarkerPatterns(
+                comment_points=re.compile(
+                    rf"{escaped_marker}_comment_points_(?P<points>\d+)",
+                    re.IGNORECASE,
+                ),
                 marker=re.compile(rf"{escaped_marker}(?!_\w)", re.IGNORECASE),
                 repost_points=re.compile(
                     rf"{escaped_marker}_repost_points_(?P<points>\d+)",
@@ -72,6 +79,11 @@ class VKPostTaskMarkerParser:
         if not self.patterns.marker.search(text):
             return None
 
+        comment_points = self.rules.default_comment_points
+        comment_match = self.patterns.comment_points.search(text)
+        if comment_match is not None:
+            comment_points = int(comment_match.group("points"))
+
         repost_points = self.rules.default_repost_points
         repost_match = self.patterns.repost_points.search(text)
         if repost_match is not None:
@@ -88,6 +100,7 @@ class VKPostTaskMarkerParser:
             week_number = int(week_match.group("week"))
 
         return ParsedVKPostMarker(
+            comment_points=comment_points,
             repost_points=repost_points,
             like_points=like_points,
             week_number=week_number,

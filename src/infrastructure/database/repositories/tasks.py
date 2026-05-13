@@ -8,6 +8,8 @@ from application.common.dto.task import (
     QuizTaskSummary,
     TaskForAwardDTO,
     TaskSummary,
+    VKCommentTaskCreationDTO,
+    VKCommentTaskCreationStatus,
     VKLikeTaskCreationDTO,
     VKLikeTaskCreationStatus,
     VKRepostTaskCreationDTO,
@@ -203,6 +205,74 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         task = await self._get_active_task_by_external_ids(
             external_ids=external_ids,
             task_type=TaskType.VK_LIKE,
+        )
+        if task is None:
+            return None
+        return self._to_task_summary(task=task)
+
+    async def create_comment_task_if_not_exists(
+        self,
+        code: str,
+        task_name: str,
+        description: str,
+        external_id: str,
+        points: int,
+        week_number: int | None,
+        repeat_policy: TaskRepeatPolicy,
+        event_id: str | None,
+    ) -> VKCommentTaskCreationDTO:
+        existing_task = await self._get_task_by_code_or_external_id(
+            code=code,
+            external_id=external_id,
+            task_type=TaskType.VK_COMMENT,
+        )
+        if existing_task is not None:
+            return self._to_comment_task_creation_dto(
+                status=VKCommentTaskCreationStatus.ALREADY_EXISTS,
+                task=existing_task,
+                event_id=event_id,
+            )
+
+        try:
+            async with self._session.begin_nested():
+                task = self._build_task(
+                    code=code,
+                    task_name=task_name,
+                    description=description,
+                    task_type=TaskType.VK_COMMENT,
+                    points=points,
+                    week_number=week_number,
+                    external_id=external_id,
+                    repeat_policy=repeat_policy,
+                )
+                self._session.add(task)
+                await self._session.flush()
+        except IntegrityError:
+            existing_task = await self._get_task_by_code_or_external_id(
+                code=code,
+                external_id=external_id,
+                task_type=TaskType.VK_COMMENT,
+            )
+            if existing_task is None:
+                raise
+            return self._to_comment_task_creation_dto(
+                status=VKCommentTaskCreationStatus.ALREADY_EXISTS,
+                task=existing_task,
+                event_id=event_id,
+            )
+        return self._to_comment_task_creation_dto(
+            status=VKCommentTaskCreationStatus.CREATED,
+            task=task,
+            event_id=event_id,
+        )
+
+    async def get_active_comment_task_by_external_ids(
+        self,
+        external_ids: tuple[str, ...],
+    ) -> TaskSummary | None:
+        task = await self._get_active_task_by_external_ids(
+            external_ids=external_ids,
+            task_type=TaskType.VK_COMMENT,
         )
         if task is None:
             return None
@@ -500,6 +570,25 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             raise RuntimeError("Первичный ключ задания не был сгенерирован")
 
         return VKLikeTaskCreationDTO(
+            status=status,
+            event_id=event_id,
+            tasks_id=task.tasks_id,
+            code=task.code,
+            external_id=task.external_id,
+            points=task.points,
+            week_number=task.week_number,
+        )
+
+    @staticmethod
+    def _to_comment_task_creation_dto(
+        status: VKCommentTaskCreationStatus,
+        task: Task,
+        event_id: str | None,
+    ) -> VKCommentTaskCreationDTO:
+        if task.tasks_id is None:
+            raise RuntimeError("Первичный ключ задания не был сгенерирован")
+
+        return VKCommentTaskCreationDTO(
             status=status,
             event_id=event_id,
             tasks_id=task.tasks_id,

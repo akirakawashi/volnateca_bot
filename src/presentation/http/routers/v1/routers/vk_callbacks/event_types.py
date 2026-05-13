@@ -10,9 +10,11 @@ class VKEventType(StrEnum):
     MESSAGE_NEW = "message_new"
     WALL_POST_NEW = "wall_post_new"
     WALL_REPOST = "wall_repost"
+    WALL_REPLY_NEW = "wall_reply_new"
 
 
 class VKEventGroups:
+    COMMENT = frozenset((VKEventType.WALL_REPLY_NEW,))
     LIKE = frozenset((VKEventType.LIKE_ADD, VKEventType.LIKE_REMOVE))
     REGISTRATION = frozenset((VKEventType.MESSAGE_NEW, VKEventType.MESSAGE_ALLOW))
     REPOST = frozenset((VKEventType.WALL_REPOST,))

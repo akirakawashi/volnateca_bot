@@ -1,6 +1,7 @@
 from dishka import Provider, Scope, provide
 
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
+from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
@@ -28,6 +29,7 @@ class PresentationProvider(Provider):
         complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler,
         create_vk_post_tasks_interactor: CreateVKPostTasksHandler,
         complete_vk_like_task_interactor: CompleteVKLikeTaskHandler,
+        complete_vk_comment_task_interactor: CompleteVKCommentTaskHandler,
         get_vk_user_tasks_interactor: GetVKUserTasksHandler,
         get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
         answer_quiz_question_interactor: AnswerQuizQuestionHandler,
@@ -45,6 +47,7 @@ class PresentationProvider(Provider):
             complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
             create_vk_post_tasks_interactor=create_vk_post_tasks_interactor,
             complete_vk_like_task_interactor=complete_vk_like_task_interactor,
+            complete_vk_comment_task_interactor=complete_vk_comment_task_interactor,
             get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
             get_quiz_first_question_interactor=get_quiz_first_question_interactor,
             answer_quiz_question_interactor=answer_quiz_question_interactor,

@@ -4,6 +4,7 @@ from application.common.dto.task import (
     QuizTaskSummary,
     TaskForAwardDTO,
     TaskSummary,
+    VKCommentTaskCreationDTO,
     VKLikeTaskCreationDTO,
     VKRepostTaskCreationDTO,
     VKUserAvailableTaskDTO,
@@ -68,6 +69,27 @@ class ITaskRepository(ABC):
 
     @abstractmethod
     async def get_active_like_task_by_external_ids(
+        self,
+        external_ids: tuple[str, ...],
+    ) -> TaskSummary | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def create_comment_task_if_not_exists(
+        self,
+        code: str,
+        task_name: str,
+        description: str,
+        external_id: str,
+        points: int,
+        week_number: int | None,
+        repeat_policy: TaskRepeatPolicy,
+        event_id: str | None,
+    ) -> VKCommentTaskCreationDTO:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_active_comment_task_by_external_ids(
         self,
         external_ids: tuple[str, ...],
     ) -> TaskSummary | None:

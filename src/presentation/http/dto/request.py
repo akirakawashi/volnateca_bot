@@ -27,14 +27,14 @@ class VKCallbackObjectSchema(BaseModel):
 
     post_id: int | None = Field(default=None, alias="id", description="ID записи на стене VK")
     owner_id: int | None = Field(default=None, description="ID владельца стены VK")
+    from_id: int | None = Field(default=None, description="ID пользователя VK")
     text: str | None = Field(default=None, description="Текст записи на стене VK")
     message: VKCallbackMessageSchema | None = Field(
         default=None,
         description="Сообщение из события VK Callback API",
     )
     user_id: int | None = Field(default=None, description="ID пользователя VK")
-    from_id: int | None = Field(default=None, description="ID пользователя VK")
-    liker_id: int | None = Field(default=None, description="ID пользователя VK, поставившего лайк")
+    liker_id: int | None = Field(default=None, description="ID пользователя VK, поставившего ��айк")
     object_id: int | None = Field(default=None, description="ID объекта, которому поставлен лайк")
     object_owner_id: int | None = Field(default=None, description="ID владельца объекта лайка")
     object_type: str | None = Field(default=None, description="Тип объекта лайка: post, comment и т.д.")

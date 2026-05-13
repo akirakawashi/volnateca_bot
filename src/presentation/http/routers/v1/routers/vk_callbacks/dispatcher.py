@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from fastapi.responses import PlainTextResponse
 
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
+from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
@@ -22,6 +23,7 @@ from application.interface.clients import IVKMessageClient
 from application.interface.services import IUserMessageIntentClassifier
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
+    handle_comment_callback,
     handle_confirmation_callback,
     handle_ignored_callback,
     handle_like_callback,
@@ -51,6 +53,7 @@ class VKCallbackDispatcher:
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     create_vk_post_tasks_interactor: CreateVKPostTasksHandler
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
+    complete_vk_comment_task_interactor: CompleteVKCommentTaskHandler
     get_vk_user_tasks_interactor: GetVKUserTasksHandler
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler
     answer_quiz_question_interactor: AnswerQuizQuestionHandler
@@ -74,6 +77,15 @@ class VKCallbackDispatcher:
             response = await handle_like_callback(
                 data=payload,
                 interactor_complete=self.complete_vk_like_task_interactor,
+                message_client=self.vk_message_client,
+            )
+            await self._record_user_activity(payload=payload)
+            return response
+
+        if payload.is_comment_event():
+            response = await handle_comment_callback(
+                data=payload,
+                interactor_complete=self.complete_vk_comment_task_interactor,
                 message_client=self.vk_message_client,
             )
             await self._record_user_activity(payload=payload)
