@@ -15,6 +15,7 @@ async def send_vk_user_message(
     message_client: IVKMessageClient,
     log_message: str,
     keyboard: VKKeyboard | None = None,
+    attachment: str | None = None,
 ) -> None:
     """Отправляет VK-сообщение и логирует сбой, не ломая обработку callback-а."""
 
@@ -23,6 +24,7 @@ async def send_vk_user_message(
             vk_user_id=vk_user_id,
             message=message.text,
             keyboard=keyboard if keyboard is not None else build_main_menu_keyboard(),
+            attachment=attachment,
         )
     except Exception:
         logger.exception(

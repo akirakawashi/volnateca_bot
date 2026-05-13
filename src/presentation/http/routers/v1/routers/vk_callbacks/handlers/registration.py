@@ -404,6 +404,9 @@ async def _handle_start_quiz(
         ),
         message_client=message_client,
         log_message="Вопрос квиза VK",
+        attachment=await message_client.upload_photo_for_message(question.image_url)
+        if question.image_url
+        else None,
     )
 
 
@@ -549,6 +552,9 @@ async def _handle_quiz_answer(
             ),
             message_client=message_client,
             log_message="Следующий вопрос квиза VK",
+            attachment=await message_client.upload_photo_for_message(next_q.image_url)
+            if next_q.image_url
+            else None,
         )
 
 
