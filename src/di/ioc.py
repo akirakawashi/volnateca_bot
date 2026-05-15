@@ -36,6 +36,7 @@ from application.services.award_achievement_service import AwardAchievementServi
 from application.services.award_task_service import AwardTaskService
 from application.services.daily_streak_achievement_service import DailyStreakAchievementService
 from application.services.quiz_streak_achievement_service import QuizStreakAchievementService
+from settings.app.app import AppSettings
 from settings.vk import VKSettings
 
 
@@ -179,12 +180,14 @@ class InteractorProvider(Provider):
         daily_activity_repository: IUserDailyActivityRepository,
         daily_streak_achievement_service: DailyStreakAchievementService,
         uow: IUnitOfWork,
+        app_settings: AppSettings,
     ) -> RecordVKUserActivityHandler:
         return RecordVKUserActivityHandler(
             user_repository=user_repository,
             daily_activity_repository=daily_activity_repository,
             daily_streak_achievement_service=daily_streak_achievement_service,
             uow=uow,
+            project_timezone=app_settings.project_timezone,
         )
 
     @provide(scope=Scope.REQUEST)
@@ -194,12 +197,14 @@ class InteractorProvider(Provider):
         achievement_repository: IAchievementRepository,
         award_achievement_service: AwardAchievementService,
         uow: IUnitOfWork,
+        app_settings: AppSettings,
     ) -> AwardMonthlyTopHandler:
         return AwardMonthlyTopHandler(
             transaction_repository=transaction_repository,
             achievement_repository=achievement_repository,
             award_achievement_service=award_achievement_service,
             uow=uow,
+            project_timezone=app_settings.project_timezone,
         )
 
     @provide(scope=Scope.REQUEST)

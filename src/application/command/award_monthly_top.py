@@ -14,7 +14,6 @@ from application.services.award_achievement_service import (
 )
 
 MONTHLY_TOP_ACHIEVEMENT_CODE = "monthly_top_10"
-PROJECT_TIMEZONE = ZoneInfo("Europe/Moscow")
 
 
 class MonthlyTopAwardStatus(str, Enum):
@@ -59,7 +58,7 @@ class AwardMonthlyTopHandler(Interactor[AwardMonthlyTopCommand, AwardMonthlyTopD
         achievement_repository: IAchievementRepository,
         award_achievement_service: AwardAchievementService,
         uow: IUnitOfWork,
-        project_timezone: ZoneInfo = PROJECT_TIMEZONE,
+        project_timezone: ZoneInfo,
     ) -> None:
         self.transaction_repository = transaction_repository
         self.achievement_repository = achievement_repository

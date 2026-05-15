@@ -11,8 +11,6 @@ from application.services.daily_streak_achievement_service import (
     DailyStreakAward,
 )
 
-PROJECT_TIMEZONE = ZoneInfo("Europe/Moscow")
-
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class RecordVKUserActivityCommand:
@@ -41,7 +39,7 @@ class RecordVKUserActivityHandler(
         daily_activity_repository: IUserDailyActivityRepository,
         daily_streak_achievement_service: DailyStreakAchievementService,
         uow: IUnitOfWork,
-        project_timezone: ZoneInfo = PROJECT_TIMEZONE,
+        project_timezone: ZoneInfo,
     ) -> None:
         self.user_repository = user_repository
         self.daily_activity_repository = daily_activity_repository
@@ -117,7 +115,6 @@ class RecordVKUserActivityHandler(
 
 
 __all__ = [
-    "PROJECT_TIMEZONE",
     "RecordVKUserActivityCommand",
     "RecordVKUserActivityDTO",
     "RecordVKUserActivityHandler",
