@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from fastapi import HTTPException, status
 from fastapi.responses import PlainTextResponse
-from loguru import logger
 
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
@@ -137,18 +136,7 @@ class VKCallbackDispatcher:
                 command_data=RecordVKUserActivityCommand(vk_user_id=vk_user_id),
             )
         except Exception:
-            await self._rollback_user_activity_uow(
-                payload=payload,
-                vk_user_id=vk_user_id,
-            )
-            logger.exception(
-                "Не удалось записать дневную активность VK: event_type={}, event_id={}, "
-                "group_id={}, vk_user_id={}",
-                payload.type,
-                payload.event_id,
-                payload.group_id,
-                vk_user_id,
-            )
+            await self._rollback_user_activity_uow()
             return
 
         try:
@@ -158,34 +146,13 @@ class VKCallbackDispatcher:
                 message_client=self.vk_message_client,
             )
         except Exception:
-            logger.exception(
-                "Не удалось обработать награду за дневной стрик VK: event_type={}, "
-                "event_id={}, group_id={}, vk_user_id={}, users_id={}, activity_recorded={}",
-                payload.type,
-                payload.event_id,
-                payload.group_id,
-                result.vk_user_id,
-                result.users_id,
-                result.activity_recorded,
-            )
+            return
 
-    async def _rollback_user_activity_uow(
-        self,
-        *,
-        payload: VKCallbackPayload,
-        vk_user_id: int,
-    ) -> None:
+    async def _rollback_user_activity_uow(self) -> None:
         try:
             await self.record_vk_user_activity_interactor.uow.rollback()
         except Exception:
-            logger.exception(
-                "Не удалось откатить транзакцию после сбоя записи активности VK: "
-                "event_type={}, event_id={}, group_id={}, vk_user_id={}",
-                payload.type,
-                payload.event_id,
-                payload.group_id,
-                vk_user_id,
-            )
+            return
 
     def _validate_group(self, payload: VKCallbackPayload) -> None:
         if payload.is_expected_group(expected_group_id=self.vk_settings.GROUP_ID):
