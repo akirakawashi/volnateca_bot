@@ -206,7 +206,7 @@ class AnswerQuizQuestionHandler(
         await self.uow.commit()
 
         next_question: QuizQuestionDTO | None = None
-        if not task_completed:
+        if not task_completed and not saved.already_answered:
             next_question = await self.quiz_repository.get_first_unanswered_question(
                 tasks_id=saved.tasks_id,
                 vk_user_id=command_data.vk_user_id,

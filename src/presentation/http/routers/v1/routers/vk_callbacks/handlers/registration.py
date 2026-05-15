@@ -461,21 +461,22 @@ async def _handle_quiz_answer(
         )
         return
 
-    # Обратная связь по правильности ответа (не показываем при повторном нажатии)
-    if not answer_result.already_answered:
-        await send_vk_user_message(
-            data=data,
-            vk_user_id=result.registration.vk_user_id,
-            users_id=result.registration.users_id,
-            message=build_quiz_answer_result_message(
-                is_correct=answer_result.is_correct,
-                correct_option_text=answer_result.correct_option_text
-                if not answer_result.is_correct
-                else None,
-            ),
-            message_client=message_client,
-            log_message="Результат ответа на вопрос квиза VK",
-        )
+    if answer_result.already_answered:
+        return
+
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_quiz_answer_result_message(
+            is_correct=answer_result.is_correct,
+            correct_option_text=answer_result.correct_option_text
+            if not answer_result.is_correct
+            else None,
+        ),
+        message_client=message_client,
+        log_message="Результат ответа на вопрос квиза VK",
+    )
 
     # Если квиз завершён — показываем награду с главным меню
     if answer_result.task_completed and answer_result.balance_points is not None:
