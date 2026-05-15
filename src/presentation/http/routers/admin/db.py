@@ -1,6 +1,6 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from application.admin.command.truncate_db import TruncateDBCommand, TruncateDBHandler
 from settings.app.app import AppSettings
