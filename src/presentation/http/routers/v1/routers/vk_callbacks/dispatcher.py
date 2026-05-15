@@ -132,6 +132,9 @@ class VKCallbackDispatcher:
             return
 
         try:
+            # Дневная активность — пост-обработка после основного сценария.
+            # Если она упадёт, не превращаем уже успешно обработанный callback в 500,
+            # иначе VK начнёт ретраить событие и может продублировать основной эффект.
             result = await self.record_vk_user_activity_interactor(
                 command_data=RecordVKUserActivityCommand(vk_user_id=vk_user_id),
             )
@@ -146,10 +149,14 @@ class VKCallbackDispatcher:
                 message_client=self.vk_message_client,
             )
         except Exception:
+            # Уведомление о награде за стрик тоже best-effort: сбой отправки сообщения
+            # не должен ломать callback и провоцировать повторную доставку от VK.
             return
 
     async def _rollback_user_activity_uow(self) -> None:
         try:
+            # После ошибки явно откатываем сессию, чтобы не оставлять request-scoped UoW
+            # в подвешенном состоянии перед дальнейшим завершением запроса.
             await self.record_vk_user_activity_interactor.uow.rollback()
         except Exception:
             return
