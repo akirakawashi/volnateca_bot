@@ -177,10 +177,7 @@ def build_quiz_answer_result_message(
 
 def build_quiz_unavailable_message() -> VKMessageText:
     return VKMessageText(
-        text=(
-            "⏳ Эта викторина уже недоступна.\n\n"
-            "Открой 🎯 Задания, чтобы увидеть актуальные активности."
-        ),
+        text=("⏳ Эта викторина уже недоступна.\n\nОткрой 🎯 Задания, чтобы увидеть актуальные активности."),
     )
 
 

@@ -63,7 +63,3 @@ class IVKWallClient(ABC):
         """
 
         raise NotImplementedError
-
-
-
-

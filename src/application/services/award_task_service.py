@@ -211,8 +211,12 @@ class AwardTaskService:
             balance_points=accrual.balance_after,
             level_up=level_up,
             week_completion_week_number=task.week_number if week_completion is not None else None,
-            week_completion_points_awarded=week_completion.points_awarded if week_completion is not None else 0,
-            week_completion_balance_points=week_completion.balance_points if week_completion is not None else None,
+            week_completion_points_awarded=week_completion.points_awarded
+            if week_completion is not None
+            else 0,
+            week_completion_balance_points=week_completion.balance_points
+            if week_completion is not None
+            else None,
             week_completion_level_up=week_completion.level_up if week_completion is not None else None,
             project_completion_points_awarded=(
                 project_completion.points_awarded if project_completion is not None else 0
@@ -220,7 +224,9 @@ class AwardTaskService:
             project_completion_balance_points=(
                 project_completion.balance_points if project_completion is not None else None
             ),
-            project_completion_level_up=project_completion.level_up if project_completion is not None else None,
+            project_completion_level_up=project_completion.level_up
+            if project_completion is not None
+            else None,
         )
 
     async def reject(

@@ -242,4 +242,5 @@ class InteractorProvider(Provider):
         vk_settings: VKSettings,
     ) -> "SeedDevScenarioHandler":
         from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
+
         return SeedDevScenarioHandler(session=session, vk_settings=vk_settings)

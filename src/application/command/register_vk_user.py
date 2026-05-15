@@ -51,6 +51,10 @@ class RegisterVKUserHandler(Interactor[RegisterVKUserCommand, VKUserRegistration
         if existing_user is not None:
             return existing_user
 
+        # Закрываем read-only транзакцию после SELECT, чтобы не держать
+        # DB-соединение во время внешнего запроса к VK API.
+        await self.uow.rollback()
+
         profile = await self.vk_user_client.get_user_profile(vk_user_id=command_data.vk_user_id)
         first_name = self._select_profile_value(
             profile_value=profile.first_name if profile else None,

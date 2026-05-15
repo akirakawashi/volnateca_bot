@@ -13,6 +13,7 @@ from application.admin.dto.quiz import (
 
 # ── Request ───────────────────────────────────────────────────────────────────
 
+
 class CreateQuizOptionSchema(BaseModel):
     option_text: str = Field(min_length=1, max_length=500)
     is_correct: bool
@@ -76,6 +77,7 @@ class CreateQuizRequestSchema(BaseModel):
 
 
 # ── Response ──────────────────────────────────────────────────────────────────
+
 
 class CreatedQuizOptionResponseSchema(BaseModel):
     quiz_question_options_id: int

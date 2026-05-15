@@ -5,6 +5,7 @@ from application.admin.dto.wall_post import PostToWallCommand, PostedToWallDTO
 
 # ── Request ───────────────────────────────────────────────────────────────────
 
+
 class PostToWallRequestSchema(BaseModel):
     message: str = Field(min_length=1, max_length=16384)
     like_points: int = Field(default=10, gt=0)
@@ -25,6 +26,7 @@ class PostToWallRequestSchema(BaseModel):
 
 
 # ── Response ──────────────────────────────────────────────────────────────────
+
 
 class PostedToWallResponseSchema(BaseModel):
     post_id: int
