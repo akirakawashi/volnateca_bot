@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
@@ -32,7 +33,6 @@ class CreateQuizQuestionSchema(BaseModel):
 
 
 class CreateQuizRequestSchema(BaseModel):
-    code: str = Field(min_length=1, max_length=255)
     task_name: str = Field(min_length=1, max_length=500)
     description: str | None = None
     points: int = Field(gt=0)
@@ -50,7 +50,7 @@ class CreateQuizRequestSchema(BaseModel):
 
     def to_command(self) -> CreateQuizCommand:
         return CreateQuizCommand(
-            code=self.code,
+            code=str(uuid.uuid4()),
             task_name=self.task_name,
             description=self.description,
             points=self.points,
