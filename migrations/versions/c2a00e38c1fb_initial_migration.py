@@ -1,8 +1,8 @@
-"""init
+"""Initial migration
 
-Revision ID: ede63ce6af90
+Revision ID: c2a00e38c1fb
 Revises: 
-Create Date: 2026-05-11 14:11:31.945488
+Create Date: 2026-05-16 01:08:33.656251
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = 'ede63ce6af90'
+revision: str = 'c2a00e38c1fb'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -37,6 +37,15 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_achievements_code'), 'achievements', ['code'], unique=True)
     op.create_index(op.f('ix_achievements_is_active'), 'achievements', ['is_active'], unique=False)
+    op.create_table('message_templates',
+    sa.Column('message_templates_id', sa.Integer(), nullable=False),
+    sa.Column('code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('template_text', sa.Text(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.PrimaryKeyConstraint('message_templates_id', name=op.f('pk_message_templates'))
+    )
+    op.create_index(op.f('ix_message_templates_code'), 'message_templates', ['code'], unique=True)
     op.create_table('prizes',
     sa.Column('prizes_id', sa.Integer(), nullable=False),
     sa.Column('code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -228,6 +237,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_task_completions_external_event_id'), 'task_completions', ['external_event_id'], unique=False)
     op.create_index(op.f('ix_task_completions_tasks_id'), 'task_completions', ['tasks_id'], unique=False)
     op.create_index(op.f('ix_task_completions_users_id'), 'task_completions', ['users_id'], unique=False)
+    op.create_index('ix_task_completions_users_id_task_completion_status', 'task_completions', ['users_id', 'task_completion_status'], unique=False)
     op.create_table('user_achievements',
     sa.Column('user_achievements_id', sa.Integer(), nullable=False),
     sa.Column('users_id', sa.Integer(), nullable=False),
@@ -301,6 +311,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_user_achievements_achievements_id'), table_name='user_achievements')
     op.drop_index(op.f('ix_user_achievements_achievement_key'), table_name='user_achievements')
     op.drop_table('user_achievements')
+    op.drop_index('ix_task_completions_users_id_task_completion_status', table_name='task_completions')
     op.drop_index(op.f('ix_task_completions_users_id'), table_name='task_completions')
     op.drop_index(op.f('ix_task_completions_tasks_id'), table_name='task_completions')
     op.drop_index(op.f('ix_task_completions_external_event_id'), table_name='task_completions')
@@ -336,6 +347,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_prizes_cost_points'), table_name='prizes')
     op.drop_index(op.f('ix_prizes_code'), table_name='prizes')
     op.drop_table('prizes')
+    op.drop_index(op.f('ix_message_templates_code'), table_name='message_templates')
+    op.drop_table('message_templates')
     op.drop_index(op.f('ix_achievements_is_active'), table_name='achievements')
     op.drop_index(op.f('ix_achievements_code'), table_name='achievements')
     op.drop_table('achievements')
