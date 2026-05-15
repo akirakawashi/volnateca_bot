@@ -103,6 +103,7 @@ class VKCallbackDispatcher:
             response = await handle_repost_callback(
                 data=payload,
                 interactor=self.complete_vk_repost_task_interactor,
+                interactor_like=self.complete_vk_like_task_interactor,
                 message_client=self.vk_message_client,
             )
             await self._record_user_activity(payload=payload)
