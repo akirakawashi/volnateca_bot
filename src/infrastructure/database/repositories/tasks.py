@@ -426,8 +426,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
                     col(Task.code) == code,
                     col(Task.external_id) == external_id,
                 ),
-            )
-            .with_for_update(),
+            ),
         )
         return result.scalars().first()
 

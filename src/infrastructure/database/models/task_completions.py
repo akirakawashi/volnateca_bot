@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, Enum as SAEnum, Text, UniqueConstraint, func
+from sqlalchemy import DateTime, Enum as SAEnum, Index, Text, UniqueConstraint, func
 from sqlmodel import Column, Field, Relationship
 
 from domain.enums.task import TaskCompletionStatus
@@ -30,6 +30,11 @@ class TaskCompletion(BaseModel, table=True):
             "tasks_id",
             "completion_key",
             name="uq_task_completions_users_tasks_key",
+        ),
+        Index(
+            "ix_task_completions_users_id_task_completion_status",
+            "users_id",
+            "task_completion_status",
         ),
     )
 

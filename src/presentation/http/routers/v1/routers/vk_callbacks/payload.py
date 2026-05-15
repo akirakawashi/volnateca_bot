@@ -314,5 +314,8 @@ class VKCallbackPayload:
         if raw_user_id is None:
             return None
 
-        vk_user_id = int(raw_user_id)
+        try:
+            vk_user_id = int(raw_user_id)
+        except (TypeError, ValueError):
+            return None
         return vk_user_id if vk_user_id > 0 else None

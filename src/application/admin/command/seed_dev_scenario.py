@@ -18,8 +18,6 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[4]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from dev_scripts.seed_dev_scenarios import get_target_user, seed_target_scenario
-
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class SeedDevScenarioCommand:
@@ -40,6 +38,8 @@ class SeedDevScenarioHandler(Interactor[SeedDevScenarioCommand, SeedDevScenarioD
         self._vk_settings = vk_settings
 
     async def __call__(self, command_data: SeedDevScenarioCommand) -> SeedDevScenarioDTO:
+        from dev_scripts.seed_dev_scenarios import get_target_user, seed_target_scenario
+
         user = await get_target_user(self._session, users_id=command_data.users_id)
         lines = await seed_target_scenario(
             self._session,
