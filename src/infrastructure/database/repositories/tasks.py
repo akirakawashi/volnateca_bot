@@ -419,8 +419,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         task_type: TaskType,
     ) -> Task | None:
         result = await self._session.execute(
-            select(Task)
-            .where(
+            select(Task).where(
                 col(Task.task_type) == task_type,
                 or_(
                     col(Task.code) == code,

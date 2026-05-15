@@ -13,7 +13,7 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
 from application.interface.clients import IVKMessageClient
-from application.interface.services import IUserMessageIntentClassifier
+from application.interface.services import IUserMessageIntentClassifier, IVKMessageTemplateService
 from presentation.http.routers.v1.routers.vk_callbacks.dispatcher import VKCallbackDispatcher
 from settings.vk import VKSettings
 
@@ -34,6 +34,7 @@ class PresentationProvider(Provider):
         process_referral_interactor: ProcessReferralHandler,
         record_vk_user_activity_interactor: RecordVKUserActivityHandler,
         vk_message_client: IVKMessageClient,
+        vk_message_template_service: IVKMessageTemplateService,
         user_message_intent_classifier: IUserMessageIntentClassifier,
     ) -> VKCallbackDispatcher:
         return VKCallbackDispatcher(
@@ -51,5 +52,6 @@ class PresentationProvider(Provider):
             process_referral_interactor=process_referral_interactor,
             record_vk_user_activity_interactor=record_vk_user_activity_interactor,
             vk_message_client=vk_message_client,
+            vk_message_template_service=vk_message_template_service,
             user_message_intent_classifier=user_message_intent_classifier,
         )

@@ -14,6 +14,7 @@ from domain.enums import (
 )
 from infrastructure.database.base import BaseModel
 from infrastructure.database.models.achievements import Achievement
+from infrastructure.database.models.message_templates import MessageTemplate
 from infrastructure.database.models.prize_promo_codes import PrizePromoCode
 from infrastructure.database.models.prize_redemptions import PrizeRedemption
 from infrastructure.database.models.prizes import Prize
@@ -33,6 +34,7 @@ __all__ = [
     "AchievementRepeatPolicy",
     "AchievementType",
     "BaseModel",
+    "MessageTemplate",
     "PromoCodeStatus",
     "Prize",
     "PrizePromoCode",

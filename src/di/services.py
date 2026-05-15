@@ -1,22 +1,31 @@
 from dishka import Provider, Scope, provide
 
 from application.interface.repositories.achievements import IAchievementRepository
+from application.interface.repositories.message_templates import IMessageTemplateRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
-from application.interface.services import IUserMessageIntentClassifier
+from application.interface.services import IUserMessageIntentClassifier, IVKMessageTemplateService
 from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
 from application.services.daily_streak_achievement_service import DailyStreakAchievementService
 from application.services.project_completion_achievement_service import ProjectCompletionAchievementService
 from application.services.quiz_streak_achievement_service import QuizStreakAchievementService
 from application.services.user_message_intent import RuleBasedUserMessageIntentClassifier
+from application.services.vk_message_template_service import VKMessageTemplateService
 from application.services.week_completion_achievement_service import WeekCompletionAchievementService
 
 
 class ServicesProvider(Provider):
+    @provide(scope=Scope.REQUEST, provides=IVKMessageTemplateService)
+    def get_vk_message_template_service(
+        self,
+        message_templates: IMessageTemplateRepository,
+    ) -> VKMessageTemplateService:
+        return VKMessageTemplateService(repository=message_templates)
+
     @provide(scope=Scope.REQUEST)
     def get_award_achievement_service(
         self,

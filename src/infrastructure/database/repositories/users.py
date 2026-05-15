@@ -99,9 +99,7 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             return
 
         await self._session.execute(
-            update(User)
-            .where(col(User.vk_user_id) == vk_user_id)
-            .values(**values),
+            update(User).where(col(User.vk_user_id) == vk_user_id).values(**values),
         )
         await self._session.flush()
 

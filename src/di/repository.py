@@ -2,6 +2,7 @@ from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.interface.repositories.achievements import IAchievementRepository
+from application.interface.repositories.message_templates import IMessageTemplateRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
@@ -12,6 +13,7 @@ from application.interface.repositories.transactions import ITransactionReposito
 from application.interface.repositories.user_daily_activities import IUserDailyActivityRepository
 from application.interface.repositories.users import IUserRepository
 from infrastructure.database.repositories.achievements import AchievementRepository
+from infrastructure.database.repositories.message_templates import MessageTemplateRepository
 from infrastructure.database.repositories.quiz import QuizRepository
 from infrastructure.database.db_manager import DBManager
 from infrastructure.database.repositories.admin.quiz import QuizAdminRepository
@@ -24,6 +26,13 @@ from infrastructure.database.repositories.users import UserRepository
 
 
 class RepositoriesProvider(Provider):
+    @provide(scope=Scope.REQUEST, provides=IMessageTemplateRepository)
+    def get_message_template_repository(
+        self,
+        session: AsyncSession,
+    ) -> MessageTemplateRepository:
+        return MessageTemplateRepository(session=session)
+
     @provide(scope=Scope.REQUEST, provides=IUserRepository)
     def get_user_repository(
         self,

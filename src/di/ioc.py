@@ -3,6 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # TODO: удалить SeedDevScenarioHandler и get_seed_dev_scenario_handler перед релизом.
 from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
+from application.admin.command.message_templates import (
+    DeleteMessageTemplateHandler,
+    ListMessageTemplatesHandler,
+    UpsertMessageTemplateHandler,
+)
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.award_monthly_top import AwardMonthlyTopHandler
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
@@ -21,6 +26,7 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
 from application.interface.clients import IVKUserClient, IVKWallClient
+from application.interface.services import IVKMessageTemplateService
 from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
@@ -41,6 +47,29 @@ from settings.vk import VKSettings
 
 
 class InteractorProvider(Provider):
+    @provide(scope=Scope.REQUEST)
+    def get_list_message_templates_handler(
+        self,
+        service: IVKMessageTemplateService,
+    ) -> ListMessageTemplatesHandler:
+        return ListMessageTemplatesHandler(service=service)
+
+    @provide(scope=Scope.REQUEST)
+    def get_upsert_message_template_handler(
+        self,
+        service: IVKMessageTemplateService,
+        uow: IUnitOfWork,
+    ) -> UpsertMessageTemplateHandler:
+        return UpsertMessageTemplateHandler(service=service, uow=uow)
+
+    @provide(scope=Scope.REQUEST)
+    def get_delete_message_template_handler(
+        self,
+        service: IVKMessageTemplateService,
+        uow: IUnitOfWork,
+    ) -> DeleteMessageTemplateHandler:
+        return DeleteMessageTemplateHandler(service=service, uow=uow)
+
     @provide(scope=Scope.REQUEST)
     def get_register_vk_user_handler(
         self,

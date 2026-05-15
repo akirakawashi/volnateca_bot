@@ -19,7 +19,7 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
 from application.interface.clients import IVKMessageClient
-from application.interface.services import IUserMessageIntentClassifier
+from application.interface.services import IUserMessageIntentClassifier, IVKMessageTemplateService
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_comment_callback,
@@ -33,6 +33,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
     send_daily_streak_rewards_if_needed,
 )
+from presentation.http.routers.v1.routers.vk_callbacks.message_sender import bind_vk_message_template_service
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from settings.vk import VKSettings
 
@@ -57,74 +58,75 @@ class VKCallbackDispatcher:
     process_referral_interactor: ProcessReferralHandler
     record_vk_user_activity_interactor: RecordVKUserActivityHandler
     vk_message_client: IVKMessageClient
+    vk_message_template_service: IVKMessageTemplateService
     user_message_intent_classifier: IUserMessageIntentClassifier
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
         """Валидирует callback и возвращает VK-совместимый plain text response."""
+        with bind_vk_message_template_service(self.vk_message_template_service):
+            payload = VKCallbackPayload(data=data)
+            self._validate_group(payload=payload)
 
-        payload = VKCallbackPayload(data=data)
-        self._validate_group(payload=payload)
+            if payload.is_confirmation():
+                return handle_confirmation_callback(vk_settings=self.vk_settings)
 
-        if payload.is_confirmation():
-            return handle_confirmation_callback(vk_settings=self.vk_settings)
+            self._validate_secret(payload=payload)
 
-        self._validate_secret(payload=payload)
+            if payload.is_like():
+                response = await handle_like_callback(
+                    data=payload,
+                    interactor_complete=self.complete_vk_like_task_interactor,
+                    message_client=self.vk_message_client,
+                )
+                await self._record_user_activity(payload=payload)
+                return response
 
-        if payload.is_like():
-            response = await handle_like_callback(
-                data=payload,
-                interactor_complete=self.complete_vk_like_task_interactor,
-                message_client=self.vk_message_client,
-            )
+            if payload.is_comment_event():
+                response = await handle_comment_callback(
+                    data=payload,
+                    interactor_complete=self.complete_vk_comment_task_interactor,
+                    message_client=self.vk_message_client,
+                )
+                await self._record_user_activity(payload=payload)
+                return response
+
+            if payload.is_repost():
+                response = await handle_repost_callback(
+                    data=payload,
+                    interactor=self.complete_vk_repost_task_interactor,
+                    interactor_like=self.complete_vk_like_task_interactor,
+                    message_client=self.vk_message_client,
+                )
+                await self._record_user_activity(payload=payload)
+                return response
+
+            if payload.is_subscription_event():
+                response = await handle_subscription_callback(
+                    data=payload,
+                    interactor=self.complete_vk_subscription_task_interactor,
+                    message_client=self.vk_message_client,
+                )
+                await self._record_user_activity(payload=payload)
+                return response
+
+            if payload.is_registration_event():
+                response = await handle_registration_callback(
+                    data=payload,
+                    interactor=self.register_vk_user_and_check_subscription_interactor,
+                    get_vk_user_tasks_interactor=self.get_vk_user_tasks_interactor,
+                    get_quiz_first_question_interactor=self.get_quiz_first_question_interactor,
+                    answer_quiz_question_interactor=self.answer_quiz_question_interactor,
+                    process_referral_interactor=self.process_referral_interactor,
+                    group_id=self.vk_settings.GROUP_ID,
+                    message_client=self.vk_message_client,
+                    intent_classifier=self.user_message_intent_classifier,
+                )
+                await self._record_user_activity(payload=payload)
+                return response
+
+            response = handle_ignored_callback(data=payload)
             await self._record_user_activity(payload=payload)
             return response
-
-        if payload.is_comment_event():
-            response = await handle_comment_callback(
-                data=payload,
-                interactor_complete=self.complete_vk_comment_task_interactor,
-                message_client=self.vk_message_client,
-            )
-            await self._record_user_activity(payload=payload)
-            return response
-
-        if payload.is_repost():
-            response = await handle_repost_callback(
-                data=payload,
-                interactor=self.complete_vk_repost_task_interactor,
-                interactor_like=self.complete_vk_like_task_interactor,
-                message_client=self.vk_message_client,
-            )
-            await self._record_user_activity(payload=payload)
-            return response
-
-        if payload.is_subscription_event():
-            response = await handle_subscription_callback(
-                data=payload,
-                interactor=self.complete_vk_subscription_task_interactor,
-                message_client=self.vk_message_client,
-            )
-            await self._record_user_activity(payload=payload)
-            return response
-
-        if payload.is_registration_event():
-            response = await handle_registration_callback(
-                data=payload,
-                interactor=self.register_vk_user_and_check_subscription_interactor,
-                get_vk_user_tasks_interactor=self.get_vk_user_tasks_interactor,
-                get_quiz_first_question_interactor=self.get_quiz_first_question_interactor,
-                answer_quiz_question_interactor=self.answer_quiz_question_interactor,
-                process_referral_interactor=self.process_referral_interactor,
-                group_id=self.vk_settings.GROUP_ID,
-                message_client=self.vk_message_client,
-                intent_classifier=self.user_message_intent_classifier,
-            )
-            await self._record_user_activity(payload=payload)
-            return response
-
-        response = handle_ignored_callback(data=payload)
-        await self._record_user_activity(payload=payload)
-        return response
 
     async def _record_user_activity(self, *, payload: VKCallbackPayload) -> None:
         vk_user_id = payload.get_primary_vk_user_id()
