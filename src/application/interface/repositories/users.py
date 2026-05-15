@@ -24,6 +24,19 @@ class IUserRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def update_vk_profile(
+        self,
+        *,
+        vk_user_id: int,
+        first_name: str | None,
+        last_name: str | None,
+        vk_screen_name: str | None,
+    ) -> None:
+        """Обновляет профильные поля пользователя без изменения баланса."""
+
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_balance_snapshot_for_update(
         self,
         vk_user_id: int,

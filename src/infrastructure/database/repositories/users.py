@@ -80,6 +80,31 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             return self._to_registration_dto(user=user, created=False)
         return self._to_registration_dto(user=user, created=True)
 
+    async def update_vk_profile(
+        self,
+        *,
+        vk_user_id: int,
+        first_name: str | None,
+        last_name: str | None,
+        vk_screen_name: str | None,
+    ) -> None:
+        values: dict[str, str] = {}
+        if first_name is not None:
+            values["first_name"] = first_name
+        if last_name is not None:
+            values["last_name"] = last_name
+        if vk_screen_name is not None:
+            values["vk_screen_name"] = vk_screen_name
+        if not values:
+            return
+
+        await self._session.execute(
+            update(User)
+            .where(col(User.vk_user_id) == vk_user_id)
+            .values(**values),
+        )
+        await self._session.flush()
+
     async def get_balance_snapshot_for_update(
         self,
         vk_user_id: int,
