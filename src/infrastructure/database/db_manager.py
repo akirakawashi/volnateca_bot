@@ -33,5 +33,8 @@ class DBManager(IDBManager):
         self._session = session
 
     async def truncate_all(self) -> None:
+        # Это изолированная dev-only операция вне продуктовых use-case'ов.
+        # Коммитим сразу здесь, чтобы TRUNCATE гарантированно завершился в той же
+        # служебной операции и не зависел от общей UoW-оркестрации приложения.
         await self._session.execute(_TRUNCATE_SQL)
         await self._session.commit()

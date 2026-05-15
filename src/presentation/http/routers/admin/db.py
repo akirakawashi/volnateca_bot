@@ -3,9 +3,9 @@ from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, status
 
 from application.admin.command.truncate_db import TruncateDBCommand, TruncateDBHandler
-from settings.app.app import AppSettings
 
-# TODO: удалить db_admin_router (truncate) перед релизом — только для локальной отладки.
+# TODO: удалить db_admin_router (truncate) перед релизом.
+# Это служебный dev-only endpoint для локальных сценариев и ручной отладки.
 db_admin_router = APIRouter(route_class=DishkaRoute)
 
 
@@ -16,11 +16,7 @@ db_admin_router = APIRouter(route_class=DishkaRoute)
 )
 async def truncate_db(
     handler: FromDishka[TruncateDBHandler],
-    app_settings: FromDishka[AppSettings],
 ) -> None:
-    # if not app_settings.DEBUG:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #         detail="Доступно только в DEBUG-режиме",
-    #     ) # TODO: убарть все что с этим связано
+    # Намеренно без runtime-охраны: endpoint не является продуктовым API и
+    # используется только в локальной разработке для dev-сценариев.
     await handler(TruncateDBCommand())

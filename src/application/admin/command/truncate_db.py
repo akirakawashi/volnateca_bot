@@ -11,7 +11,7 @@ class TruncateDBCommand:
 
 
 class TruncateDBHandler(Interactor[TruncateDBCommand, None]):
-    """Полностью очищает все таблицы БД. Только для DEBUG-режима."""
+    """Полностью очищает все таблицы БД. Только для локальной разработки."""
 
     def __init__(self, db_manager: IDBManager) -> None:
         self._db_manager = db_manager

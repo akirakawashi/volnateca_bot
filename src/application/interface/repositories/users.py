@@ -24,16 +24,6 @@ class IUserRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def update_profile(
-        self,
-        users_id: int,
-        first_name: str | None,
-        last_name: str | None,
-        vk_screen_name: str | None,
-    ) -> VKUserRegistrationDTO:
-        raise NotImplementedError
-
-    @abstractmethod
     async def get_balance_snapshot_for_update(
         self,
         vk_user_id: int,

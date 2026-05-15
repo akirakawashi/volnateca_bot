@@ -80,26 +80,6 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             return self._to_registration_dto(user=user, created=False)
         return self._to_registration_dto(user=user, created=True)
 
-    async def update_profile(
-        self,
-        users_id: int,
-        first_name: str | None,
-        last_name: str | None,
-        vk_screen_name: str | None,
-    ) -> VKUserRegistrationDTO:
-        user = await self._session.get(User, users_id)
-        if user is None:
-            raise RuntimeError(f"Пользователь с users_id={users_id} не найден")
-
-        if first_name is not None:
-            user.first_name = first_name
-        if last_name is not None:
-            user.last_name = last_name
-        if vk_screen_name is not None:
-            user.vk_screen_name = vk_screen_name
-
-        return self._to_registration_dto(user=user, created=False)
-
     async def get_balance_snapshot_for_update(
         self,
         vk_user_id: int,
