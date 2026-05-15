@@ -8,7 +8,7 @@ import aiohttp
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from application.common.dto.vk import VKUserProfileDTO
-from application.interface.clients import IVKMessageClient, IVKUserClient
+from application.interface.clients import IVKMessageClient, IVKUserClient, IVKWallClient
 from settings.vk import VKSettings
 
 VK_USERS_GET_METHOD = "users.get"
@@ -17,6 +17,7 @@ VK_GROUPS_IS_MEMBER_METHOD = "groups.isMember"
 VK_MESSAGES_SEND_METHOD = "messages.send"
 VK_PHOTOS_GET_MESSAGES_UPLOAD_SERVER_METHOD = "photos.getMessagesUploadServer"
 VK_PHOTOS_SAVE_MESSAGES_PHOTO_METHOD = "photos.saveMessagesPhoto"
+VK_WALL_POST_METHOD = "wall.post"
 
 
 class VKAPIErrorSchema(BaseModel):
@@ -127,7 +128,24 @@ class VKSaveMessagesPhotoResponseSchema(BaseModel):
     error: VKAPIErrorSchema | None = None
 
 
-class VKAPIClient(IVKUserClient, IVKMessageClient):
+class VKWallPostInnerSchema(BaseModel):
+    """post_id из успешного ответа wall.post."""
+
+    model_config = ConfigDict(extra="allow")
+
+    post_id: int
+
+
+class VKWallPostResponseSchema(BaseModel):
+    """Полный ответ метода wall.post."""
+
+    model_config = ConfigDict(extra="allow")
+
+    response: VKWallPostInnerSchema | None = None
+    error: VKAPIErrorSchema | None = None
+
+
+class VKAPIClient(IVKUserClient, IVKMessageClient, IVKWallClient):
     """Небросающий клиент VK API для application-слоя.
 
     Методы возвращают None/False при недоступном токене, сетевой ошибке,
@@ -359,6 +377,43 @@ class VKAPIClient(IVKUserClient, IVKMessageClient):
 
         photo: VKSavedMessagePhotoSchema = saved.response[0]
         return f"photo{photo.owner_id}_{photo.id}"
+
+    async def post_to_wall(
+        self,
+        *,
+        message: str,
+        attachments: tuple[str, ...] | None = None,
+    ) -> int | None:
+        """Публикует запись на стене сообщества через wall.post."""
+
+        if not self._settings.GROUP_ACCESS_TOKEN:
+            return None
+        if not message:
+            return None
+
+        params: dict[str, str] = {
+            "owner_id": str(-abs(self._settings.GROUP_ID)),
+            "from_group": "1",
+            "message": message,
+            "access_token": self._settings.GROUP_ACCESS_TOKEN,
+            "v": self._settings.API_VERSION,
+        }
+        if attachments:
+            params["attachments"] = ",".join(attachments)
+
+        response_data = await self._request(method=VK_WALL_POST_METHOD, params=params)
+        if response_data is None:
+            return None
+
+        try:
+            parsed = VKWallPostResponseSchema.model_validate(response_data)
+        except ValidationError:
+            return None
+
+        if parsed.error is not None or parsed.response is None:
+            return None
+
+        return parsed.response.post_id
 
     async def _request(
         self,

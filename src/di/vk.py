@@ -2,7 +2,7 @@ from collections.abc import AsyncIterable
 
 from dishka import Provider, Scope, provide
 
-from application.interface.clients import IVKMessageClient, IVKUserClient
+from application.interface.clients import IVKMessageClient, IVKUserClient, IVKWallClient
 from infrastructure.vk import VKAPIClient
 from settings.vk import VKSettings
 
@@ -22,4 +22,8 @@ class VKProvider(Provider):
 
     @provide(scope=Scope.APP, provides=IVKMessageClient)
     def get_vk_message_client(self, client: VKAPIClient) -> IVKMessageClient:
+        return client
+
+    @provide(scope=Scope.APP, provides=IVKWallClient)
+    def get_vk_wall_client(self, client: VKAPIClient) -> IVKWallClient:
         return client

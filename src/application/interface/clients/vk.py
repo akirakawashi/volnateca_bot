@@ -45,3 +45,21 @@ class IVKMessageClient(ABC):
         """
 
         raise NotImplementedError
+
+
+class IVKWallClient(ABC):
+    """Порт публикации записей на стене сообщества."""
+
+    @abstractmethod
+    async def post_to_wall(
+        self,
+        *,
+        message: str,
+        attachments: tuple[str, ...] | None = None,
+    ) -> int | None:
+        """Публикует запись от имени сообщества.
+
+        Возвращает post_id при успехе или None при ошибке.
+        """
+
+        raise NotImplementedError
