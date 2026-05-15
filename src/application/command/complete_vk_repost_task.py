@@ -58,7 +58,6 @@ class CompleteVKRepostTaskHandler(
                 vk_user_id=command_data.vk_user_id,
             )
 
-        # wall_repost приходит от VK в момент репоста, поэтому дополнительная проверка не нужна.
         outcome = await self.award_service.award(
             vk_user_id=command_data.vk_user_id,
             task=TaskAwardSpec(
