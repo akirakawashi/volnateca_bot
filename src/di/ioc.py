@@ -12,7 +12,6 @@ from application.command.complete_vk_subscription_task import CompleteVKSubscrip
 from application.admin.command.create_quiz import CreateQuizHandler
 from application.admin.command.post_to_wall import PostToWallHandler
 from application.admin.command.truncate_db import TruncateDBHandler
-from application.admin.command.upload_wall_photo import UploadWallPhotoHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
@@ -228,10 +227,6 @@ class InteractorProvider(Provider):
             uow=uow,
             vk_settings=vk_settings,
         )
-
-    @provide(scope=Scope.REQUEST)
-    def get_upload_wall_photo_handler(self) -> UploadWallPhotoHandler:
-        return UploadWallPhotoHandler()
 
     @provide(scope=Scope.REQUEST)
     def get_truncate_db_handler(
