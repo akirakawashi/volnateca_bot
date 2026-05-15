@@ -11,9 +11,6 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.repost import ha
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.subscription import (
     handle_subscription_callback,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.handlers.wall_post import (
-    handle_wall_post_new_callback,
-)
 
 __all__ = [
     "handle_comment_callback",
@@ -23,5 +20,4 @@ __all__ = [
     "handle_registration_callback",
     "handle_repost_callback",
     "handle_subscription_callback",
-    "handle_wall_post_new_callback",
 ]

@@ -12,7 +12,6 @@ from application.command.complete_vk_subscription_task import CompleteVKSubscrip
 from application.admin.command.create_quiz import CreateQuizHandler
 from application.admin.command.post_to_wall import PostToWallHandler
 from application.admin.command.truncate_db import TruncateDBHandler
-from application.command.create_vk_post_tasks import CreateVKPostTasksHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
@@ -95,17 +94,6 @@ class InteractorProvider(Provider):
             uow=uow,
             vk_user_client=vk_user_client,
             required_subscription_group_id=vk_settings.required_subscription_group_id,
-        )
-
-    @provide(scope=Scope.REQUEST)
-    def get_create_vk_post_tasks_handler(
-        self,
-        task_repository: ITaskRepository,
-        uow: IUnitOfWork,
-    ) -> CreateVKPostTasksHandler:
-        return CreateVKPostTasksHandler(
-            task_repository=task_repository,
-            uow=uow,
         )
 
     @provide(scope=Scope.REQUEST)

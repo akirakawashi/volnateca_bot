@@ -62,9 +62,6 @@ class VKCallbackPayload:
     def is_comment_event(self) -> bool:
         return self.type in VKEventGroups.COMMENT
 
-    def is_wall_post_new(self) -> bool:
-        return self.type in VKEventGroups.WALL_POST
-
     def is_registration_event(self) -> bool:
         return self.type in VKEventGroups.REGISTRATION
 
