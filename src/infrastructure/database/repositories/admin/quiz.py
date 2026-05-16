@@ -37,7 +37,6 @@ class QuizAdminRepository(SQLAlchemyRepository, IQuizAdminRepository):
                 tasks_id=task.tasks_id,
                 question_text=q_data.question_text,
                 image_attachment=q_data.image_attachment,
-                image_url=q_data.image_url,
                 is_active=True,
             )
             self._session.add(question)
@@ -68,7 +67,6 @@ class QuizAdminRepository(SQLAlchemyRepository, IQuizAdminRepository):
                     quiz_questions_id=question.quiz_questions_id,  # type: ignore[arg-type]
                     question_text=question.question_text,
                     image_attachment=question.image_attachment,
-                    image_url=question.image_url,
                     options=tuple(created_options),
                 )
             )

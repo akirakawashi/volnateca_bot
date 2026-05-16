@@ -37,10 +37,6 @@ class QuizQuestion(BaseModel, table=True):
         default=None,
         description="Готовый VK attachment для изображения вопроса; NULL если картинки нет",
     )
-    image_url: str | None = Field(
-        default=None,
-        description="URL изображения к вопросу; используется как fallback для старых записей",
-    )
     is_active: bool = Field(
         default=True,
         nullable=False,

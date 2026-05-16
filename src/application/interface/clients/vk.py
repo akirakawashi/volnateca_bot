@@ -36,16 +36,6 @@ class IVKMessageClient(ABC):
 
         raise NotImplementedError
 
-    @abstractmethod
-    async def upload_photo_for_message(self, image_url: str) -> str | None:
-        """Загружает изображение по URL на серверы VK и возвращает строку вложения.
-
-        Возвращает строку формата ``photo{owner_id}_{media_id}`` при успехе
-        или None при любой ошибке.
-        """
-
-        raise NotImplementedError
-
 
 class IVKWallClient(ABC):
     """Порт публикации записей на стене сообщества."""

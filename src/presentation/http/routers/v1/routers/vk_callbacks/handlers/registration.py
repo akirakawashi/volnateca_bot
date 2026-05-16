@@ -16,7 +16,6 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionDTO,
     RegisterVKUserAndCheckSubscriptionHandler,
 )
-from application.common.dto.quiz import QuizQuestionDTO
 from application.common.dto.task import TaskCompletionResultStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
@@ -405,10 +404,7 @@ async def _handle_start_quiz(
         ),
         message_client=message_client,
         log_message="Вопрос квиза VK",
-        attachment=await _resolve_quiz_question_attachment(
-            question=question,
-            message_client=message_client,
-        ),
+        attachment=question.image_attachment,
     )
 
 
@@ -553,23 +549,8 @@ async def _handle_quiz_answer(
             ),
             message_client=message_client,
             log_message="Следующий вопрос квиза VK",
-            attachment=await _resolve_quiz_question_attachment(
-                question=next_q,
-                message_client=message_client,
-            ),
+            attachment=next_q.image_attachment,
         )
-
-
-async def _resolve_quiz_question_attachment(
-    *,
-    question: QuizQuestionDTO,
-    message_client: IVKMessageClient,
-) -> str | None:
-    if question.image_attachment:
-        return question.image_attachment
-    if question.image_url:
-        return await message_client.upload_photo_for_message(question.image_url)
-    return None
 
 
 def _build_registered_user_response(

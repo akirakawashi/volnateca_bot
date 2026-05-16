@@ -12,7 +12,6 @@ class QuizQuestionDTO:
     quiz_questions_id: int
     question_text: str
     image_attachment: str | None
-    image_url: str | None
     question_number: int
     total_questions: int
     options: tuple[QuizQuestionOptionDTO, ...]

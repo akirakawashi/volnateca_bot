@@ -24,10 +24,9 @@ class CreateQuizOptionSchema(BaseModel):
 class CreateQuizQuestionSchema(BaseModel):
     question_text: str = Field(min_length=1, max_length=2000)
     image_attachment: str | None = None
-    image_url: str | None = None
     options: list[CreateQuizOptionSchema] = Field(min_length=2)
 
-    @field_validator("image_attachment", "image_url", mode="before")
+    @field_validator("image_attachment", mode="before")
     @classmethod
     def normalize_optional_media_fields(cls, value: object) -> object:
         if isinstance(value, str):
@@ -82,7 +81,6 @@ class CreateQuizRequestSchema(BaseModel):
                 CreateQuizQuestionDTO(
                     question_text=q.question_text,
                     image_attachment=q.image_attachment,
-                    image_url=q.image_url,
                     options=tuple(
                         CreateQuizOptionDTO(
                             option_text=o.option_text,
@@ -111,7 +109,6 @@ class CreatedQuizQuestionResponseSchema(BaseModel):
     quiz_questions_id: int
     question_text: str
     image_attachment: str | None
-    image_url: str | None
     options: list[CreatedQuizOptionResponseSchema]
 
 
@@ -132,7 +129,6 @@ class CreatedQuizResponseSchema(BaseModel):
                     quiz_questions_id=q.quiz_questions_id,
                     question_text=q.question_text,
                     image_attachment=q.image_attachment,
-                    image_url=q.image_url,
                     options=[
                         CreatedQuizOptionResponseSchema(
                             quiz_question_options_id=o.quiz_question_options_id,
