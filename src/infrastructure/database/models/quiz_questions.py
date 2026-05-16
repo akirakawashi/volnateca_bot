@@ -33,9 +33,13 @@ class QuizQuestion(BaseModel, table=True):
         sa_column=Column(Text, nullable=False),
         description="Текст вопроса, отображаемый пользователю",
     )
+    image_attachment: str | None = Field(
+        default=None,
+        description="Готовый VK attachment для изображения вопроса; NULL если картинки нет",
+    )
     image_url: str | None = Field(
         default=None,
-        description="URL изображения к вопросу; NULL если картинки нет",
+        description="URL изображения к вопросу; используется как fallback для старых записей",
     )
     is_active: bool = Field(
         default=True,

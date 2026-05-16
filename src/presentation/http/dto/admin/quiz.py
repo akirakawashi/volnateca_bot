@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from application.admin.dto.quiz import (
     CreateQuizCommand,
@@ -9,6 +9,7 @@ from application.admin.dto.quiz import (
     CreateQuizQuestionDTO,
     CreatedQuizDTO,
 )
+from utils.vk_attachments import extract_vk_photo_attachment
 
 
 # ── Request ───────────────────────────────────────────────────────────────────
@@ -22,8 +23,27 @@ class CreateQuizOptionSchema(BaseModel):
 
 class CreateQuizQuestionSchema(BaseModel):
     question_text: str = Field(min_length=1, max_length=2000)
+    image_attachment: str | None = None
     image_url: str | None = None
     options: list[CreateQuizOptionSchema] = Field(min_length=2)
+
+    @field_validator("image_attachment", "image_url", mode="before")
+    @classmethod
+    def normalize_optional_media_fields(cls, value: object) -> object:
+        if isinstance(value, str):
+            stripped = value.strip()
+            return stripped or None
+        return value
+
+    @field_validator("image_attachment")
+    @classmethod
+    def validate_image_attachment(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = extract_vk_photo_attachment(value)
+        if normalized is None:
+            raise ValueError("image_attachment должен быть в формате photo-123_456")
+        return normalized
 
     @model_validator(mode="after")
     def validate_exactly_one_correct(self) -> "CreateQuizQuestionSchema":
@@ -61,6 +81,7 @@ class CreateQuizRequestSchema(BaseModel):
             questions=tuple(
                 CreateQuizQuestionDTO(
                     question_text=q.question_text,
+                    image_attachment=q.image_attachment,
                     image_url=q.image_url,
                     options=tuple(
                         CreateQuizOptionDTO(
@@ -89,6 +110,7 @@ class CreatedQuizOptionResponseSchema(BaseModel):
 class CreatedQuizQuestionResponseSchema(BaseModel):
     quiz_questions_id: int
     question_text: str
+    image_attachment: str | None
     image_url: str | None
     options: list[CreatedQuizOptionResponseSchema]
 
@@ -109,6 +131,7 @@ class CreatedQuizResponseSchema(BaseModel):
                 CreatedQuizQuestionResponseSchema(
                     quiz_questions_id=q.quiz_questions_id,
                     question_text=q.question_text,
+                    image_attachment=q.image_attachment,
                     image_url=q.image_url,
                     options=[
                         CreatedQuizOptionResponseSchema(

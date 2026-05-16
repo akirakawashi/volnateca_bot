@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from application.admin.dto.wall_post import PostToWallCommand, PostedToWallDTO
+from utils.vk_attachments import extract_vk_attachment
 
 
 # ── Request ───────────────────────────────────────────────────────────────────
@@ -13,6 +14,26 @@ class PostToWallRequestSchema(BaseModel):
     comment_points: int = Field(default=0, ge=0)
     week_number: int | None = Field(default=None, ge=1, le=12)
     attachments: list[str] = Field(default_factory=list, max_length=10)
+
+    @field_validator("attachments", mode="before")
+    @classmethod
+    def normalize_attachments(cls, value: object) -> object:
+        if not isinstance(value, list):
+            return value
+
+        normalized: list[object] = []
+        for item in value:
+            if not isinstance(item, str):
+                normalized.append(item)
+                continue
+
+            stripped = item.strip()
+            if not stripped:
+                continue
+
+            normalized.append(extract_vk_attachment(stripped) or stripped)
+
+        return normalized
 
     def to_command(self) -> PostToWallCommand:
         return PostToWallCommand(

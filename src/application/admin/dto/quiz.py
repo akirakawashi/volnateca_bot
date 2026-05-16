@@ -12,6 +12,7 @@ class CreateQuizOptionDTO:
 @dataclass(slots=True, frozen=True, kw_only=True)
 class CreateQuizQuestionDTO:
     question_text: str
+    image_attachment: str | None
     image_url: str | None
     options: tuple[CreateQuizOptionDTO, ...]
 
@@ -40,6 +41,7 @@ class CreatedQuizOptionDTO:
 class CreatedQuizQuestionDTO:
     quiz_questions_id: int
     question_text: str
+    image_attachment: str | None
     image_url: str | None
     options: tuple[CreatedQuizOptionDTO, ...]
 

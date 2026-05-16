@@ -82,6 +82,7 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
         return QuizQuestionDTO(
             quiz_questions_id=first_unanswered.quiz_questions_id,
             question_text=first_unanswered.question_text,
+            image_attachment=first_unanswered.image_attachment,
             image_url=first_unanswered.image_url,
             question_number=question_number,
             total_questions=total_questions,
