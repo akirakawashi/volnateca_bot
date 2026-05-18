@@ -38,3 +38,24 @@ class VKWallPostDTO:
             variants.add(f"wall{abs(self.owner_id)}_{self.post_id}")
             variants.add(f"{abs(self.owner_id)}_{self.post_id}")
         return tuple(sorted(variants))
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class VKPollDTO:
+    owner_id: int
+    poll_id: int
+
+    @property
+    def external_id(self) -> str:
+        return f"poll{self.owner_id}_{self.poll_id}"
+
+    @property
+    def external_id_variants(self) -> tuple[str, ...]:
+        variants = {
+            self.external_id,
+            f"{self.owner_id}_{self.poll_id}",
+        }
+        if self.owner_id < 0:
+            variants.add(f"poll{abs(self.owner_id)}_{self.poll_id}")
+            variants.add(f"{abs(self.owner_id)}_{self.poll_id}")
+        return tuple(sorted(variants))

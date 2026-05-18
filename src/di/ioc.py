@@ -12,11 +12,13 @@ from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.award_monthly_top import AwardMonthlyTopHandler
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
+from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.admin.command.create_quiz import CreateQuizHandler
 from application.admin.command.post_to_wall import PostToWallHandler
 from application.admin.command.truncate_db import TruncateDBHandler
+from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
@@ -149,6 +151,30 @@ class InteractorProvider(Provider):
         return CompleteVKCommentTaskHandler(
             task_repository=task_repository,
             award_service=award_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_complete_vk_poll_task_handler(
+        self,
+        task_repository: ITaskRepository,
+        award_service: AwardTaskService,
+        uow: IUnitOfWork,
+    ) -> CompleteVKPollTaskHandler:
+        return CompleteVKPollTaskHandler(
+            task_repository=task_repository,
+            award_service=award_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_ensure_vk_poll_task_handler(
+        self,
+        task_repository: ITaskRepository,
+        uow: IUnitOfWork,
+    ) -> EnsureVKPollTaskHandler:
+        return EnsureVKPollTaskHandler(
+            task_repository=task_repository,
             uow=uow,
         )
 

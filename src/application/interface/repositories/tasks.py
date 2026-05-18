@@ -96,6 +96,25 @@ class ITaskRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_or_create_poll_task(
+        self,
+        code: str,
+        task_name: str,
+        description: str,
+        external_id: str,
+        points: int,
+        repeat_policy: TaskRepeatPolicy,
+    ) -> TaskSummary:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_active_poll_task_by_external_ids(
+        self,
+        external_ids: tuple[str, ...],
+    ) -> TaskSummary | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def list_available_tasks_for_vk_user(
         self,
         vk_user_id: int,

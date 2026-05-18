@@ -6,8 +6,10 @@ from fastapi.responses import PlainTextResponse
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
+from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
+from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
@@ -26,9 +28,11 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_confirmation_callback,
     handle_ignored_callback,
     handle_like_callback,
+    handle_poll_vote_callback,
     handle_registration_callback,
     handle_repost_callback,
     handle_subscription_callback,
+    handle_wall_post_callback,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
     send_daily_streak_rewards_if_needed,
@@ -52,6 +56,8 @@ class VKCallbackDispatcher:
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
     complete_vk_comment_task_interactor: CompleteVKCommentTaskHandler
+    complete_vk_poll_task_interactor: CompleteVKPollTaskHandler
+    ensure_vk_poll_task_interactor: EnsureVKPollTaskHandler
     get_vk_user_tasks_interactor: GetVKUserTasksHandler
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler
     answer_quiz_question_interactor: AnswerQuizQuestionHandler
@@ -90,6 +96,15 @@ class VKCallbackDispatcher:
                 await self._record_user_activity(payload=payload)
                 return response
 
+            if payload.is_poll_vote_event():
+                response = await handle_poll_vote_callback(
+                    data=payload,
+                    interactor_complete=self.complete_vk_poll_task_interactor,
+                    message_client=self.vk_message_client,
+                )
+                await self._record_user_activity(payload=payload)
+                return response
+
             if payload.is_repost():
                 response = await handle_repost_callback(
                     data=payload,
@@ -108,6 +123,12 @@ class VKCallbackDispatcher:
                 )
                 await self._record_user_activity(payload=payload)
                 return response
+
+            if payload.is_wall_post_event():
+                return await handle_wall_post_callback(
+                    data=payload,
+                    interactor=self.ensure_vk_poll_task_interactor,
+                )
 
             if payload.is_registration_event():
                 response = await handle_registration_callback(

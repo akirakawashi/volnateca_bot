@@ -10,6 +10,7 @@ __all__ = [
     "VKCommentObjectSchema",
     "VKLikeObjectSchema",
     "VKMessageObjectSchema",
+    "VKPollVoteObjectSchema",
     "VKRepostObjectSchema",
     "VKUserObjectSchema",
     "VKWallPostObjectSchema",
@@ -31,6 +32,13 @@ class VKLikeObjectSchema(VKCallbackEventObjectSchema):
     object_id: int
     object_owner_id: int
     object_type: Literal["post"]
+
+
+class VKPollVoteObjectSchema(VKCallbackEventObjectSchema):
+    owner_id: int
+    poll_id: int
+    user_id: int
+    option_id: int | None = None
 
 
 class VKWallPostObjectSchema(VKCallbackEventObjectSchema):

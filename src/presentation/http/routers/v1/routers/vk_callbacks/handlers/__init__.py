@@ -3,6 +3,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.confirmation imp
 )
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.ignored import handle_ignored_callback
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.like import handle_like_callback
+from presentation.http.routers.v1.routers.vk_callbacks.handlers.poll import handle_poll_vote_callback
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration import (
     handle_registration_callback,
 )
@@ -11,13 +12,18 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.repost import ha
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.subscription import (
     handle_subscription_callback,
 )
+from presentation.http.routers.v1.routers.vk_callbacks.handlers.wall_post import (
+    handle_wall_post_callback,
+)
 
 __all__ = [
     "handle_comment_callback",
     "handle_confirmation_callback",
     "handle_ignored_callback",
     "handle_like_callback",
+    "handle_poll_vote_callback",
     "handle_registration_callback",
     "handle_repost_callback",
     "handle_subscription_callback",
+    "handle_wall_post_callback",
 ]

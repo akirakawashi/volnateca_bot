@@ -54,9 +54,11 @@ class VKUserAvailableTaskDTO:
 
     @property
     def action_url(self) -> str | None:
-        if self.external_id is None or not self.external_id.startswith("wall"):
+        if self.external_id is None:
             return None
-        return f"https://vk.com/{self.external_id}"
+        if self.external_id.startswith(("wall", "poll")):
+            return f"https://vk.com/{self.external_id}"
+        return None
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

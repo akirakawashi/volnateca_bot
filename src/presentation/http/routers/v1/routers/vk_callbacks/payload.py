@@ -4,13 +4,14 @@ from typing import Any, Type, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
-from application.common.dto.vk import VKWallPostDTO
+from application.common.dto.vk import VKPollDTO, VKWallPostDTO
 from presentation.http.dto.request import VKCallbackSchema, VKCallbackWallPostSchema
 from presentation.http.routers.v1.routers.vk_callbacks.event_objects import (
     VKCallbackEventObjectSchema,
     VKCommentObjectSchema,
     VKLikeObjectSchema,
     VKMessageObjectSchema,
+    VKPollVoteObjectSchema,
     VKRepostObjectSchema,
     VKUserObjectSchema,
     VKWallPostObjectSchema,
@@ -53,6 +54,9 @@ class VKCallbackPayload:
     def is_like(self) -> bool:
         return self.type in VKEventGroups.LIKE
 
+    def is_poll_vote_event(self) -> bool:
+        return self.type in VKEventGroups.POLL
+
     def is_repost(self) -> bool:
         return self.type in VKEventGroups.REPOST
 
@@ -67,6 +71,9 @@ class VKCallbackPayload:
 
     def is_message_new(self) -> bool:
         return self.type == VKEventType.MESSAGE_NEW
+
+    def is_wall_post_event(self) -> bool:
+        return self.type in VKEventGroups.POST_CREATE
 
     # Проверка события VK
 
@@ -86,9 +93,15 @@ class VKCallbackPayload:
         comment_object = self.get_comment_object()
         return self._normalize_vk_user_id(raw_user_id=comment_object.from_id if comment_object else None)
 
+    def get_poll_user_id(self) -> int | None:
+        poll_vote_object = self.get_poll_vote_object()
+        return self._normalize_vk_user_id(raw_user_id=poll_vote_object.user_id if poll_vote_object else None)
+
     def get_primary_vk_user_id(self) -> int | None:
         if self.is_like():
             return self.get_like_user_id()
+        if self.is_poll_vote_event():
+            return self.get_poll_user_id()
         if self.is_repost():
             return self.get_repost_user_id()
         if self.is_comment_event():
@@ -254,6 +267,70 @@ class VKCallbackPayload:
         wall_post_object = self.get_wall_post_object()
         return wall_post_object.text if wall_post_object and wall_post_object.text else ""
 
+    def get_wall_post_poll(self) -> VKPollDTO | None:
+        raw_object = self.data.event_object.model_extra or {}
+        raw_attachments = raw_object.get("attachments")
+        if not isinstance(raw_attachments, list):
+            return None
+
+        for attachment in raw_attachments:
+            if not isinstance(attachment, dict):
+                continue
+            if attachment.get("type") != "poll":
+                continue
+
+            raw_poll = attachment.get("poll")
+            if not isinstance(raw_poll, dict):
+                continue
+
+            owner_id = self._normalize_int(raw_poll.get("owner_id"))
+            poll_id = self._normalize_int(raw_poll.get("id"))
+            if poll_id is None:
+                poll_id = self._normalize_int(raw_poll.get("poll_id"))
+            if owner_id is None or poll_id is None:
+                continue
+            return VKPollDTO(owner_id=owner_id, poll_id=poll_id)
+
+        return None
+
+    def get_wall_post_poll_question(self) -> str | None:
+        raw_object = self.data.event_object.model_extra or {}
+        raw_attachments = raw_object.get("attachments")
+        if not isinstance(raw_attachments, list):
+            return None
+
+        for attachment in raw_attachments:
+            if not isinstance(attachment, dict):
+                continue
+            if attachment.get("type") != "poll":
+                continue
+
+            raw_poll = attachment.get("poll")
+            if not isinstance(raw_poll, dict):
+                continue
+
+            question = raw_poll.get("question")
+            if isinstance(question, str) and question.strip():
+                return question.strip()
+
+        return None
+
+    def get_voted_poll(self) -> VKPollDTO | None:
+        poll_vote_object = self.get_poll_vote_object()
+        if poll_vote_object is None:
+            return None
+
+        return VKPollDTO(
+            owner_id=poll_vote_object.owner_id,
+            poll_id=poll_vote_object.poll_id,
+        )
+
+    def get_voted_poll_external_ids(self) -> tuple[str, ...]:
+        poll = self.get_voted_poll()
+        if poll is None:
+            return ()
+        return poll.external_id_variants
+
     # Извлечение типизированного объекта события
 
     def get_comment_object(self) -> VKCommentObjectSchema | None:
@@ -265,6 +342,11 @@ class VKCallbackPayload:
         if not self.is_like():
             return None
         return self._parse_event_object(schema=VKLikeObjectSchema)
+
+    def get_poll_vote_object(self) -> VKPollVoteObjectSchema | None:
+        if not self.is_poll_vote_event():
+            return None
+        return self._parse_event_object(schema=VKPollVoteObjectSchema)
 
     def get_repost_object(self) -> VKRepostObjectSchema | None:
         if not self.is_repost():
@@ -319,3 +401,10 @@ class VKCallbackPayload:
         except (TypeError, ValueError):
             return None
         return vk_user_id if vk_user_id > 0 else None
+
+    @staticmethod
+    def _normalize_int(raw_value: Any) -> int | None:
+        try:
+            return int(raw_value)
+        except (TypeError, ValueError):
+            return None

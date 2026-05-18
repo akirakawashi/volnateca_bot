@@ -278,6 +278,60 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             return None
         return self._to_task_summary(task=task)
 
+    async def get_or_create_poll_task(
+        self,
+        code: str,
+        task_name: str,
+        description: str,
+        external_id: str,
+        points: int,
+        repeat_policy: TaskRepeatPolicy,
+    ) -> TaskSummary:
+        existing_task = await self._get_task_by_code_or_external_id(
+            code=code,
+            external_id=external_id,
+            task_type=TaskType.VK_POLL,
+        )
+        if existing_task is not None:
+            return self._to_task_summary(task=existing_task)
+
+        try:
+            async with self._session.begin_nested():
+                task = self._build_task(
+                    code=code,
+                    task_name=task_name,
+                    description=description,
+                    task_type=TaskType.VK_POLL,
+                    points=points,
+                    week_number=None,
+                    external_id=external_id,
+                    repeat_policy=repeat_policy,
+                )
+                self._session.add(task)
+                await self._session.flush()
+        except IntegrityError:
+            existing_task = await self._get_task_by_code_or_external_id(
+                code=code,
+                external_id=external_id,
+                task_type=TaskType.VK_POLL,
+            )
+            if existing_task is None:
+                raise
+            return self._to_task_summary(task=existing_task)
+        return self._to_task_summary(task=task)
+
+    async def get_active_poll_task_by_external_ids(
+        self,
+        external_ids: tuple[str, ...],
+    ) -> TaskSummary | None:
+        task = await self._get_active_task_by_external_ids(
+            external_ids=external_ids,
+            task_type=TaskType.VK_POLL,
+        )
+        if task is None:
+            return None
+        return self._to_task_summary(task=task)
+
     async def list_available_tasks_for_vk_user(
         self,
         vk_user_id: int,
