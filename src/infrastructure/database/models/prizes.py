@@ -44,6 +44,10 @@ class Prize(BaseModel, table=True):
         sa_column=Column(Text),
         description="Подробное описание приза",
     )
+    image_attachment: str | None = Field(
+        default=None,
+        description="VK attachment картинки приза, например photo-123_456",
+    )
     prize_type: PrizeType = Field(
         sa_column=Column(
             SAEnum(PrizeType, name="prize_type", values_callable=enum_values),

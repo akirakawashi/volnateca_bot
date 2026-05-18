@@ -425,6 +425,7 @@ async def _handle_store_prize_card(
         ),
         message_client=message_client,
         log_message="Карточка приза VK",
+        attachment=card.prize.image_attachment if card.prize is not None else None,
     )
 
 
@@ -464,6 +465,7 @@ async def _handle_store_claim(
         ),
         message_client=message_client,
         log_message="Заглушка получения приза VK",
+        attachment=card.prize.image_attachment if card is not None and card.prize is not None else None,
     )
 
 

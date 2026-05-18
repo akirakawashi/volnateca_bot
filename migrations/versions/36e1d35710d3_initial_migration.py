@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: fcc1dba5c038
+Revision ID: 36e1d35710d3
 Revises: 
-Create Date: 2026-05-18 05:14:31.712432
+Create Date: 2026-05-18 22:33:31.515412
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = 'fcc1dba5c038'
+revision: str = '36e1d35710d3'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -51,6 +51,7 @@ def upgrade() -> None:
     sa.Column('code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('prize_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('image_attachment', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('prize_type', sa.Enum('merch', 'promo_code', 'super_prize', 'partner', name='prize_type'), nullable=False),
     sa.Column('receive_type', sa.Enum('pickup', 'delivery', 'promo_code', 'manager_contact', name='prize_receive_type'), nullable=False),
     sa.Column('status', sa.Enum('available', 'sold_out', 'hidden', name='prize_status'), nullable=False),

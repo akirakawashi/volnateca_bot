@@ -47,6 +47,7 @@ class StorePrizeSnapshot:
     prizes_id: int
     prize_name: str
     description: str | None
+    image_attachment: str | None
     prize_type: PrizeType
     status: PrizeStatus
     cost_points: int
@@ -61,6 +62,7 @@ class StorePrizeView:
     prizes_id: int
     prize_name: str
     description: str | None
+    image_attachment: str | None
     prize_type: PrizeType
     cost_points: int
     quantity_total: int | None

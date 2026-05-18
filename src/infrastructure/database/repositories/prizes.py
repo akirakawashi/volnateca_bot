@@ -59,6 +59,7 @@ class PrizeRepository(SQLAlchemyRepository, IPrizeRepository):
             prizes_id=prize.prizes_id,
             prize_name=prize.prize_name,
             description=prize.description,
+            image_attachment=prize.image_attachment,
             prize_type=prize.prize_type,
             status=prize.status,
             cost_points=prize.cost_points,

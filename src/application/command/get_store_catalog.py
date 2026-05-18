@@ -107,6 +107,7 @@ def _build_store_prize_view(
         prizes_id=prize.prizes_id,
         prize_name=prize.prize_name,
         description=prize.description,
+        image_attachment=prize.image_attachment,
         prize_type=prize.prize_type,
         cost_points=prize.cost_points,
         quantity_total=prize.quantity_total,

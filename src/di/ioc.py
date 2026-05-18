@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # TODO: удалить SeedDevScenarioHandler и get_seed_dev_scenario_handler перед релизом.
 from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
+from application.admin.command.seed_store_prizes import SeedStorePrizesHandler
 from application.admin.command.message_templates import (
     DeleteMessageTemplateHandler,
     ListMessageTemplatesHandler,
@@ -320,3 +321,10 @@ class InteractorProvider(Provider):
         from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 
         return SeedDevScenarioHandler(session=session, vk_settings=vk_settings)
+
+    @provide(scope=Scope.REQUEST)
+    def get_seed_store_prizes_handler(
+        self,
+        session: AsyncSession,
+    ) -> SeedStorePrizesHandler:
+        return SeedStorePrizesHandler(session=session)

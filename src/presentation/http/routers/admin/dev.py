@@ -3,6 +3,7 @@ from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter
 
 from application.admin.command.seed_dev_scenario import SeedDevScenarioCommand, SeedDevScenarioHandler
+from application.admin.command.seed_store_prizes import SeedStorePrizesCommand, SeedStorePrizesHandler
 from application.command.award_monthly_top import AwardMonthlyTopCommand, AwardMonthlyTopHandler
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IVKMessageTemplateService
@@ -11,6 +12,7 @@ from presentation.http.dto.admin.dev import (
     AwardMonthlyTopResponse,
     SeedDevScenarioRequest,
     SeedDevScenarioResponse,
+    SeedStorePrizesResponse,
 )
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
@@ -37,6 +39,19 @@ async def seed_dev_scenario(
         SeedDevScenarioCommand(scenario=data.scenario, users_id=data.users_id),
     )
     return SeedDevScenarioResponse(messages=list(result.messages))
+
+
+@dev_admin_router.post(
+    path="/dev/seed-store-prizes",
+    name="Засеять тестовые призы магазина",
+    response_model=SeedStorePrizesResponse,
+    status_code=200,
+)
+async def seed_store_prizes(
+    handler: FromDishka[SeedStorePrizesHandler],
+) -> SeedStorePrizesResponse:
+    result = await handler(SeedStorePrizesCommand())
+    return SeedStorePrizesResponse(messages=list(result.messages))
 
 
 @dev_admin_router.post(

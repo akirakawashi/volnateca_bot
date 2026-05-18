@@ -23,6 +23,10 @@ class SeedDevScenarioResponse(BaseModel):
     messages: list[str]
 
 
+class SeedStorePrizesResponse(BaseModel):
+    messages: list[str]
+
+
 class AwardMonthlyTopResponse(BaseModel):
     month: str
     messages: list[str]
