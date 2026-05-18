@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 36e1d35710d3
+Revision ID: 3b724d372599
 Revises: 
-Create Date: 2026-05-18 22:33:31.515412
+Create Date: 2026-05-18 22:54:10.763794
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = '36e1d35710d3'
+revision: str = '3b724d372599'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -58,6 +58,7 @@ def upgrade() -> None:
     sa.Column('cost_points', sa.Integer(), nullable=False),
     sa.Column('quantity_total', sa.Integer(), nullable=True),
     sa.Column('quantity_claimed', sa.Integer(), nullable=False),
+    sa.Column('required_level', sa.Integer(), nullable=True),
     sa.Column('sort_order', sa.Integer(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -65,6 +66,7 @@ def upgrade() -> None:
     sa.CheckConstraint('cost_points > 0', name=op.f('ck_prizes_cost_points_positive')),
     sa.CheckConstraint('quantity_claimed >= 0', name=op.f('ck_prizes_quantity_claimed_non_negative')),
     sa.CheckConstraint('quantity_total IS NULL OR quantity_claimed <= quantity_total', name=op.f('ck_prizes_quantity_claimed_lte_quantity_total')),
+    sa.CheckConstraint('required_level IS NULL OR required_level BETWEEN 1 AND 4', name=op.f('ck_prizes_required_level_between_1_and_4')),
     sa.PrimaryKeyConstraint('prizes_id', name=op.f('pk_prizes'))
     )
     op.create_index(op.f('ix_prizes_code'), 'prizes', ['code'], unique=True)

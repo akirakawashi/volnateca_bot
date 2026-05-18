@@ -26,6 +26,10 @@ class Prize(BaseModel, table=True):
         CheckConstraint("cost_points > 0", name="cost_points_positive"),
         CheckConstraint("quantity_claimed >= 0", name="quantity_claimed_non_negative"),
         CheckConstraint(
+            "required_level IS NULL OR required_level BETWEEN 1 AND 4",
+            name="required_level_between_1_and_4",
+        ),
+        CheckConstraint(
             "quantity_total IS NULL OR quantity_claimed <= quantity_total",
             name="quantity_claimed_lte_quantity_total",
         ),
@@ -79,6 +83,10 @@ class Prize(BaseModel, table=True):
         default=0,
         nullable=False,
         description="Количество единиц приза, уже выданных или зарезервированных пользователями",
+    )
+    required_level: int | None = Field(
+        default=None,
+        description="Минимальный уровень пользователя для получения приза; NULL означает без ограничения",
     )
     sort_order: int = Field(  # Нужно уточнить у Влада, нужно ли это поле
         default=0, nullable=False, description="Порядок отображения в магазине"

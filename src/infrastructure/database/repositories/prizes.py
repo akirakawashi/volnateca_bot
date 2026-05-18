@@ -66,6 +66,7 @@ class PrizeRepository(SQLAlchemyRepository, IPrizeRepository):
             quantity_total=prize.quantity_total,
             quantity_claimed=prize.quantity_claimed,
             sort_order=prize.sort_order,
+            required_level=prize.required_level,
         )
 
 

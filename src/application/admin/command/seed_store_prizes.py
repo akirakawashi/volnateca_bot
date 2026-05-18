@@ -27,6 +27,7 @@ class StorePrizeFixture:
     quantity_total: int | None
     quantity_claimed: int
     sort_order: int
+    required_level: int | None = None
 
 
 STORE_PRIZE_FIXTURES: tuple[StorePrizeFixture, ...] = (
@@ -113,6 +114,7 @@ STORE_PRIZE_FIXTURES: tuple[StorePrizeFixture, ...] = (
         quantity_total=3,
         quantity_claimed=0,
         sort_order=70,
+        required_level=2,
     ),
     StorePrizeFixture(
         code="dev_store_super_speaker",
@@ -125,6 +127,7 @@ STORE_PRIZE_FIXTURES: tuple[StorePrizeFixture, ...] = (
         quantity_total=1,
         quantity_claimed=0,
         sort_order=80,
+        required_level=3,
     ),
     StorePrizeFixture(
         code="dev_store_super_headphones",
@@ -149,6 +152,7 @@ STORE_PRIZE_FIXTURES: tuple[StorePrizeFixture, ...] = (
         quantity_total=1,
         quantity_claimed=0,
         sort_order=100,
+        required_level=4,
     ),
 )
 
@@ -219,6 +223,7 @@ def _apply_fixture(*, prize: Prize, fixture: StorePrizeFixture) -> None:
     prize.cost_points = fixture.cost_points
     prize.quantity_total = fixture.quantity_total
     prize.quantity_claimed = fixture.quantity_claimed
+    prize.required_level = fixture.required_level
     prize.sort_order = fixture.sort_order
     prize.is_active = True
 
