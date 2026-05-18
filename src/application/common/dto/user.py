@@ -7,4 +7,5 @@ class VKUserRegistrationDTO:
     vk_user_id: int
     vk_screen_name: str | None
     balance_points: int
+    current_level: int
     created: bool

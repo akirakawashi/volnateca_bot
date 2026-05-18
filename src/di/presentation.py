@@ -8,6 +8,7 @@ from application.command.complete_vk_repost_task import CompleteVKRepostTaskHand
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
+from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
 from application.command.record_vk_user_activity import RecordVKUserActivityHandler
@@ -32,6 +33,8 @@ class PresentationProvider(Provider):
         complete_vk_comment_task_interactor: CompleteVKCommentTaskHandler,
         complete_vk_poll_task_interactor: CompleteVKPollTaskHandler,
         ensure_vk_poll_task_interactor: EnsureVKPollTaskHandler,
+        get_store_catalog_interactor: GetStoreCatalogHandler,
+        get_store_prize_card_interactor: GetStorePrizeCardHandler,
         get_vk_user_tasks_interactor: GetVKUserTasksHandler,
         get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
         answer_quiz_question_interactor: AnswerQuizQuestionHandler,
@@ -52,6 +55,8 @@ class PresentationProvider(Provider):
             complete_vk_comment_task_interactor=complete_vk_comment_task_interactor,
             complete_vk_poll_task_interactor=complete_vk_poll_task_interactor,
             ensure_vk_poll_task_interactor=ensure_vk_poll_task_interactor,
+            get_store_catalog_interactor=get_store_catalog_interactor,
+            get_store_prize_card_interactor=get_store_prize_card_interactor,
             get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
             get_quiz_first_question_interactor=get_quiz_first_question_interactor,
             answer_quiz_question_interactor=answer_quiz_question_interactor,

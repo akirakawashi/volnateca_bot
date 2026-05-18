@@ -20,6 +20,7 @@ from application.admin.command.post_to_wall import PostToWallHandler
 from application.admin.command.truncate_db import TruncateDBHandler
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
+from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
 from application.command.record_vk_user_activity import RecordVKUserActivityHandler
@@ -30,6 +31,7 @@ from application.command.register_vk_user_and_check_subscription import (
 from application.interface.clients import IVKUserClient, IVKWallClient
 from application.interface.services import IVKMessageTemplateService
 from application.interface.repositories.achievements import IAchievementRepository
+from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
@@ -184,6 +186,20 @@ class InteractorProvider(Provider):
         task_repository: ITaskRepository,
     ) -> GetVKUserTasksHandler:
         return GetVKUserTasksHandler(task_repository=task_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_store_catalog_handler(
+        self,
+        prize_repository: IPrizeRepository,
+    ) -> GetStoreCatalogHandler:
+        return GetStoreCatalogHandler(prize_repository=prize_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_store_prize_card_handler(
+        self,
+        prize_repository: IPrizeRepository,
+    ) -> GetStorePrizeCardHandler:
+        return GetStorePrizeCardHandler(prize_repository=prize_repository)
 
     @provide(scope=Scope.REQUEST)
     def get_quiz_first_question_handler(

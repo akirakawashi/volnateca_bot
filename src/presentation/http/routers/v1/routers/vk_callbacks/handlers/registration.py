@@ -8,6 +8,12 @@ from application.command.get_quiz_first_question import (
     GetQuizFirstQuestionCommand,
     GetQuizFirstQuestionHandler,
 )
+from application.command.get_store_catalog import (
+    GetStoreCatalogCommand,
+    GetStoreCatalogHandler,
+    GetStorePrizeCardCommand,
+    GetStorePrizeCardHandler,
+)
 from application.command.get_vk_user_tasks import GetVKUserTasksCommand, GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralCommand, ProcessReferralHandler
 from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
@@ -16,6 +22,7 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionDTO,
     RegisterVKUserAndCheckSubscriptionHandler,
 )
+from application.common.dto.store import StoreSection
 from application.common.dto.task import TaskCompletionResultStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
@@ -29,6 +36,10 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement impo
 from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
     build_quiz_offer_keyboard,
     build_quiz_question_keyboard,
+    build_store_catalog_keyboard,
+    build_store_prize_card_keyboard,
+    build_store_prize_not_found_keyboard,
+    build_store_root_keyboard,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     VKMessageText,
@@ -45,6 +56,10 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_referral_link_message,
     build_referral_milestone_message,
     build_registration_welcome_message,
+    build_store_catalog_message,
+    build_store_claim_unavailable_message,
+    build_store_prize_card_message,
+    build_store_root_message,
     build_subscription_reward_message,
     build_tasks_message,
 )
@@ -57,6 +72,8 @@ async def handle_registration_callback(
     data: VKCallbackPayload,
     interactor: RegisterVKUserAndCheckSubscriptionHandler,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+    get_store_catalog_interactor: GetStoreCatalogHandler,
+    get_store_prize_card_interactor: GetStorePrizeCardHandler,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     process_referral_interactor: ProcessReferralHandler,
@@ -107,6 +124,8 @@ async def handle_registration_callback(
             message_client=message_client,
             intent_classifier=intent_classifier,
             get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+            get_store_catalog_interactor=get_store_catalog_interactor,
+            get_store_prize_card_interactor=get_store_prize_card_interactor,
             get_quiz_first_question_interactor=get_quiz_first_question_interactor,
             answer_quiz_question_interactor=answer_quiz_question_interactor,
             group_id=group_id,
@@ -187,6 +206,8 @@ async def _handle_registered_user_message(
     message_client: IVKMessageClient,
     intent_classifier: IUserMessageIntentClassifier,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+    get_store_catalog_interactor: GetStoreCatalogHandler,
+    get_store_prize_card_interactor: GetStorePrizeCardHandler,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     group_id: int,
@@ -197,6 +218,54 @@ async def _handle_registered_user_message(
     button_payload = data.get_button_payload()
     if button_payload is not None:
         action = button_payload.get("action")
+        if action == "store_root":
+            await _handle_store_root(
+                data=data,
+                result=result,
+                message_client=message_client,
+            )
+            return
+        if action == "store_catalog":
+            await _handle_store_catalog(
+                data=data,
+                result=result,
+                section=_parse_store_section(button_payload.get("section")),
+                page=_parse_store_page(button_payload.get("page")),
+                message_client=message_client,
+                get_store_catalog_interactor=get_store_catalog_interactor,
+            )
+            return
+        if action == "store_prize":
+            prizes_id = _parse_positive_int(button_payload.get("prizes_id"))
+            if prizes_id is None:
+                await _handle_store_root(
+                    data=data,
+                    result=result,
+                    message_client=message_client,
+                )
+                return
+            await _handle_store_prize_card(
+                data=data,
+                result=result,
+                prizes_id=prizes_id,
+                section=_parse_store_section(button_payload.get("section")),
+                page=_parse_store_page(button_payload.get("page")),
+                message_client=message_client,
+                get_store_prize_card_interactor=get_store_prize_card_interactor,
+            )
+            return
+        if action == "store_claim":
+            prizes_id = _parse_positive_int(button_payload.get("prizes_id"))
+            await _handle_store_claim(
+                data=data,
+                result=result,
+                prizes_id=prizes_id,
+                section=_parse_store_section(button_payload.get("section")),
+                page=_parse_store_page(button_payload.get("page")),
+                message_client=message_client,
+                get_store_prize_card_interactor=get_store_prize_card_interactor,
+            )
+            return
         if action == "start_quiz":
             tasks_id = button_payload.get("tasks_id")
             if isinstance(tasks_id, int):
@@ -258,6 +327,13 @@ async def _handle_registered_user_message(
             vk_user_id=result.registration.vk_user_id,
             group_id=group_id,
         )
+    elif classified.intent == UserMessageIntent.SHOP:
+        await _handle_store_root(
+            data=data,
+            result=result,
+            message_client=message_client,
+        )
+        return
     else:
         response = _build_registered_user_response(
             intent=classified.intent,
@@ -270,6 +346,124 @@ async def _handle_registered_user_message(
         message=response,
         message_client=message_client,
         log_message="Ответ VK зарегистрированному пользователю",
+    )
+
+
+async def _handle_store_root(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+) -> None:
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_store_root_message(balance_points=result.registration.balance_points),
+        keyboard=build_store_root_keyboard(),
+        message_client=message_client,
+        log_message="Корневой экран магазина VK",
+    )
+
+
+async def _handle_store_catalog(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    section: StoreSection,
+    page: int,
+    message_client: IVKMessageClient,
+    get_store_catalog_interactor: GetStoreCatalogHandler,
+) -> None:
+    catalog = await get_store_catalog_interactor(
+        command_data=GetStoreCatalogCommand(
+            balance_points=result.registration.balance_points,
+            current_level=result.registration.current_level,
+            section=section,
+            page=page,
+        ),
+    )
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_store_catalog_message(catalog=catalog),
+        keyboard=build_store_catalog_keyboard(catalog),
+        message_client=message_client,
+        log_message="Каталог магазина VK",
+    )
+
+
+async def _handle_store_prize_card(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    prizes_id: int,
+    section: StoreSection,
+    page: int,
+    message_client: IVKMessageClient,
+    get_store_prize_card_interactor: GetStorePrizeCardHandler,
+) -> None:
+    card = await get_store_prize_card_interactor(
+        command_data=GetStorePrizeCardCommand(
+            prizes_id=prizes_id,
+            balance_points=result.registration.balance_points,
+            current_level=result.registration.current_level,
+            section=section,
+            page=page,
+        ),
+    )
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_store_prize_card_message(card=card),
+        keyboard=(
+            build_store_prize_card_keyboard(card)
+            if card.prize is not None
+            else build_store_prize_not_found_keyboard()
+        ),
+        message_client=message_client,
+        log_message="Карточка приза VK",
+    )
+
+
+async def _handle_store_claim(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    prizes_id: int | None,
+    section: StoreSection,
+    page: int,
+    message_client: IVKMessageClient,
+    get_store_prize_card_interactor: GetStorePrizeCardHandler,
+) -> None:
+    card = None
+    if prizes_id is not None:
+        card = await get_store_prize_card_interactor(
+            command_data=GetStorePrizeCardCommand(
+                prizes_id=prizes_id,
+                balance_points=result.registration.balance_points,
+                current_level=result.registration.current_level,
+                section=section,
+                page=page,
+            ),
+        )
+
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_store_claim_unavailable_message(
+            prize_name=card.prize.prize_name if card is not None and card.prize is not None else None,
+        ),
+        keyboard=(
+            build_store_prize_card_keyboard(card)
+            if card is not None and card.prize is not None
+            else build_store_prize_not_found_keyboard()
+        ),
+        message_client=message_client,
+        log_message="Заглушка получения приза VK",
     )
 
 
@@ -551,6 +745,31 @@ async def _handle_quiz_answer(
             log_message="Следующий вопрос квиза VK",
             attachment=next_q.image_attachment,
         )
+
+
+def _parse_store_section(raw_section: object) -> StoreSection:
+    if isinstance(raw_section, str):
+        try:
+            return StoreSection(raw_section)
+        except ValueError:
+            return StoreSection.ALL
+    return StoreSection.ALL
+
+
+def _parse_store_page(raw_page: object) -> int:
+    page = _parse_positive_int(raw_page)
+    return page if page is not None else 1
+
+
+def _parse_positive_int(raw_value: object) -> int | None:
+    if isinstance(raw_value, bool):
+        return None
+    if isinstance(raw_value, int) and raw_value > 0:
+        return raw_value
+    if isinstance(raw_value, str) and raw_value.isdecimal():
+        parsed = int(raw_value)
+        return parsed if parsed > 0 else None
+    return None
 
 
 def _build_registered_user_response(

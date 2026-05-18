@@ -4,6 +4,7 @@ from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
+from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.record_vk_user_activity import RecordVKUserActivityHandler
 from application.command.register_vk_user import RegisterVKUserHandler
@@ -18,6 +19,8 @@ __all__ = [
     "CompleteVKRepostTaskHandler",
     "CompleteVKSubscriptionTaskHandler",
     "EnsureVKPollTaskHandler",
+    "GetStoreCatalogHandler",
+    "GetStorePrizeCardHandler",
     "GetVKUserTasksHandler",
     "RecordVKUserActivityHandler",
     "RegisterVKUserAndCheckSubscriptionHandler",

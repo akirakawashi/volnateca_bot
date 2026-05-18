@@ -157,5 +157,6 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             vk_user_id=user.vk_user_id,
             vk_screen_name=user.vk_screen_name,
             balance_points=user.balance_points,
+            current_level=user.current_level,
             created=created,
         )
