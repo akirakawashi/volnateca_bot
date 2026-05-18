@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: c90d60cb6b52
+Revision ID: fcc1dba5c038
 Revises: 
-Create Date: 2026-05-16 08:10:22.771761
+Create Date: 2026-05-18 05:14:31.712432
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = 'c90d60cb6b52'
+revision: str = 'fcc1dba5c038'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -118,7 +118,6 @@ def upgrade() -> None:
     sa.Column('tasks_id', sa.Integer(), nullable=False),
     sa.Column('question_text', sa.Text(), nullable=False),
     sa.Column('image_attachment', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('image_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
