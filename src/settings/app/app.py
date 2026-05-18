@@ -13,6 +13,8 @@ class AppSettings(Settings):
     VERSION: str = "0.1.0"
     TRUSTED_HOSTS: list[str] = ["*"]
     PROJECT_TIMEZONE: str = "Europe/Moscow"
+    ADMIN_LOGIN: str = "admin"
+    ADMIN_PASSWORD: str = "admin"
 
     @property
     def project_timezone(self) -> ZoneInfo:
