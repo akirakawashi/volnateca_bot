@@ -103,29 +103,6 @@ class VKRepostTaskCreationDTO:
     reason: str | None = None
 
 
-class VKPostTasksCreationStatus(str, Enum):
-    CREATED = "created"
-    ALREADY_EXISTS = "already_exists"
-    IGNORED = "ignored"
-    INVALID_MARKER = "invalid_marker"
-    WRONG_WALL_OWNER = "wrong_wall_owner"
-
-
-@dataclass(slots=True, frozen=True, kw_only=True)
-class VKPostTasksCreationDTO:
-    status: VKPostTasksCreationStatus
-    event_id: str | None
-    external_id: str | None = None
-    comment_tasks_id: int | None = None
-    repost_tasks_id: int | None = None
-    like_tasks_id: int | None = None
-    comment_points: int | None = None
-    repost_points: int | None = None
-    like_points: int | None = None
-    week_number: int | None = None
-    reason: str | None = None
-
-
 class VKCommentTaskCreationStatus(str, Enum):
     CREATED = "created"
     ALREADY_EXISTS = "already_exists"
