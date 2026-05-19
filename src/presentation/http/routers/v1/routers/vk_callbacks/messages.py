@@ -143,6 +143,30 @@ def build_store_catalog_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
     return VKMessageText(text=f"{header}\n\n" + "\n\n".join(prize_blocks))
 
 
+def build_store_catalog_navigation_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🎁 Магазин · {catalog.section.label}\n"
+            f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}"
+        ),
+    )
+
+
+def build_store_catalog_carousel_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🎁 Магазин · {catalog.section.label}\n\n"
+            f"💫 Баланс: {catalog.balance_points} ✦\n"
+            f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}\n\n"
+            "Листай карточки и нажимай «Открыть», чтобы посмотреть приз."
+        ),
+    )
+
+
+def build_store_exit_message() -> VKMessageText:
+    return VKMessageText(text="Главное меню")
+
+
 def build_store_prize_card_message(*, card: StorePrizeCardDTO) -> VKMessageText:
     prize = card.prize
     if prize is None:
@@ -425,7 +449,10 @@ __all__ = [
     "build_registration_welcome_message",
     "build_repost_reward_message",
     "build_store_catalog_message",
+    "build_store_catalog_carousel_message",
+    "build_store_catalog_navigation_message",
     "build_store_claim_unavailable_message",
+    "build_store_exit_message",
     "build_store_prize_card_message",
     "build_store_prize_not_found_message",
     "build_store_root_message",

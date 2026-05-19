@@ -6,8 +6,10 @@ from application.common.dto.store import (
     StorePrizeUserState,
     list_store_sections,
 )
+from utils.vk_attachments import extract_vk_photo_attachment
 
 VKKeyboard = dict[str, object]
+VKTemplate = dict[str, object]
 
 
 def build_main_menu_keyboard() -> VKKeyboard:
@@ -76,71 +78,39 @@ def build_quiz_question_keyboard(
 def build_store_root_keyboard() -> VKKeyboard:
     return {
         "one_time": False,
-        "buttons": [
-            [
-                _payload_button(
-                    label=section.label,
-                    color="secondary",
-                    payload={"action": "store_catalog", "section": section.value, "page": 1},
-                )
-                for section in list_store_sections()[:2]
-            ],
-            [
-                _payload_button(
-                    label=section.label,
-                    color="secondary",
-                    payload={"action": "store_catalog", "section": section.value, "page": 1},
-                )
-                for section in list_store_sections()[2:]
-            ],
-        ],
+        "buttons": _build_store_section_rows(),
     }
 
 
-def build_store_catalog_keyboard(catalog: StoreCatalogDTO) -> VKKeyboard:
-    buttons: list[list[dict[str, object]]] = [
-        [
-            _payload_button(
-                label=_truncate_button_label(
-                    f"{_store_state_icon(prize.user_state)} {prize.prize_name} · {prize.cost_points} ✦",
-                ),
-                color="secondary",
-                payload={
-                    "action": "store_prize",
-                    "prizes_id": prize.prizes_id,
-                    "section": catalog.section.value,
-                    "page": catalog.pagination.page,
-                },
-            ),
-        ]
-        for prize in catalog.prizes
-    ]
+def build_store_catalog_keyboard(
+    catalog: StoreCatalogDTO,
+    *,
+    include_prize_buttons: bool = False,
+) -> VKKeyboard:
+    buttons: list[list[dict[str, object]]] = []
 
-    navigation_row: list[dict[str, object]] = []
-    if catalog.pagination.has_previous:
-        navigation_row.append(
-            _payload_button(
-                label="← Назад",
-                color="secondary",
-                payload={
-                    "action": "store_catalog",
-                    "section": catalog.section.value,
-                    "page": catalog.pagination.page - 1,
-                },
-            ),
+    if include_prize_buttons:
+        buttons.extend(
+            [
+                [
+                    _payload_button(
+                        label=_truncate_button_label(
+                            f"{_store_state_icon(prize.user_state)} {prize.prize_name} · {prize.cost_points} ✦",
+                        ),
+                        color="secondary",
+                        payload={
+                            "action": "store_prize",
+                            "prizes_id": prize.prizes_id,
+                            "section": catalog.section.value,
+                            "page": catalog.pagination.page,
+                        },
+                    ),
+                ]
+                for prize in catalog.prizes
+            ],
         )
-    if catalog.pagination.has_next:
-        navigation_row.append(
-            _payload_button(
-                label="Вперёд →",
-                color="secondary",
-                payload={
-                    "action": "store_catalog",
-                    "section": catalog.section.value,
-                    "page": catalog.pagination.page + 1,
-                },
-            ),
-        )
+
+    navigation_row = _build_store_catalog_navigation_row(catalog)
     if navigation_row:
         buttons.append(navigation_row)
 
@@ -154,6 +124,58 @@ def build_store_catalog_keyboard(catalog: StoreCatalogDTO) -> VKKeyboard:
         ],
     )
     return {"one_time": False, "buttons": buttons}
+
+
+def build_store_catalog_navigation_keyboard(catalog: StoreCatalogDTO) -> VKKeyboard:
+    buttons: list[list[dict[str, object]]] = []
+
+    navigation_row = _build_store_catalog_navigation_row(catalog)
+    if navigation_row:
+        buttons.append(navigation_row)
+
+    buttons.extend(_build_store_section_rows())
+    buttons.append(_build_store_exit_row())
+    return {"one_time": False, "buttons": buttons}
+
+
+def build_store_catalog_carousel_template(catalog: StoreCatalogDTO) -> VKTemplate | None:
+    if not catalog.prizes:
+        return None
+
+    elements: list[dict[str, object]] = []
+    for prize in catalog.prizes:
+        photo_id = _to_carousel_photo_id(prize.image_attachment)
+        if photo_id is None:
+            return None
+
+        elements.append(
+            {
+                "title": _truncate_carousel_text(prize.prize_name, max_length=80),
+                "description": _truncate_carousel_text(
+                    f"{prize.cost_points} ✦ · {_format_store_carousel_state(prize.user_state)}",
+                    max_length=80,
+                ),
+                "photo_id": photo_id,
+                "action": {"type": "open_photo"},
+                "buttons": [
+                    _payload_button(
+                        label="Открыть",
+                        color="primary",
+                        payload={
+                            "action": "store_prize",
+                            "prizes_id": prize.prizes_id,
+                            "section": catalog.section.value,
+                            "page": catalog.pagination.page,
+                        },
+                    ),
+                ],
+            },
+        )
+
+    return {
+        "type": "carousel",
+        "elements": elements,
+    }
 
 
 def build_store_prize_card_keyboard(card: StorePrizeCardDTO) -> VKKeyboard:
@@ -195,6 +217,71 @@ def build_store_prize_not_found_keyboard() -> VKKeyboard:
     return build_store_root_keyboard()
 
 
+def build_store_exit_keyboard() -> VKKeyboard:
+    return build_main_menu_keyboard()
+
+
+def _build_store_catalog_navigation_row(catalog: StoreCatalogDTO) -> list[dict[str, object]]:
+    buttons: list[dict[str, object]] = []
+    if catalog.pagination.has_previous:
+        buttons.append(
+            _payload_button(
+                label="← Назад",
+                color="secondary",
+                payload={
+                    "action": "store_catalog",
+                    "section": catalog.section.value,
+                    "page": catalog.pagination.page - 1,
+                },
+            ),
+        )
+    if catalog.pagination.has_next:
+        buttons.append(
+            _payload_button(
+                label="Вперёд →",
+                color="secondary",
+                payload={
+                    "action": "store_catalog",
+                    "section": catalog.section.value,
+                    "page": catalog.pagination.page + 1,
+                },
+            ),
+        )
+    return buttons
+
+
+def _build_store_section_rows() -> list[list[dict[str, object]]]:
+    sections = list_store_sections()
+    return [
+        [
+            _payload_button(
+                label=section.label,
+                color="secondary",
+                payload={"action": "store_catalog", "section": section.value, "page": 1},
+            )
+            for section in sections[:2]
+        ],
+        [
+            _payload_button(
+                label=section.label,
+                color="secondary",
+                payload={"action": "store_catalog", "section": section.value, "page": 1},
+            )
+            for section in sections[2:]
+        ],
+    ]
+
+
+def _build_store_exit_row() -> list[dict[str, object]]:
+    return [
+        _payload_button(
+            label="Выйти из магазина",
+            color="primary",
+            payload={"action": "store_exit"},
+        ),
+    ]
+
+
 def _text_button(*, label: str, color: str) -> dict[str, object]:
     return {
         "action": {
@@ -233,12 +320,44 @@ def _truncate_button_label(label: str) -> str:
     return f"{clean_label[:39]}…"
 
 
+def _truncate_carousel_text(text: str, *, max_length: int) -> str:
+    clean_text = " ".join(text.split())
+    if len(clean_text) <= max_length:
+        return clean_text
+    return f"{clean_text[: max_length - 1]}…"
+
+
+def _to_carousel_photo_id(image_attachment: str | None) -> str | None:
+    if image_attachment is None:
+        return None
+
+    photo_attachment = extract_vk_photo_attachment(image_attachment)
+    if photo_attachment is None:
+        return None
+    photo_id = photo_attachment.removeprefix("photo")
+    return photo_id or None
+
+
+def _format_store_carousel_state(state: StorePrizeUserState) -> str:
+    if state == StorePrizeUserState.AVAILABLE:
+        return "доступен"
+    if state == StorePrizeUserState.INSUFFICIENT_BALANCE:
+        return "не хватает баллов"
+    if state == StorePrizeUserState.LEVEL_LOCKED:
+        return "закрыт по уровню"
+    return "разобрали"
+
+
 __all__ = [
     "VKKeyboard",
+    "VKTemplate",
     "build_main_menu_keyboard",
     "build_quiz_offer_keyboard",
     "build_quiz_question_keyboard",
+    "build_store_catalog_carousel_template",
     "build_store_catalog_keyboard",
+    "build_store_catalog_navigation_keyboard",
+    "build_store_exit_keyboard",
     "build_store_prize_card_keyboard",
     "build_store_prize_not_found_keyboard",
     "build_store_root_keyboard",

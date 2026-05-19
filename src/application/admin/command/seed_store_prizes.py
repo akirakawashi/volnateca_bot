@@ -9,7 +9,7 @@ from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
 from infrastructure.database.models.prizes import Prize
 from utils.vk_attachments import extract_vk_photo_attachment
 
-STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE = "photo-213947338_457239019%2Falbum-213947338_0%2Frev"
+STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE = "photo-213947338_457239022%2Falbum-213947338_0%2Frev"
 STORE_PRIZE_IMAGE_ATTACHMENT = (
     extract_vk_photo_attachment(STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE) or STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE
 )

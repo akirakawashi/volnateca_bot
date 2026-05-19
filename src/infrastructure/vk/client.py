@@ -5,6 +5,7 @@ from http import HTTPStatus
 from typing import Any, Self
 
 import aiohttp
+from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from application.common.dto.vk import VKUserProfileDTO
@@ -199,6 +200,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient, IVKWallClient):
         random_id: int | None = None,
         keyboard: dict[str, object] | None = None,
         attachment: str | None = None,
+        template: dict[str, object] | None = None,
     ) -> bool:
         """Отправляет сообщение VK и возвращает факт успешного ответа API."""
 
@@ -218,6 +220,8 @@ class VKAPIClient(IVKUserClient, IVKMessageClient, IVKWallClient):
             params["keyboard"] = json.dumps(keyboard, ensure_ascii=False)
         if attachment is not None:
             params["attachment"] = attachment
+        if template is not None:
+            params["template"] = json.dumps(template, ensure_ascii=False)
 
         response_data = await self._request(method=VK_MESSAGES_SEND_METHOD, params=params)
         if response_data is None:
@@ -226,9 +230,15 @@ class VKAPIClient(IVKUserClient, IVKMessageClient, IVKWallClient):
         try:
             parsed_response = VKMessagesSendResponseSchema.model_validate(response_data)
         except ValidationError:
+            logger.warning("Не удалось разобрать ответ VK messages.send: {}", response_data)
             return False
 
         if parsed_response.error is not None:
+            logger.warning(
+                "VK messages.send вернул ошибку: code={}, msg={}",
+                parsed_response.error.error_code,
+                parsed_response.error.error_msg,
+            )
             return False
 
         return parsed_response.response is not None

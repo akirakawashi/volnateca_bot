@@ -4,7 +4,11 @@ from loguru import logger
 
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IVKMessageTemplateService
-from presentation.http.routers.v1.routers.vk_callbacks.keyboards import VKKeyboard, build_main_menu_keyboard
+from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
+    VKKeyboard,
+    VKTemplate,
+    build_main_menu_keyboard,
+)
 from presentation.http.routers.v1.routers.vk_callbacks.messages import VKMessageText
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 
@@ -33,17 +37,32 @@ async def send_vk_user_message(
     log_message: str,
     keyboard: VKKeyboard | None = None,
     attachment: str | None = None,
-) -> None:
+    template: VKTemplate | None = None,
+) -> bool:
     """Отправляет VK-сообщение и логирует сбой, не ломая обработку callback-а."""
 
     try:
         message_text = await _resolve_message_text(message=message)
-        await message_client.send_message(
+        keyboard_to_send = keyboard
+        if keyboard_to_send is None and template is None:
+            keyboard_to_send = build_main_menu_keyboard()
+
+        sent = await message_client.send_message(
             vk_user_id=vk_user_id,
             message=message_text,
-            keyboard=keyboard if keyboard is not None else build_main_menu_keyboard(),
+            keyboard=keyboard_to_send,
             attachment=attachment,
+            template=template,
         )
+        if not sent:
+            logger.error(
+                "{} не отправлено: VK API не подтвердил отправку, event_id={}, vk_user_id={}, users_id={}",
+                log_message,
+                data.event_id,
+                vk_user_id,
+                users_id,
+            )
+        return sent
     except Exception:
         logger.exception(
             "{} не отправлено из-за ошибки: event_id={}, vk_user_id={}, users_id={}",
@@ -52,7 +71,7 @@ async def send_vk_user_message(
             vk_user_id,
             users_id,
         )
-        return
+        return False
 
 
 async def _resolve_message_text(*, message: VKMessageText) -> str:

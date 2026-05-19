@@ -36,7 +36,10 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement impo
 from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
     build_quiz_offer_keyboard,
     build_quiz_question_keyboard,
+    build_store_catalog_carousel_template,
     build_store_catalog_keyboard,
+    build_store_catalog_navigation_keyboard,
+    build_store_exit_keyboard,
     build_store_prize_card_keyboard,
     build_store_prize_not_found_keyboard,
     build_store_root_keyboard,
@@ -56,8 +59,11 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_referral_link_message,
     build_referral_milestone_message,
     build_registration_welcome_message,
+    build_store_catalog_carousel_message,
     build_store_catalog_message,
+    build_store_catalog_navigation_message,
     build_store_claim_unavailable_message,
+    build_store_exit_message,
     build_store_prize_card_message,
     build_store_root_message,
     build_subscription_reward_message,
@@ -66,6 +72,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
 from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
+from utils.vk_attachments import extract_vk_photo_attachment
 
 
 async def handle_registration_callback(
@@ -225,6 +232,13 @@ async def _handle_registered_user_message(
                 message_client=message_client,
             )
             return
+        if action == "store_exit":
+            await _handle_store_exit(
+                data=data,
+                result=result,
+                message_client=message_client,
+            )
+            return
         if action == "store_catalog":
             await _handle_store_catalog(
                 data=data,
@@ -366,6 +380,23 @@ async def _handle_store_root(
     )
 
 
+async def _handle_store_exit(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+) -> None:
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_store_exit_message(),
+        keyboard=build_store_exit_keyboard(),
+        message_client=message_client,
+        log_message="Выход из магазина VK",
+    )
+
+
 async def _handle_store_catalog(
     *,
     data: VKCallbackPayload,
@@ -383,14 +414,38 @@ async def _handle_store_catalog(
             page=page,
         ),
     )
+    carousel_template = build_store_catalog_carousel_template(catalog)
+    if carousel_template is not None:
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_store_catalog_navigation_message(catalog=catalog),
+            keyboard=build_store_catalog_navigation_keyboard(catalog),
+            message_client=message_client,
+            log_message="Навигация каталога магазина VK",
+        )
+        sent = await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_store_catalog_carousel_message(catalog=catalog),
+            keyboard=None,
+            template=carousel_template,
+            message_client=message_client,
+            log_message="Карусель каталога магазина VK",
+        )
+        if sent:
+            return
+
     await send_vk_user_message(
         data=data,
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
         message=build_store_catalog_message(catalog=catalog),
-        keyboard=build_store_catalog_keyboard(catalog),
+        keyboard=build_store_catalog_keyboard(catalog, include_prize_buttons=True),
         message_client=message_client,
-        log_message="Каталог магазина VK",
+        log_message="Каталог магазина VK без карусели",
     )
 
 
@@ -425,7 +480,7 @@ async def _handle_store_prize_card(
         ),
         message_client=message_client,
         log_message="Карточка приза VK",
-        attachment=card.prize.image_attachment if card.prize is not None else None,
+        attachment=_normalize_vk_photo_attachment(card.prize.image_attachment) if card.prize is not None else None,
     )
 
 
@@ -465,7 +520,11 @@ async def _handle_store_claim(
         ),
         message_client=message_client,
         log_message="Заглушка получения приза VK",
-        attachment=card.prize.image_attachment if card is not None and card.prize is not None else None,
+        attachment=(
+            _normalize_vk_photo_attachment(card.prize.image_attachment)
+            if card is not None and card.prize is not None
+            else None
+        ),
     )
 
 
@@ -772,6 +831,12 @@ def _parse_positive_int(raw_value: object) -> int | None:
         parsed = int(raw_value)
         return parsed if parsed > 0 else None
     return None
+
+
+def _normalize_vk_photo_attachment(image_attachment: str | None) -> str | None:
+    if image_attachment is None:
+        return None
+    return extract_vk_photo_attachment(image_attachment) or image_attachment
 
 
 def _build_registered_user_response(

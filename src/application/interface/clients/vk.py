@@ -31,6 +31,7 @@ class IVKMessageClient(ABC):
         random_id: int | None = None,
         keyboard: dict[str, object] | None = None,
         attachment: str | None = None,
+        template: dict[str, object] | None = None,
     ) -> bool:
         """Возвращает True только когда VK подтвердил отправку сообщения."""
 
