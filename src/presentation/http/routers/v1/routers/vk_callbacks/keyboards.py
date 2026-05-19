@@ -6,7 +6,7 @@ from application.common.dto.store import (
     StorePrizeUserState,
     list_store_sections,
 )
-from utils.vk_attachments import extract_vk_photo_attachment
+from utils.vk_attachments import to_vk_carousel_photo_id
 
 VKKeyboard = dict[str, object]
 VKTemplate = dict[str, object]
@@ -144,7 +144,7 @@ def build_store_catalog_carousel_template(catalog: StoreCatalogDTO) -> VKTemplat
 
     elements: list[dict[str, object]] = []
     for prize in catalog.prizes:
-        photo_id = _to_carousel_photo_id(prize.image_attachment)
+        photo_id = to_vk_carousel_photo_id(prize.image_attachment)
         if photo_id is None:
             return None
 
@@ -325,17 +325,6 @@ def _truncate_carousel_text(text: str, *, max_length: int) -> str:
     if len(clean_text) <= max_length:
         return clean_text
     return f"{clean_text[: max_length - 1]}…"
-
-
-def _to_carousel_photo_id(image_attachment: str | None) -> str | None:
-    if image_attachment is None:
-        return None
-
-    photo_attachment = extract_vk_photo_attachment(image_attachment)
-    if photo_attachment is None:
-        return None
-    photo_id = photo_attachment.removeprefix("photo")
-    return photo_id or None
 
 
 def _format_store_carousel_state(state: StorePrizeUserState) -> str:

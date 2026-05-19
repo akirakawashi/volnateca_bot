@@ -7,11 +7,11 @@ from sqlmodel import col
 from application.base_interactor import Interactor
 from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
 from infrastructure.database.models.prizes import Prize
-from utils.vk_attachments import extract_vk_photo_attachment
+from utils.vk_attachments import normalize_vk_photo_attachment
 
 STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE = "photo-213947338_457239022%2Falbum-213947338_0%2Frev"
 STORE_PRIZE_IMAGE_ATTACHMENT = (
-    extract_vk_photo_attachment(STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE) or STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE
+    normalize_vk_photo_attachment(STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE) or STORE_PRIZE_IMAGE_ATTACHMENT_SOURCE
 )
 
 

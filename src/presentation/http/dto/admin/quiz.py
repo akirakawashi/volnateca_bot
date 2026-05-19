@@ -9,7 +9,7 @@ from application.admin.dto.quiz import (
     CreateQuizQuestionDTO,
     CreatedQuizDTO,
 )
-from utils.vk_attachments import extract_vk_photo_attachment
+from utils.vk_attachments import normalize_vk_photo_attachment
 
 
 # ── Request ───────────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ class CreateQuizQuestionSchema(BaseModel):
     def validate_image_attachment(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        normalized = extract_vk_photo_attachment(value)
+        normalized = normalize_vk_photo_attachment(value)
         if normalized is None:
             raise ValueError("image_attachment должен быть в формате photo-123_456")
         return normalized

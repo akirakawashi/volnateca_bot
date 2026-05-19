@@ -72,7 +72,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
 from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
-from utils.vk_attachments import extract_vk_photo_attachment
+from utils.vk_attachments import normalize_vk_photo_attachment
 
 
 async def handle_registration_callback(
@@ -480,7 +480,7 @@ async def _handle_store_prize_card(
         ),
         message_client=message_client,
         log_message="Карточка приза VK",
-        attachment=_normalize_vk_photo_attachment(card.prize.image_attachment) if card.prize is not None else None,
+        attachment=normalize_vk_photo_attachment(card.prize.image_attachment) if card.prize is not None else None,
     )
 
 
@@ -521,7 +521,7 @@ async def _handle_store_claim(
         message_client=message_client,
         log_message="Заглушка получения приза VK",
         attachment=(
-            _normalize_vk_photo_attachment(card.prize.image_attachment)
+            normalize_vk_photo_attachment(card.prize.image_attachment)
             if card is not None and card.prize is not None
             else None
         ),
@@ -831,12 +831,6 @@ def _parse_positive_int(raw_value: object) -> int | None:
         parsed = int(raw_value)
         return parsed if parsed > 0 else None
     return None
-
-
-def _normalize_vk_photo_attachment(image_attachment: str | None) -> str | None:
-    if image_attachment is None:
-        return None
-    return extract_vk_photo_attachment(image_attachment) or image_attachment
 
 
 def _build_registered_user_response(
