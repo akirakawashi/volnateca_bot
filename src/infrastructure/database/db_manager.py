@@ -15,7 +15,6 @@ _ALL_TABLES = ", ".join(
         "task_completions",
         "referrals",
         "user_achievements",
-        "user_daily_activities",
         "transactions",
         "quiz_questions",
         "tasks",

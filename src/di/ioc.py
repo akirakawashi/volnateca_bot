@@ -24,7 +24,6 @@ from application.command.get_quiz_first_question import GetQuizFirstQuestionHand
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
-from application.command.record_vk_user_activity import RecordVKUserActivityHandler
 from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
@@ -40,13 +39,10 @@ from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
-from application.interface.repositories.user_daily_activities import IUserDailyActivityRepository
 from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
 from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
-from application.services.daily_streak_achievement_service import DailyStreakAchievementService
-from application.services.quiz_streak_achievement_service import QuizStreakAchievementService
 from settings.app.app import AppSettings
 from settings.vk import VKSettings
 
@@ -215,14 +211,12 @@ class InteractorProvider(Provider):
         quiz_repository: IQuizRepository,
         task_repository: ITaskRepository,
         award_service: AwardTaskService,
-        quiz_streak_achievement_service: QuizStreakAchievementService,
         uow: IUnitOfWork,
     ) -> AnswerQuizQuestionHandler:
         return AnswerQuizQuestionHandler(
             quiz_repository=quiz_repository,
             task_repository=task_repository,
             award_service=award_service,
-            quiz_streak_achievement_service=quiz_streak_achievement_service,
             uow=uow,
         )
 
@@ -243,23 +237,6 @@ class InteractorProvider(Provider):
             transaction_repository=transaction_repository,
             award_achievement_service=award_achievement_service,
             uow=uow,
-        )
-
-    @provide(scope=Scope.REQUEST)
-    def get_record_vk_user_activity_handler(
-        self,
-        user_repository: IUserRepository,
-        daily_activity_repository: IUserDailyActivityRepository,
-        daily_streak_achievement_service: DailyStreakAchievementService,
-        uow: IUnitOfWork,
-        app_settings: AppSettings,
-    ) -> RecordVKUserActivityHandler:
-        return RecordVKUserActivityHandler(
-            user_repository=user_repository,
-            daily_activity_repository=daily_activity_repository,
-            daily_streak_achievement_service=daily_streak_achievement_service,
-            uow=uow,
-            project_timezone=app_settings.project_timezone,
         )
 
     @provide(scope=Scope.REQUEST)

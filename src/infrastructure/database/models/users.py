@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from infrastructure.database.models.referrals import Referral
     from infrastructure.database.models.task_completions import TaskCompletion
     from infrastructure.database.models.transactions import Transaction
-    from infrastructure.database.models.user_daily_activities import UserDailyActivity
 
 
 class User(BaseModel, table=True):
@@ -94,7 +93,6 @@ class User(BaseModel, table=True):
             "uselist": False,
         },
     )
-    daily_activities: list["UserDailyActivity"] = Relationship(back_populates="user")
     user_achievements: list["UserAchievement"] = Relationship(back_populates="user")
     prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="user")
     task_completions: list["TaskCompletion"] = Relationship(back_populates="user")

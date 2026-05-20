@@ -6,7 +6,6 @@ from application.command.complete_vk_subscription_task import CompleteVKSubscrip
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
-from application.command.record_vk_user_activity import RecordVKUserActivityHandler
 from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
@@ -22,7 +21,6 @@ __all__ = [
     "GetStoreCatalogHandler",
     "GetStorePrizeCardHandler",
     "GetVKUserTasksHandler",
-    "RecordVKUserActivityHandler",
     "RegisterVKUserAndCheckSubscriptionHandler",
     "RegisterVKUserHandler",
 ]

@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 3b724d372599
+Revision ID: 31d79bc8dd94
 Revises: 
-Create Date: 2026-05-18 22:54:10.763794
+Create Date: 2026-05-20 17:29:19.114477
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = '3b724d372599'
+revision: str = '31d79bc8dd94'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -26,7 +26,7 @@ def upgrade() -> None:
     sa.Column('code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('achievement_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('achievement_type', sa.Enum('referral_milestone', 'daily_streak', 'week_completion', 'quiz_streak', 'monthly_rating', 'project_completion', 'custom', name='achievement_type'), nullable=False),
+    sa.Column('achievement_type', sa.Enum('referral_milestone', 'week_completion', 'monthly_rating', 'project_completion', 'custom', name='achievement_type'), nullable=False),
     sa.Column('repeat_policy', sa.Enum('once', 'weekly', 'monthly', name='achievement_repeat_policy'), nullable=False),
     sa.Column('points', sa.Integer(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
@@ -152,20 +152,6 @@ def upgrade() -> None:
     op.create_index(op.f('ix_transactions_prizes_id'), 'transactions', ['prizes_id'], unique=False)
     op.create_index(op.f('ix_transactions_tasks_id'), 'transactions', ['tasks_id'], unique=False)
     op.create_index(op.f('ix_transactions_users_id'), 'transactions', ['users_id'], unique=False)
-    op.create_table('user_daily_activities',
-    sa.Column('user_daily_activities_id', sa.Integer(), nullable=False),
-    sa.Column('users_id', sa.Integer(), nullable=False),
-    sa.Column('activity_date', sa.Date(), nullable=False),
-    sa.Column('streak_days', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.CheckConstraint('streak_days > 0', name=op.f('ck_user_daily_activities_streak_days_positive')),
-    sa.ForeignKeyConstraint(['users_id'], ['users.users_id'], name=op.f('fk_user_daily_activities_users_id_users')),
-    sa.PrimaryKeyConstraint('user_daily_activities_id', name=op.f('pk_user_daily_activities')),
-    sa.UniqueConstraint('users_id', 'activity_date', name='uq_user_daily_activities_users_date')
-    )
-    op.create_index(op.f('ix_user_daily_activities_activity_date'), 'user_daily_activities', ['activity_date'], unique=False)
-    op.create_index(op.f('ix_user_daily_activities_users_id'), 'user_daily_activities', ['users_id'], unique=False)
     op.create_table('prize_redemptions',
     sa.Column('prize_redemptions_id', sa.Integer(), nullable=False),
     sa.Column('users_id', sa.Integer(), nullable=False),
@@ -329,9 +315,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_prize_redemptions_users_id'), table_name='prize_redemptions')
     op.drop_index(op.f('ix_prize_redemptions_prizes_id'), table_name='prize_redemptions')
     op.drop_table('prize_redemptions')
-    op.drop_index(op.f('ix_user_daily_activities_users_id'), table_name='user_daily_activities')
-    op.drop_index(op.f('ix_user_daily_activities_activity_date'), table_name='user_daily_activities')
-    op.drop_table('user_daily_activities')
     op.drop_index(op.f('ix_transactions_users_id'), table_name='transactions')
     op.drop_index(op.f('ix_transactions_tasks_id'), table_name='transactions')
     op.drop_index(op.f('ix_transactions_prizes_id'), table_name='transactions')

@@ -11,7 +11,6 @@ from application.command.get_quiz_first_question import GetQuizFirstQuestionHand
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
-from application.command.record_vk_user_activity import RecordVKUserActivityHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
@@ -39,7 +38,6 @@ class PresentationProvider(Provider):
         get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
         answer_quiz_question_interactor: AnswerQuizQuestionHandler,
         process_referral_interactor: ProcessReferralHandler,
-        record_vk_user_activity_interactor: RecordVKUserActivityHandler,
         vk_message_client: IVKMessageClient,
         vk_message_template_service: IVKMessageTemplateService,
         user_message_intent_classifier: IUserMessageIntentClassifier,
@@ -61,7 +59,6 @@ class PresentationProvider(Provider):
             get_quiz_first_question_interactor=get_quiz_first_question_interactor,
             answer_quiz_question_interactor=answer_quiz_question_interactor,
             process_referral_interactor=process_referral_interactor,
-            record_vk_user_activity_interactor=record_vk_user_activity_interactor,
             vk_message_client=vk_message_client,
             vk_message_template_service=vk_message_template_service,
             user_message_intent_classifier=user_message_intent_classifier,

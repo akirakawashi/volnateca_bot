@@ -210,24 +210,6 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         variables=("week_number", "points_awarded", "balance_points"),
     ),
 
-    "daily_streak_reward": MessageTemplateDefinition(
-        code="daily_streak_reward",
-        description="Сообщение о бонусе за ежедневный стрик",
-        default_template="🔥 Стрик {streak_days} дней!\n\n+{points_awarded} ✦ бонус\n\n💫 Баланс: {balance_points} ✦",
-        variables=("streak_days", "points_awarded", "balance_points"),
-    ),
-
-    "quiz_streak_reward": MessageTemplateDefinition(
-        code="quiz_streak_reward",
-        description="Сообщение о бонусе за серию квизов без ошибок",
-        default_template=(
-            "🏆 {streak_count} викторин подряд без ошибок!\n\n"
-            "+{points_awarded} ✦ бонус\n\n"
-            "💫 Баланс: {balance_points} ✦"
-        ),
-        variables=("streak_count", "points_awarded", "balance_points"),
-    ),
-
     "project_completion_reward": MessageTemplateDefinition(
         code="project_completion_reward",
         description="Сообщение о финальном бонусе за проект",

@@ -6,10 +6,6 @@ from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
-from application.interface.repositories.user_daily_activities import (
-    IUserDailyActivityRepository,
-    UserDailyActivityRecord,
-)
 from application.interface.repositories.users import IUserRepository
 
 __all__ = [
@@ -17,12 +13,10 @@ __all__ = [
     "IAchievementRepository",
     "IMessageTemplateRepository",
     "IPrizeRepository",
-    "IUserDailyActivityRepository",
     "IQuizRepository",
     "IReferralRepository",
     "ITaskCompletionRepository",
     "ITaskRepository",
     "ITransactionRepository",
-    "UserDailyActivityRecord",
     "IUserRepository",
 ]

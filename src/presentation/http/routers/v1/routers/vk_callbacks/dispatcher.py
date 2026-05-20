@@ -14,10 +14,6 @@ from application.command.get_quiz_first_question import GetQuizFirstQuestionHand
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
-from application.command.record_vk_user_activity import (
-    RecordVKUserActivityCommand,
-    RecordVKUserActivityHandler,
-)
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
@@ -34,9 +30,6 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_repost_callback,
     handle_subscription_callback,
     handle_wall_post_callback,
-)
-from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
-    send_daily_streak_rewards_if_needed,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.message_sender import bind_vk_message_template_service
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
@@ -65,7 +58,6 @@ class VKCallbackDispatcher:
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler
     answer_quiz_question_interactor: AnswerQuizQuestionHandler
     process_referral_interactor: ProcessReferralHandler
-    record_vk_user_activity_interactor: RecordVKUserActivityHandler
     vk_message_client: IVKMessageClient
     vk_message_template_service: IVKMessageTemplateService
     user_message_intent_classifier: IUserMessageIntentClassifier
@@ -82,50 +74,40 @@ class VKCallbackDispatcher:
             self._validate_secret(payload=payload)
 
             if payload.is_like():
-                response = await handle_like_callback(
+                return await handle_like_callback(
                     data=payload,
                     interactor_complete=self.complete_vk_like_task_interactor,
                     message_client=self.vk_message_client,
                 )
-                await self._record_user_activity(payload=payload)
-                return response
 
             if payload.is_comment_event():
-                response = await handle_comment_callback(
+                return await handle_comment_callback(
                     data=payload,
                     interactor_complete=self.complete_vk_comment_task_interactor,
                     message_client=self.vk_message_client,
                 )
-                await self._record_user_activity(payload=payload)
-                return response
 
             if payload.is_poll_vote_event():
-                response = await handle_poll_vote_callback(
+                return await handle_poll_vote_callback(
                     data=payload,
                     interactor_complete=self.complete_vk_poll_task_interactor,
                     message_client=self.vk_message_client,
                 )
-                await self._record_user_activity(payload=payload)
-                return response
 
             if payload.is_repost():
-                response = await handle_repost_callback(
+                return await handle_repost_callback(
                     data=payload,
                     interactor=self.complete_vk_repost_task_interactor,
                     interactor_like=self.complete_vk_like_task_interactor,
                     message_client=self.vk_message_client,
                 )
-                await self._record_user_activity(payload=payload)
-                return response
 
             if payload.is_subscription_event():
-                response = await handle_subscription_callback(
+                return await handle_subscription_callback(
                     data=payload,
                     interactor=self.complete_vk_subscription_task_interactor,
                     message_client=self.vk_message_client,
                 )
-                await self._record_user_activity(payload=payload)
-                return response
 
             if payload.is_wall_post_event():
                 return await handle_wall_post_callback(
@@ -134,7 +116,7 @@ class VKCallbackDispatcher:
                 )
 
             if payload.is_registration_event():
-                response = await handle_registration_callback(
+                return await handle_registration_callback(
                     data=payload,
                     interactor=self.register_vk_user_and_check_subscription_interactor,
                     get_vk_user_tasks_interactor=self.get_vk_user_tasks_interactor,
@@ -147,47 +129,8 @@ class VKCallbackDispatcher:
                     message_client=self.vk_message_client,
                     intent_classifier=self.user_message_intent_classifier,
                 )
-                await self._record_user_activity(payload=payload)
-                return response
 
-            response = handle_ignored_callback(data=payload)
-            await self._record_user_activity(payload=payload)
-            return response
-
-    async def _record_user_activity(self, *, payload: VKCallbackPayload) -> None:
-        vk_user_id = payload.get_primary_vk_user_id()
-        if vk_user_id is None:
-            return
-
-        try:
-            # Дневная активность — пост-обработка после основного сценария.
-            # Если она упадёт, не превращаем уже успешно обработанный callback в 500,
-            # иначе VK начнёт ретраить событие и может продублировать основной эффект.
-            result = await self.record_vk_user_activity_interactor(
-                command_data=RecordVKUserActivityCommand(vk_user_id=vk_user_id),
-            )
-        except Exception:
-            await self._rollback_user_activity_uow()
-            return
-
-        try:
-            await send_daily_streak_rewards_if_needed(
-                data=payload,
-                result=result,
-                message_client=self.vk_message_client,
-            )
-        except Exception:
-            # Уведомление о награде за стрик тоже best-effort: сбой отправки сообщения
-            # не должен ломать callback и провоцировать повторную доставку от VK.
-            return
-
-    async def _rollback_user_activity_uow(self) -> None:
-        try:
-            # После ошибки явно откатываем сессию, чтобы не оставлять request-scoped UoW
-            # в подвешенном состоянии перед дальнейшим завершением запроса.
-            await self.record_vk_user_activity_interactor.uow.rollback()
-        except Exception:
-            return
+            return handle_ignored_callback(data=payload)
 
     def _validate_group(self, payload: VKCallbackPayload) -> None:
         if payload.is_expected_group(expected_group_id=self.vk_settings.GROUP_ID):

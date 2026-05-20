@@ -19,7 +19,7 @@ class QuizAnswer(BaseModel, table=True):
 
     Один пользователь может ответить на один вопрос ровно один раз
     (UniqueConstraint на users_id + quiz_questions_id).
-    Поле is_correct денормализовано для быстрого подсчёта серий правильных ответов.
+    Поле is_correct денормализовано для удобной обратной связи и проверок.
     """
 
     __tablename__ = "quiz_answers"
@@ -52,7 +52,7 @@ class QuizAnswer(BaseModel, table=True):
     )
     is_correct: bool = Field(
         nullable=False,
-        description="Правильный ли ответ выбрал пользователь; денормализовано для удобства подсчёта стриков",
+        description="Правильный ли ответ выбрал пользователь; хранится вместе с ответом для быстрой проверки результата",
     )
     task_completions_id: int | None = Field(
         default=None,

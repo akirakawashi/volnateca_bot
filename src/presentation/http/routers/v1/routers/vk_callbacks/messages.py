@@ -301,34 +301,6 @@ def build_week_completion_reward_message(
     )
 
 
-def build_daily_streak_reward_message(
-    *,
-    streak_days: int,
-    points_awarded: int,
-    balance_points: int,
-) -> VKMessageText:
-    return _template_message(
-        "daily_streak_reward",
-        streak_days=streak_days,
-        points_awarded=points_awarded,
-        balance_points=balance_points,
-    )
-
-
-def build_quiz_streak_reward_message(
-    *,
-    streak_count: int,
-    points_awarded: int,
-    balance_points: int,
-) -> VKMessageText:
-    return _template_message(
-        "quiz_streak_reward",
-        streak_count=streak_count,
-        points_awarded=points_awarded,
-        balance_points=balance_points,
-    )
-
-
 def build_project_completion_reward_message(
     *,
     points_awarded: int,
@@ -430,7 +402,6 @@ __all__ = [
     "VKMessageText",
     "build_balance_message",
     "build_comment_reward_message",
-    "build_daily_streak_reward_message",
     "build_free_text_fallback_message",
     "build_help_message",
     "build_level_up_message",
@@ -441,7 +412,6 @@ __all__ = [
     "build_quiz_completed_message",
     "build_quiz_offer_message",
     "build_quiz_question_message",
-    "build_quiz_streak_reward_message",
     "build_quiz_unavailable_message",
     "build_referral_bonus_message",
     "build_referral_link_message",

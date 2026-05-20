@@ -7,8 +7,7 @@ class SeedDevScenarioRequest(BaseModel):
     scenario: str = Field(
         ...,
         description=(
-            "Сценарий: daily7, daily30, quiz5, quiz-broken, "
-            "week, monthly_top, project12, referral3, referral5, referral10"
+            "Сценарий: week, monthly_top, project12, referral3, referral5, referral10"
         ),
     )
     users_id: int = Field(default=1, ge=1)

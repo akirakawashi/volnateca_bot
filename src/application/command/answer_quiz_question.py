@@ -11,7 +11,6 @@ from application.services.award_task_service import (
     AwardTaskService,
     TaskAwardSpec,
 )
-from application.services.quiz_streak_achievement_service import QuizStreakAchievementService
 from application.services.task_completion_key import build_task_completion_key
 
 
@@ -38,10 +37,6 @@ class AnswerQuizQuestionDTO:
     project_completion_points_awarded: int
     project_completion_balance_points: int | None
     project_completion_level_up: int | None
-    quiz_streak_count: int | None
-    quiz_streak_points_awarded: int
-    quiz_streak_balance_points: int | None
-    quiz_streak_level_up: int | None
     already_answered: bool
     invalid_payload: bool
     quiz_unavailable: bool
@@ -60,13 +55,11 @@ class AnswerQuizQuestionHandler(
         quiz_repository: IQuizRepository,
         task_repository: ITaskRepository,
         award_service: AwardTaskService,
-        quiz_streak_achievement_service: QuizStreakAchievementService,
         uow: IUnitOfWork,
     ) -> None:
         self.quiz_repository = quiz_repository
         self.task_repository = task_repository
         self.award_service = award_service
-        self.quiz_streak_achievement_service = quiz_streak_achievement_service
         self.uow = uow
 
     async def __call__(
@@ -95,10 +88,6 @@ class AnswerQuizQuestionHandler(
                 project_completion_points_awarded=0,
                 project_completion_balance_points=None,
                 project_completion_level_up=None,
-                quiz_streak_count=None,
-                quiz_streak_points_awarded=0,
-                quiz_streak_balance_points=None,
-                quiz_streak_level_up=None,
                 already_answered=False,
                 invalid_payload=True,
                 quiz_unavailable=False,
@@ -120,10 +109,6 @@ class AnswerQuizQuestionHandler(
                 project_completion_points_awarded=0,
                 project_completion_balance_points=None,
                 project_completion_level_up=None,
-                quiz_streak_count=None,
-                quiz_streak_points_awarded=0,
-                quiz_streak_balance_points=None,
-                quiz_streak_level_up=None,
                 already_answered=False,
                 invalid_payload=False,
                 quiz_unavailable=True,
@@ -140,10 +125,6 @@ class AnswerQuizQuestionHandler(
         project_completion_points_awarded = 0
         project_completion_balance_points: int | None = None
         project_completion_level_up: int | None = None
-        quiz_streak_count: int | None = None
-        quiz_streak_points_awarded = 0
-        quiz_streak_balance_points: int | None = None
-        quiz_streak_level_up: int | None = None
 
         if not saved.already_answered:
             remaining = await self.quiz_repository.get_remaining_questions_count(
@@ -193,15 +174,6 @@ class AnswerQuizQuestionHandler(
                                 quiz_answers_id=saved.quiz_answers_id,
                                 task_completions_id=outcome.task_completions_id,
                             )
-                        if outcome.status == AwardTaskOutcomeStatus.COMPLETED:
-                            quiz_streak_award = await self.quiz_streak_achievement_service.award_if_needed(
-                                vk_user_id=command_data.vk_user_id,
-                            )
-                            if quiz_streak_award is not None:
-                                quiz_streak_count = quiz_streak_award.streak_count
-                                quiz_streak_points_awarded = quiz_streak_award.points_awarded
-                                quiz_streak_balance_points = quiz_streak_award.balance_points
-                                quiz_streak_level_up = quiz_streak_award.level_up
 
         await self.uow.commit()
 
@@ -227,10 +199,6 @@ class AnswerQuizQuestionHandler(
             project_completion_points_awarded=project_completion_points_awarded,
             project_completion_balance_points=project_completion_balance_points,
             project_completion_level_up=project_completion_level_up,
-            quiz_streak_count=quiz_streak_count,
-            quiz_streak_points_awarded=quiz_streak_points_awarded,
-            quiz_streak_balance_points=quiz_streak_balance_points,
-            quiz_streak_level_up=quiz_streak_level_up,
             already_answered=saved.already_answered,
             invalid_payload=False,
             quiz_unavailable=False,

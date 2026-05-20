@@ -26,7 +26,6 @@ from infrastructure.database.models.task_completions import TaskCompletion
 from infrastructure.database.models.tasks import Task
 from infrastructure.database.models.transactions import Transaction
 from infrastructure.database.models.user_achievements import UserAchievement
-from infrastructure.database.models.user_daily_activities import UserDailyActivity
 from infrastructure.database.models.users import User
 
 __all__ = [
@@ -57,5 +56,4 @@ __all__ = [
     "TransactionType",
     "User",
     "UserAchievement",
-    "UserDailyActivity",
 ]

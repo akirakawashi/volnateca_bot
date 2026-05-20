@@ -6,11 +6,10 @@ from sqlmodel import col
 
 from application.common.dto.quiz import QuizAnswerSavedDTO, QuizQuestionDTO, QuizQuestionOptionDTO
 from application.interface.repositories.quiz import IQuizRepository
-from domain.enums.task import TaskCompletionStatus, TaskType
+from domain.enums.task import TaskType
 from infrastructure.database.models.quiz_answers import QuizAnswer
 from infrastructure.database.models.quiz_question_options import QuizQuestionOption
 from infrastructure.database.models.quiz_questions import QuizQuestion
-from infrastructure.database.models.task_completions import TaskCompletion
 from infrastructure.database.models.tasks import Task
 from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
@@ -206,24 +205,6 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
         answered_count = len(answered_result.all())
         return max(0, len(all_ids) - answered_count)
 
-    async def get_current_correct_quiz_streak(self, vk_user_id: int) -> int:
-        users_id = await self._get_users_id_by_vk_user_id(vk_user_id=vk_user_id)
-        if users_id is None:
-            return 0
-
-        completions = await self._list_completed_quiz_completions(users_id=users_id)
-
-        streak = 0
-        for completion in completions:
-            if await self._is_quiz_completed_without_mistakes(
-                users_id=users_id,
-                tasks_id=completion.tasks_id,
-            ):
-                streak += 1
-                continue
-            break
-        return streak
-
     async def link_answer_to_task_completion(
         self,
         quiz_answers_id: int,
@@ -244,47 +225,6 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
         )
         user = result.scalar_one_or_none()
         return user.users_id if user is not None else None
-
-    async def _list_completed_quiz_completions(self, *, users_id: int) -> list[TaskCompletion]:
-        result = await self._session.execute(
-            select(TaskCompletion)
-            .join(Task, col(TaskCompletion.tasks_id) == col(Task.tasks_id))
-            .where(
-                col(TaskCompletion.users_id) == users_id,
-                col(TaskCompletion.task_completion_status) == TaskCompletionStatus.COMPLETED,
-                col(Task.task_type) == TaskType.QUIZ,
-            )
-            .order_by(
-                col(TaskCompletion.checked_at).desc(),
-                col(TaskCompletion.task_completions_id).desc(),
-            ),
-        )
-        return list(result.scalars().all())
-
-    async def _is_quiz_completed_without_mistakes(
-        self,
-        *,
-        users_id: int,
-        tasks_id: int,
-    ) -> bool:
-        question_ids_result = await self._session.execute(
-            select(col(QuizQuestion.quiz_questions_id)).where(
-                col(QuizQuestion.tasks_id) == tasks_id,
-                col(QuizQuestion.is_active).is_(True),
-            ),
-        )
-        question_ids = [row for (row,) in question_ids_result.all()]
-        if not question_ids:
-            return False
-
-        answers_result = await self._session.execute(
-            select(QuizAnswer).where(
-                col(QuizAnswer.users_id) == users_id,
-                col(QuizAnswer.quiz_questions_id).in_(question_ids),
-            ),
-        )
-        answers = list(answers_result.scalars().all())
-        return len(answers) == len(question_ids) and all(answer.is_correct for answer in answers)
 
     async def _get_active_quiz_task_by_id(self, *, tasks_id: int) -> Task | None:
         now = datetime.now(tz=UTC)
