@@ -33,12 +33,12 @@ def create_fastapi_app() -> FastAPI:
 
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=config.cors.ALLOW_ORIGINS,
+        allow_origins=["*"],
         allow_credentials=config.cors.ALLOW_CREDENTIALS,
-        allow_methods=config.cors.ALLOW_METHODS,
-        allow_headers=config.cors.ALLOW_HEADERS,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
-    application.add_middleware(TrustedHostMiddleware, allowed_hosts=config.app.TRUSTED_HOSTS)
+    application.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
     return application
 

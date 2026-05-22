@@ -11,7 +11,6 @@ class AppSettings(Settings):
     DEBUG: bool = False
     NAME: str = "volnateca-bot"
     VERSION: str = "0.1.0"
-    TRUSTED_HOSTS: list[str] = ["*"]
     PROJECT_TIMEZONE: str = "Europe/Moscow"
     ADMIN_LOGIN: str = "admin"
     ADMIN_PASSWORD: str = "admin"
