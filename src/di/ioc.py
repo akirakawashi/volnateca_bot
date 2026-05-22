@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # TODO: удалить SeedDevScenarioHandler и get_seed_dev_scenario_handler перед релизом.
 from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 from application.admin.command.seed_store_prizes import SeedStorePrizesHandler
+from application.admin.command.create_prize import CreatePrizeHandler
+from application.admin.command.list_prizes import ListPrizesHandler
 from application.admin.command.message_templates import (
     DeleteMessageTemplateHandler,
     ListMessageTemplatesHandler,
@@ -34,6 +36,7 @@ from application.interface.repositories.achievements import IAchievementReposito
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
+from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
@@ -264,6 +267,24 @@ class InteractorProvider(Provider):
     ) -> CreateQuizHandler:
         return CreateQuizHandler(
             quiz_admin_repository=quiz_admin_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_list_prizes_handler(
+        self,
+        prize_admin_repository: IPrizeAdminRepository,
+    ) -> ListPrizesHandler:
+        return ListPrizesHandler(prize_admin_repository=prize_admin_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_create_prize_handler(
+        self,
+        prize_admin_repository: IPrizeAdminRepository,
+        uow: IUnitOfWork,
+    ) -> CreatePrizeHandler:
+        return CreatePrizeHandler(
+            prize_admin_repository=prize_admin_repository,
             uow=uow,
         )
 

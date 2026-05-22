@@ -6,6 +6,7 @@ from application.interface.repositories.message_templates import IMessageTemplat
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
+from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
@@ -17,6 +18,7 @@ from infrastructure.database.repositories.message_templates import MessageTempla
 from infrastructure.database.repositories.prizes import PrizeRepository
 from infrastructure.database.repositories.quiz import QuizRepository
 from infrastructure.database.db_manager import DBManager
+from infrastructure.database.repositories.admin.prize import PrizeAdminRepository
 from infrastructure.database.repositories.admin.quiz import QuizAdminRepository
 from infrastructure.database.repositories.referrals import ReferralRepository
 from infrastructure.database.repositories.task_completions import TaskCompletionRepository
@@ -95,6 +97,13 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> QuizAdminRepository:
         return QuizAdminRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IPrizeAdminRepository)
+    def get_prize_admin_repository(
+        self,
+        session: AsyncSession,
+    ) -> PrizeAdminRepository:
+        return PrizeAdminRepository(session=session)
 
     @provide(scope=Scope.REQUEST, provides=IDBManager)
     def get_db_manager(
