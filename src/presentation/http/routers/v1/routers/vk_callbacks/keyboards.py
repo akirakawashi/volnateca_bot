@@ -78,7 +78,10 @@ def build_quiz_question_keyboard(
 def build_store_root_keyboard() -> VKKeyboard:
     return {
         "one_time": False,
-        "buttons": _build_store_section_rows(),
+        "buttons": [
+            *_build_store_section_rows(),
+            _build_store_exit_row(label="Главное меню"),
+        ],
     }
 
 
@@ -272,10 +275,10 @@ def _build_store_section_rows() -> list[list[dict[str, object]]]:
     ]
 
 
-def _build_store_exit_row() -> list[dict[str, object]]:
+def _build_store_exit_row(*, label: str = "Выйти из магазина") -> list[dict[str, object]]:
     return [
         _payload_button(
-            label="Выйти из магазина",
+            label=label,
             color="primary",
             payload={"action": "store_exit"},
         ),
