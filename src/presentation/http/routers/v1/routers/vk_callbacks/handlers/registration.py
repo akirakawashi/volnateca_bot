@@ -51,6 +51,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_level_up_message,
     build_quiz_answer_result_message,
     build_quiz_completed_message,
+    build_quiz_failed_message,
     build_quiz_offer_message,
     build_quiz_question_message,
     build_quiz_unavailable_message,
@@ -795,6 +796,16 @@ async def _handle_quiz_answer(
             log_message="Следующий вопрос квиза VK",
             attachment=next_q.image_attachment,
         )
+        return
+
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_quiz_failed_message(),
+        message_client=message_client,
+        log_message="Сообщение о завершении квиза без награды VK",
+    )
 
 
 def _parse_store_section(raw_section: object) -> StoreSection:

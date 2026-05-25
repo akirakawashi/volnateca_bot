@@ -142,33 +142,56 @@ class AnswerQuizQuestionHandler(
                         week_number=task_spec.week_number,
                         checked_at=datetime.now(tz=UTC),
                     )
-                    outcome = await self.award_service.award(
-                        vk_user_id=command_data.vk_user_id,
-                        task=TaskAwardSpec(
-                            tasks_id=task_spec.tasks_id,
-                            task_name=task_spec.task_name,
-                            points=task_spec.points,
-                            week_number=task_spec.week_number,
-                        ),
-                        completion_key=completion_key,
-                        event_id=None,
-                        evidence_external_id=None,
+                    task_award_spec = TaskAwardSpec(
+                        tasks_id=task_spec.tasks_id,
+                        task_name=task_spec.task_name,
+                        points=task_spec.points,
+                        week_number=task_spec.week_number,
                     )
-                    if outcome.status in (
-                        AwardTaskOutcomeStatus.COMPLETED,
-                        AwardTaskOutcomeStatus.ALREADY_COMPLETED,
+                    if await self.quiz_repository.are_all_answers_correct(
+                        tasks_id=saved.tasks_id,
+                        vk_user_id=command_data.vk_user_id,
                     ):
-                        task_completed = True
-                        points_awarded = outcome.points_awarded
-                        balance_points = outcome.balance_points
-                        level_up = outcome.level_up
-                        week_completion_week_number = outcome.week_completion_week_number
-                        week_completion_points_awarded = outcome.week_completion_points_awarded
-                        week_completion_balance_points = outcome.week_completion_balance_points
-                        week_completion_level_up = outcome.week_completion_level_up
-                        project_completion_points_awarded = outcome.project_completion_points_awarded
-                        project_completion_balance_points = outcome.project_completion_balance_points
-                        project_completion_level_up = outcome.project_completion_level_up
+                        outcome = await self.award_service.award(
+                            vk_user_id=command_data.vk_user_id,
+                            task=task_award_spec,
+                            completion_key=completion_key,
+                            event_id=None,
+                            evidence_external_id=None,
+                        )
+                        if outcome.status in (
+                            AwardTaskOutcomeStatus.COMPLETED,
+                            AwardTaskOutcomeStatus.ALREADY_COMPLETED,
+                        ):
+                            task_completed = True
+                            points_awarded = outcome.points_awarded
+                            balance_points = outcome.balance_points
+                            level_up = outcome.level_up
+                            week_completion_week_number = outcome.week_completion_week_number
+                            week_completion_points_awarded = outcome.week_completion_points_awarded
+                            week_completion_balance_points = outcome.week_completion_balance_points
+                            week_completion_level_up = outcome.week_completion_level_up
+                            project_completion_points_awarded = (
+                                outcome.project_completion_points_awarded
+                            )
+                            project_completion_balance_points = (
+                                outcome.project_completion_balance_points
+                            )
+                            project_completion_level_up = outcome.project_completion_level_up
+                            if outcome.task_completions_id is not None and saved.quiz_answers_id is not None:
+                                await self.quiz_repository.link_answer_to_task_completion(
+                                    quiz_answers_id=saved.quiz_answers_id,
+                                    task_completions_id=outcome.task_completions_id,
+                                )
+                    else:
+                        outcome = await self.award_service.reject(
+                            vk_user_id=command_data.vk_user_id,
+                            task=task_award_spec,
+                            completion_key=completion_key,
+                            event_id=None,
+                            evidence_external_id=None,
+                            rejected_reason="quiz_has_incorrect_answers",
+                        )
                         if outcome.task_completions_id is not None and saved.quiz_answers_id is not None:
                             await self.quiz_repository.link_answer_to_task_completion(
                                 quiz_answers_id=saved.quiz_answers_id,

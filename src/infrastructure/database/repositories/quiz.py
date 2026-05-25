@@ -205,6 +205,38 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
         answered_count = len(answered_result.all())
         return max(0, len(all_ids) - answered_count)
 
+    async def are_all_answers_correct(
+        self,
+        tasks_id: int,
+        vk_user_id: int,
+    ) -> bool:
+        """Проверяет, что пользователь правильно ответил на все активные вопросы задания."""
+        users_id = await self._get_users_id_by_vk_user_id(vk_user_id=vk_user_id)
+        if users_id is None:
+            return False
+
+        if await self._get_active_quiz_task_by_id(tasks_id=tasks_id) is None:
+            return False
+
+        question_ids_result = await self._session.execute(
+            select(col(QuizQuestion.quiz_questions_id)).where(
+                col(QuizQuestion.tasks_id) == tasks_id,
+                col(QuizQuestion.is_active).is_(True),
+            ),
+        )
+        question_ids = [row for (row,) in question_ids_result.all()]
+        if not question_ids:
+            return False
+
+        answers_result = await self._session.execute(
+            select(col(QuizAnswer.is_correct)).where(
+                col(QuizAnswer.users_id) == users_id,
+                col(QuizAnswer.quiz_questions_id).in_(question_ids),
+            ),
+        )
+        answers = [row for (row,) in answers_result.all()]
+        return len(answers) == len(question_ids) and all(answers)
+
     async def link_answer_to_task_completion(
         self,
         quiz_answers_id: int,

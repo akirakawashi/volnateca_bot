@@ -387,12 +387,19 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         completed_keys = await self._list_completed_task_keys(users_id=users_id)
 
         for task in quiz_tasks:
-            if not self._is_task_completed_for_current_period(
+            if self._is_task_completed_for_current_period(
                 task=task,
                 checked_at=now,
                 completed_keys=completed_keys,
             ):
-                return self._to_quiz_task_summary(task=task, checked_at=now)
+                continue
+            if await self._is_quiz_attempt_finalized_for_current_period(
+                users_id=users_id,
+                task=task,
+                checked_at=now,
+            ):
+                continue
+            return self._to_quiz_task_summary(task=task, checked_at=now)
 
         return None
 
@@ -465,6 +472,36 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             ),
         )
         return {(completion.tasks_id, completion.completion_key) for completion in result.scalars().all()}
+
+    async def _is_quiz_attempt_finalized_for_current_period(
+        self,
+        *,
+        users_id: int,
+        task: Task,
+        checked_at: datetime,
+    ) -> bool:
+        if task.tasks_id is None:
+            raise RuntimeError("Первичный ключ задания не был сгенерирован")
+
+        completion_key = build_task_completion_key(
+            repeat_policy=task.repeat_policy,
+            week_number=self._task_week_number(task=task),
+            checked_at=checked_at,
+        )
+        result = await self._session.execute(
+            select(TaskCompletion).where(
+                col(TaskCompletion.users_id) == users_id,
+                col(TaskCompletion.tasks_id) == task.tasks_id,
+                col(TaskCompletion.completion_key) == completion_key,
+                col(TaskCompletion.task_completion_status).in_(
+                    (
+                        TaskCompletionStatus.COMPLETED,
+                        TaskCompletionStatus.REJECTED,
+                    ),
+                ),
+            ),
+        )
+        return result.scalar_one_or_none() is not None
 
     async def _get_task_by_code_or_external_id(
         self,

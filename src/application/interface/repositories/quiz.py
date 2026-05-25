@@ -40,6 +40,15 @@ class IQuizRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def are_all_answers_correct(
+        self,
+        tasks_id: int,
+        vk_user_id: int,
+    ) -> bool:
+        """Проверяет, что по всем активным вопросам задания даны правильные ответы."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def link_answer_to_task_completion(
         self,
         quiz_answers_id: int,

@@ -250,6 +250,10 @@ def build_quiz_completed_message(
     )
 
 
+def build_quiz_failed_message() -> VKMessageText:
+    return _template_message("quiz_failed")
+
+
 def build_free_text_fallback_message() -> VKMessageText:
     return _template_message("free_text_fallback")
 
@@ -410,6 +414,7 @@ __all__ = [
     "build_project_completion_reward_message",
     "build_quiz_answer_result_message",
     "build_quiz_completed_message",
+    "build_quiz_failed_message",
     "build_quiz_offer_message",
     "build_quiz_question_message",
     "build_quiz_unavailable_message",

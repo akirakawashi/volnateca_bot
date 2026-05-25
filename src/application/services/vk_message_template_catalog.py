@@ -156,6 +156,15 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         variables=("points_awarded", "balance_points"),
     ),
 
+    "quiz_failed": MessageTemplateDefinition(
+        code="quiz_failed",
+        description="Сообщение о завершении викторины без награды",
+        default_template=(
+            "❌ Квиз завершён без награды.\n\n"
+            "Баллы начисляются только если все ответы правильные."
+        ),
+    ),
+
     "free_text_fallback": MessageTemplateDefinition(
         code="free_text_fallback",
         description="Ответ на нераспознанный свободный текст",
