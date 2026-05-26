@@ -14,7 +14,12 @@ class AppSettings(Settings):
     PROJECT_TIMEZONE: str = "Europe/Moscow"
     ADMIN_LOGIN: str = "admin"
     ADMIN_PASSWORD: str = "admin"
+    ALLOWED_HOSTS: str = "localhost,127.0.0.1"
 
     @property
     def project_timezone(self) -> ZoneInfo:
         return ZoneInfo(self.PROJECT_TIMEZONE)
+
+    @property
+    def allowed_hosts(self) -> list[str]:
+        return [item.strip() for item in self.ALLOWED_HOSTS.split(",") if item.strip()]

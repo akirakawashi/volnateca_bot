@@ -33,14 +33,15 @@ def create_fastapi_app() -> FastAPI:
     )
     include_routers(application)
 
-    application.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=config.cors.ALLOW_CREDENTIALS,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    application.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+    if config.cors.enabled:
+        application.add_middleware(
+            CORSMiddleware,
+            allow_origins=config.cors.allowed_origins,
+            allow_credentials=config.cors.ALLOW_CREDENTIALS,
+            allow_methods=config.cors.allowed_methods,
+            allow_headers=config.cors.allowed_headers,
+        )
+    application.add_middleware(TrustedHostMiddleware, allowed_hosts=config.app.allowed_hosts)
 
     return application
 
