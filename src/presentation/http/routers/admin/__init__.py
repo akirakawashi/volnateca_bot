@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from presentation.http.routers.admin.auth import auth_admin_router, verify_admin_credentials
+from presentation.http.routers.admin.auth import auth_admin_router, verify_admin_credentials, verify_admin_token
 from presentation.http.routers.admin.db import db_admin_router
 from presentation.http.routers.admin.dev import dev_admin_router
 from presentation.http.routers.admin.message_templates import message_templates_admin_router
@@ -11,7 +11,7 @@ from presentation.http.routers.admin.wall_post import wall_admin_router
 admin_router = APIRouter(
     prefix="/v1/admin",
     tags=["Admin"],
-    dependencies=[Depends(verify_admin_credentials)],
+    dependencies=[Depends(verify_admin_credentials), Depends(verify_admin_token)],
 )
 admin_router.include_router(auth_admin_router)
 admin_router.include_router(quiz_admin_router)

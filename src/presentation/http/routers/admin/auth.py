@@ -1,6 +1,6 @@
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Header, Response, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from settings.app.app import AppSettings
@@ -28,6 +28,22 @@ def verify_admin_credentials(
 
     if not (login_ok and password_ok):
         raise unauthorized
+
+
+def verify_admin_token(
+    admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
+) -> None:
+    forbidden = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Некорректный X-Admin-Token",
+    )
+
+    if admin_token is None:
+        raise forbidden
+
+    token_ok = secrets.compare_digest(admin_token, settings.ADMIN_TOKEN)
+    if not token_ok:
+        raise forbidden
 
 
 @auth_admin_router.get(
