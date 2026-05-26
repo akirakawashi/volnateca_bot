@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Text, func
+from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Index, Text, func
 from sqlmodel import Column, Field, Relationship
 
 from domain.enums.transaction import (
@@ -33,6 +33,12 @@ class Transaction(BaseModel, table=True):
         CheckConstraint("amount > 0", name="amount_positive"),
         CheckConstraint("balance_before >= 0", name="balance_before_non_negative"),
         CheckConstraint("balance_after >= 0", name="balance_after_non_negative"),
+        Index(
+            "ix_transactions_transaction_type_created_at_users_id",
+            "transaction_type",
+            "created_at",
+            "users_id",
+        ),
     )
 
     transactions_id: int | None = Field(default=None, primary_key=True)
