@@ -28,6 +28,8 @@ def create_fastapi_app() -> FastAPI:
         title=config.app.NAME,
         version=config.app.VERSION,
         openapi_url=config.docs.OPENAPI_URL,
+        docs_url=None,
+        redoc_url=None,
     )
     include_routers(application)
 

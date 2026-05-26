@@ -158,11 +158,22 @@ class QuizRepository(SQLAlchemyRepository, IQuizRepository):
                 self._session.add(answer)
                 await self._session.flush()
         except IntegrityError:
+            existing_answer_result = await self._session.execute(
+                select(QuizAnswer).where(
+                    col(QuizAnswer.users_id) == users_id,
+                    col(QuizAnswer.quiz_questions_id) == quiz_questions_id,
+                ),
+            )
+            existing_answer = existing_answer_result.scalar_one_or_none()
+            if existing_answer is None:
+                raise
+
             return QuizAnswerSavedDTO(
-                is_correct=option.is_correct,
+                is_correct=existing_answer.is_correct,
                 correct_option_text=correct_text,
                 tasks_id=question.tasks_id,
                 already_answered=True,
+                quiz_answers_id=existing_answer.quiz_answers_id,
             )
 
         return QuizAnswerSavedDTO(
