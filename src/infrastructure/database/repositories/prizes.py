@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlmodel import col
 
 from application.common.dto.store import STORE_ALLOWED_PRIZE_TYPES, StorePrizeSnapshot
@@ -13,8 +13,10 @@ class PrizeRepository(SQLAlchemyRepository, IPrizeRepository):
         self,
         *,
         prize_types: tuple[PrizeType, ...],
+        limit: int,
+        offset: int,
     ) -> tuple[StorePrizeSnapshot, ...]:
-        if not prize_types:
+        if not prize_types or limit <= 0:
             return ()
 
         result = await self._session.execute(
@@ -28,9 +30,30 @@ class PrizeRepository(SQLAlchemyRepository, IPrizeRepository):
                 col(Prize.sort_order),
                 col(Prize.cost_points),
                 col(Prize.prizes_id),
-            ),
+            )
+            .limit(limit)
+            .offset(max(0, offset)),
         )
         return tuple(self._to_store_prize_snapshot(prize=prize) for prize in result.scalars().all())
+
+    async def count_store_prizes(
+        self,
+        *,
+        prize_types: tuple[PrizeType, ...],
+    ) -> int:
+        if not prize_types:
+            return 0
+
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(Prize)
+            .where(
+                col(Prize.is_active).is_(True),
+                col(Prize.status) != PrizeStatus.HIDDEN,
+                col(Prize.prize_type).in_(prize_types),
+            ),
+        )
+        return int(result.scalar_one())
 
     async def get_store_prize(
         self,

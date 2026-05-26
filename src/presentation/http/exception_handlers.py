@@ -21,9 +21,16 @@ async def pydantic_validation_error_handler(
     if not isinstance(err, RequestValidationError | ValidationError):
         raise err
 
+    logger.warning(
+        "Ошибка валидации запроса: {method} {path} errors={errors}",
+        method=request.method,
+        path=request.url.path,
+        errors=err.errors(),
+    )
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"status": False, "message": "Ошибка валидации", "context": err.errors()},
+        content={"status": False, "message": "Ошибка валидации", "context": None},
     )
 
 

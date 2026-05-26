@@ -342,7 +342,11 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
 
         now = datetime.now(tz=UTC)
         tasks = await self._list_active_tasks(now=now)
-        completed_keys = await self._list_completed_task_keys(users_id=users_id)
+        task_ids = self._extract_task_ids(tasks=tasks)
+        completed_keys = await self._list_completed_task_keys(
+            users_id=users_id,
+            task_ids=task_ids,
+        )
 
         return [
             self._to_user_available_task_dto(task=task)
@@ -384,7 +388,11 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         if not quiz_tasks:
             return None
 
-        completed_keys = await self._list_completed_task_keys(users_id=users_id)
+        task_ids = self._extract_task_ids(tasks=quiz_tasks)
+        completed_keys = await self._list_completed_task_keys(
+            users_id=users_id,
+            task_ids=task_ids,
+        )
 
         for task in quiz_tasks:
             if self._is_task_completed_for_current_period(
@@ -418,7 +426,11 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         if not weekly_tasks:
             return False
 
-        completed_keys = await self._list_completed_task_keys(users_id=users_id)
+        task_ids = self._extract_task_ids(tasks=weekly_tasks)
+        completed_keys = await self._list_completed_task_keys(
+            users_id=users_id,
+            task_ids=task_ids,
+        )
         return all(
             self._is_task_completed_for_current_period(
                 task=task,
@@ -464,10 +476,19 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         )
         return list(result.scalars().all())
 
-    async def _list_completed_task_keys(self, users_id: int) -> set[tuple[int, str]]:
+    async def _list_completed_task_keys(
+        self,
+        *,
+        users_id: int,
+        task_ids: tuple[int, ...],
+    ) -> set[tuple[int, str]]:
+        if not task_ids:
+            return set()
+
         result = await self._session.execute(
             select(TaskCompletion).where(
                 col(TaskCompletion.users_id) == users_id,
+                col(TaskCompletion.tasks_id).in_(task_ids),
                 col(TaskCompletion.task_completion_status) == TaskCompletionStatus.COMPLETED,
             ),
         )
@@ -707,3 +728,12 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         if task.task_type == TaskType.VK_SUBSCRIBE:
             return None
         return task.week_number
+
+    @staticmethod
+    def _extract_task_ids(*, tasks: list[Task]) -> tuple[int, ...]:
+        task_ids: list[int] = []
+        for task in tasks:
+            if task.tasks_id is None:
+                raise RuntimeError("Первичный ключ задания не был сгенерирован")
+            task_ids.append(task.tasks_id)
+        return tuple(task_ids)

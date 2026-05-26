@@ -1,6 +1,7 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, HTTPException, status
+from loguru import logger
 
 from application.admin.command.post_to_wall import PostToWallHandler
 from presentation.http.dto.admin.wall_post import PostToWallRequestSchema, PostedToWallResponseSchema
@@ -21,5 +22,6 @@ async def post_to_wall(
     try:
         result = await handler(data.to_command())
     except RuntimeError as e:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(e)) from e
+        logger.exception("VK wall post failed")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="VK wall post failed") from e
     return PostedToWallResponseSchema.from_dto(result)

@@ -37,14 +37,18 @@ class GetStoreCatalogHandler(Interactor[GetStoreCatalogCommand, StoreCatalogDTO]
         self.prize_repository = prize_repository
 
     async def __call__(self, command_data: GetStoreCatalogCommand) -> StoreCatalogDTO:
-        snapshots = await self.prize_repository.list_store_prizes(
-            prize_types=command_data.section.prize_types,
-        )
-        total_items = len(snapshots)
+        prize_types = command_data.section.prize_types
+        total_items = await self.prize_repository.count_store_prizes(prize_types=prize_types)
         total_pages = max(1, (total_items + STORE_PAGE_SIZE - 1) // STORE_PAGE_SIZE)
         page = _normalize_page(page=command_data.page, total_pages=total_pages)
-        start = (page - 1) * STORE_PAGE_SIZE
-        page_items = snapshots[start : start + STORE_PAGE_SIZE]
+        page_items: tuple[StorePrizeSnapshot, ...] = ()
+        if total_items > 0:
+            start = (page - 1) * STORE_PAGE_SIZE
+            page_items = await self.prize_repository.list_store_prizes(
+                prize_types=prize_types,
+                limit=STORE_PAGE_SIZE,
+                offset=start,
+            )
 
         return StoreCatalogDTO(
             section=command_data.section,

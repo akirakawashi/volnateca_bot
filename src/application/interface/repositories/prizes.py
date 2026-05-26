@@ -10,7 +10,17 @@ class IPrizeRepository(ABC):
         self,
         *,
         prize_types: tuple[PrizeType, ...],
+        limit: int,
+        offset: int,
     ) -> tuple[StorePrizeSnapshot, ...]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def count_store_prizes(
+        self,
+        *,
+        prize_types: tuple[PrizeType, ...],
+    ) -> int:
         raise NotImplementedError
 
     @abstractmethod
