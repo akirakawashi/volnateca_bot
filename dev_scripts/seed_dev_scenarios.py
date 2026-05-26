@@ -957,7 +957,6 @@ async def seed_target_scenario(
     post_external_id: str,
 ) -> list[str]:
     await reset_target_dev_fixtures(session, target_user=user)
-    await upsert_achievements(session)
 
     if scenario == "week":
         lines = await seed_target_week_completion(session, user=user)

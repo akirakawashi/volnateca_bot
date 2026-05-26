@@ -3,10 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.admin.interface.db_manager import IDBManager
 
-# Все таблицы перечислены в порядке «листья → корни»;
-# RESTART IDENTITY CASCADE позволяет PostgreSQL самому разрешить
-# порядок зависимостей, но явный список исключает случайные таблицы.
-_ALL_TABLES = ", ".join(
+# Очищаем только рабочие таблицы.
+# Справочники message_templates и achievements остаются на месте:
+# они относятся к базовой конфигурации окружения, а не к пользовательским данным.
+# Таблицы перечислены в порядке «листья → корни»; RESTART IDENTITY CASCADE
+# позволяет PostgreSQL самому разрешить порядок зависимостей.
+_TRUNCATED_TABLES = ", ".join(
     [
         "quiz_answers",
         "prize_promo_codes",
@@ -20,11 +22,10 @@ _ALL_TABLES = ", ".join(
         "tasks",
         "users",
         "prizes",
-        "achievements",
     ]
 )
 
-_TRUNCATE_SQL = text(f"TRUNCATE {_ALL_TABLES} RESTART IDENTITY CASCADE")
+_TRUNCATE_SQL = text(f"TRUNCATE {_TRUNCATED_TABLES} RESTART IDENTITY CASCADE")
 
 
 class DBManager(IDBManager):
