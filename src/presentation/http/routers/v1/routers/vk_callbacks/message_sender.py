@@ -31,7 +31,7 @@ async def send_vk_user_message(
     *,
     data: VKCallbackPayload,
     vk_user_id: int,
-    users_id: int,
+    users_id: int | None,
     message: VKMessageText,
     message_client: IVKMessageClient,
     log_message: str,

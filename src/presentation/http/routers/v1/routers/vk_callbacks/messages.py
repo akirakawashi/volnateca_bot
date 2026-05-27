@@ -32,6 +32,10 @@ def build_registration_welcome_message(
     )
 
 
+def build_consent_request_message() -> VKMessageText:
+    return _template_message("consent_request")
+
+
 def build_task_accrual_message(
     *,
     task_name: str,
@@ -406,6 +410,7 @@ __all__ = [
     "VKMessageText",
     "build_balance_message",
     "build_comment_reward_message",
+    "build_consent_request_message",
     "build_free_text_fallback_message",
     "build_help_message",
     "build_level_up_message",

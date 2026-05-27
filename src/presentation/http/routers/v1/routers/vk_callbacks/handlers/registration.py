@@ -26,6 +26,7 @@ from application.common.dto.store import StoreSection
 from application.common.dto.task import TaskCompletionResultStatus
 from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
+from application.interface.repositories.users import IUserRepository
 from application.interface.services import IUserMessageIntentClassifier
 from domain.services.level import get_level_name
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
@@ -33,6 +34,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement impo
     send_week_completion_reward_if_needed,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
+    build_consent_keyboard,
     build_quiz_offer_keyboard,
     build_quiz_question_keyboard,
     build_store_catalog_carousel_template,
@@ -46,6 +48,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     VKMessageText,
     build_balance_message,
+    build_consent_request_message,
     build_free_text_fallback_message,
     build_help_message,
     build_level_up_message,
@@ -74,6 +77,10 @@ from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallback
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 from utils.vk_attachments import normalize_vk_photo_attachment
 
+CONSENT_ACCEPT_ACTION = "consent_accept"
+CONSENT_DECLINE_ACTION = "consent_decline"
+CONSENT_REF_PAYLOAD_KEY = "consent_ref"
+
 
 async def handle_registration_callback(
     data: VKCallbackPayload,
@@ -87,16 +94,55 @@ async def handle_registration_callback(
     group_id: int,
     message_client: IVKMessageClient,
     intent_classifier: IUserMessageIntentClassifier,
+    user_repository: IUserRepository,
 ) -> PlainTextResponse:
     """Обрабатывает первый контакт пользователя и обычные сообщения в бота.
 
-    Нового пользователя регистрирует и запускает приветственные сценарии.
+    Новый пользователь сначала должен согласиться с правилами. Пока согласия
+    нет, запись в users не создаётся.
+
     Уже зарегистрированного пользователя обрабатывает только для message_new,
     чтобы callback-и подписки/разрешения сообщений не дублировали ответы.
     """
 
     vk_user_id = data.get_vk_user_id()
     if vk_user_id is None:
+        return vk_ok_response()
+
+    button_payload = data.get_button_payload()
+    action = button_payload.get("action") if button_payload is not None else None
+
+    existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
+    if existing_user is not None:
+        if action in (CONSENT_ACCEPT_ACTION, CONSENT_DECLINE_ACTION):
+            return vk_ok_response()
+        if data.is_message_new():
+            await _handle_registered_user_message(
+                data=data,
+                result=RegisterVKUserAndCheckSubscriptionDTO(
+                    registration=existing_user,
+                    subscription=None,
+                ),
+                message_client=message_client,
+                intent_classifier=intent_classifier,
+                get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+                get_store_catalog_interactor=get_store_catalog_interactor,
+                get_store_prize_card_interactor=get_store_prize_card_interactor,
+                get_quiz_first_question_interactor=get_quiz_first_question_interactor,
+                answer_quiz_question_interactor=answer_quiz_question_interactor,
+                group_id=group_id,
+            )
+        return vk_ok_response()
+
+    if action == CONSENT_DECLINE_ACTION:
+        return vk_ok_response()
+    if action != CONSENT_ACCEPT_ACTION:
+        await _send_consent_request_message(
+            data=data,
+            vk_user_id=vk_user_id,
+            message_client=message_client,
+            ref_key=data.get_ref_key(),
+        )
         return vk_ok_response()
 
     result = await interactor(
@@ -123,21 +169,27 @@ async def handle_registration_callback(
             result=result,
             process_referral_interactor=process_referral_interactor,
             message_client=message_client,
-        )
-    elif data.is_message_new():
-        await _handle_registered_user_message(
-            data=data,
-            result=result,
-            message_client=message_client,
-            intent_classifier=intent_classifier,
-            get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
-            get_store_catalog_interactor=get_store_catalog_interactor,
-            get_store_prize_card_interactor=get_store_prize_card_interactor,
-            get_quiz_first_question_interactor=get_quiz_first_question_interactor,
-            answer_quiz_question_interactor=answer_quiz_question_interactor,
-            group_id=group_id,
+            raw_ref=_extract_consent_ref_key(button_payload=button_payload, data=data),
         )
     return vk_ok_response()
+
+
+async def _send_consent_request_message(
+    *,
+    data: VKCallbackPayload,
+    vk_user_id: int,
+    message_client: IVKMessageClient,
+    ref_key: str | None,
+) -> None:
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=vk_user_id,
+        users_id=None,
+        message=build_consent_request_message(),
+        keyboard=build_consent_keyboard(ref_key=ref_key),
+        message_client=message_client,
+        log_message="Сообщение с запросом согласия VK",
+    )
 
 
 async def _send_registration_welcome_message(
@@ -534,12 +586,15 @@ async def _process_referral_on_registration(
     result: RegisterVKUserAndCheckSubscriptionDTO,
     process_referral_interactor: ProcessReferralHandler,
     message_client: IVKMessageClient,
+    raw_ref: str | None = None,
 ) -> None:
     """Обрабатывает реф-ссылку при первой регистрации нового пользователя.
 
-    VK передаёт ref-параметр ссылки в message.payload как {'ref': '<value>'}.
+    Во время consent-flow ref может прийти либо из исходного события VK,
+    либо из payload кнопки "Да", если пользователь сначала подтвердил
+    согласие, а уже потом был зарегистрирован.
     """
-    raw_ref = data.get_ref_key()
+    raw_ref = raw_ref if raw_ref is not None else data.get_ref_key()
     if raw_ref is None:
         return
     try:
@@ -603,6 +658,18 @@ async def _process_referral_on_registration(
             message_client=message_client,
             log_message="Уведомление о milestone рефералки VK",
         )
+
+
+def _extract_consent_ref_key(
+    *,
+    button_payload: dict[str, object] | None,
+    data: VKCallbackPayload,
+) -> str | None:
+    if button_payload is not None:
+        raw_ref = button_payload.get(CONSENT_REF_PAYLOAD_KEY)
+        if isinstance(raw_ref, str) and raw_ref.strip():
+            return raw_ref.strip()
+    return data.get_ref_key()
 
 
 async def _handle_start_quiz(

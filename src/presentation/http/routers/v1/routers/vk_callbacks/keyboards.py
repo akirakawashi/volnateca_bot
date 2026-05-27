@@ -12,6 +12,27 @@ VKKeyboard = dict[str, object]
 VKTemplate = dict[str, object]
 
 
+def build_consent_keyboard(*, ref_key: str | None = None) -> VKKeyboard:
+    accept_payload: dict[str, object] = {"action": "consent_accept"}
+    clean_ref_key = ref_key.strip() if ref_key is not None else ""
+    if clean_ref_key:
+        accept_payload["consent_ref"] = clean_ref_key
+
+    return {
+        "one_time": True,
+        "buttons": [
+            [
+                _payload_button(label="Да", color="positive", payload=accept_payload),
+                _payload_button(
+                    label="Нет",
+                    color="negative",
+                    payload={"action": "consent_decline"},
+                ),
+            ],
+        ],
+    }
+
+
 def build_main_menu_keyboard() -> VKKeyboard:
     return {
         "one_time": False,
