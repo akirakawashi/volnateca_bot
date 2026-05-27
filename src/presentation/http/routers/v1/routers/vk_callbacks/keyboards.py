@@ -38,12 +38,12 @@ def build_main_menu_keyboard() -> VKKeyboard:
         "one_time": False,
         "buttons": [
             [
-                _text_button(label="💫 Баланс", color="primary"),
-                _text_button(label="🎯 Задания", color="primary"),
+                _payload_button(label="💫 Баланс", color="primary", payload={"action": "balance"}),
+                _payload_button(label="🎯 Задания", color="primary", payload={"action": "tasks"}),
             ],
             [
-                _text_button(label="🎁 Магазин", color="secondary"),
-                _text_button(label="🤝 Рефералка", color="secondary"),
+                _payload_button(label="🎁 Магазин", color="secondary", payload={"action": "shop"}),
+                _payload_button(label="🤝 Рефералка", color="secondary", payload={"action": "referral"}),
             ],
         ],
     }
@@ -306,16 +306,6 @@ def _build_store_exit_row(*, label: str = "Выйти из магазина") ->
     ]
 
 
-def _text_button(*, label: str, color: str) -> dict[str, object]:
-    return {
-        "action": {
-            "type": "text",
-            "label": label,
-        },
-        "color": color,
-    }
-
-
 def _payload_button(*, label: str, color: str, payload: dict) -> dict[str, object]:
     return {
         "action": {
@@ -364,6 +354,7 @@ def _format_store_carousel_state(state: StorePrizeUserState) -> str:
 __all__ = [
     "VKKeyboard",
     "VKTemplate",
+    "build_consent_keyboard",
     "build_main_menu_keyboard",
     "build_quiz_offer_keyboard",
     "build_quiz_question_keyboard",

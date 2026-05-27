@@ -27,6 +27,7 @@ from infrastructure.database.models.tasks import Task
 from infrastructure.database.models.transactions import Transaction
 from infrastructure.database.models.user_achievements import UserAchievement
 from infrastructure.database.models.users import User
+from infrastructure.database.models.vk_referral_intents import VKReferralIntent
 
 __all__ = [
     "Achievement",
@@ -56,4 +57,5 @@ __all__ = [
     "TransactionType",
     "User",
     "UserAchievement",
+    "VKReferralIntent",
 ]

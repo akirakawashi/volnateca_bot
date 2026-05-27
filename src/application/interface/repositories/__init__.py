@@ -2,6 +2,7 @@ from application.interface.repositories.achievements import AchievementRecord, I
 from application.interface.repositories.message_templates import IMessageTemplateRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
+from application.interface.repositories.referral_intents import IReferralIntentRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
@@ -14,6 +15,7 @@ __all__ = [
     "IMessageTemplateRepository",
     "IPrizeRepository",
     "IQuizRepository",
+    "IReferralIntentRepository",
     "IReferralRepository",
     "ITaskCompletionRepository",
     "ITaskRepository",

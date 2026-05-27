@@ -16,6 +16,7 @@ _TRUNCATED_TABLES = ", ".join(
         "prize_redemptions",
         "task_completions",
         "referrals",
+        "vk_referral_intents",
         "user_achievements",
         "transactions",
         "quiz_questions",

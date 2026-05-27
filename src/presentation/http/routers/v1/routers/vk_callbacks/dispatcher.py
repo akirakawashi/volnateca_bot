@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from fastapi.responses import PlainTextResponse
 
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
+from application.command.capture_vk_referral_intent import CaptureVKReferralIntentHandler
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
@@ -13,13 +14,10 @@ from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
-from application.command.process_referral import ProcessReferralHandler
-from application.command.register_vk_user_and_check_subscription import (
-    RegisterVKUserAndCheckSubscriptionHandler,
-)
+from application.command.register_vk_user_with_referral_context import RegisterVKUserWithReferralContextHandler
 from application.interface.clients import IVKMessageClient
 from application.interface.repositories.users import IUserRepository
-from application.interface.services import IUserMessageIntentClassifier, IVKMessageTemplateService
+from application.interface.services import IVKMessageTemplateService
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_comment_callback,
@@ -46,7 +44,6 @@ class VKCallbackDispatcher:
     """
 
     vk_settings: VKSettings
-    register_vk_user_and_check_subscription_interactor: RegisterVKUserAndCheckSubscriptionHandler
     complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
@@ -58,10 +55,10 @@ class VKCallbackDispatcher:
     get_vk_user_tasks_interactor: GetVKUserTasksHandler
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler
     answer_quiz_question_interactor: AnswerQuizQuestionHandler
-    process_referral_interactor: ProcessReferralHandler
+    capture_vk_referral_intent_interactor: CaptureVKReferralIntentHandler
+    register_vk_user_with_referral_context_interactor: RegisterVKUserWithReferralContextHandler
     vk_message_client: IVKMessageClient
     vk_message_template_service: IVKMessageTemplateService
-    user_message_intent_classifier: IUserMessageIntentClassifier
     user_repository: IUserRepository
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
@@ -120,16 +117,17 @@ class VKCallbackDispatcher:
             if payload.is_registration_event():
                 return await handle_registration_callback(
                     data=payload,
-                    interactor=self.register_vk_user_and_check_subscription_interactor,
                     get_vk_user_tasks_interactor=self.get_vk_user_tasks_interactor,
                     get_store_catalog_interactor=self.get_store_catalog_interactor,
                     get_store_prize_card_interactor=self.get_store_prize_card_interactor,
                     get_quiz_first_question_interactor=self.get_quiz_first_question_interactor,
                     answer_quiz_question_interactor=self.answer_quiz_question_interactor,
-                    process_referral_interactor=self.process_referral_interactor,
+                    capture_referral_intent_interactor=self.capture_vk_referral_intent_interactor,
+                    register_with_referral_context_interactor=(
+                        self.register_vk_user_with_referral_context_interactor
+                    ),
                     group_id=self.vk_settings.GROUP_ID,
                     message_client=self.vk_message_client,
-                    intent_classifier=self.user_message_intent_classifier,
                     user_repository=self.user_repository,
                 )
 
