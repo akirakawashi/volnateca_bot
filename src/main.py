@@ -1,11 +1,10 @@
 from dishka import AsyncContainer, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
 
 from di.providers import make_providers
 from presentation.http.exception_handlers import setup_exception_handlers
-from presentation.http.middleware import TrustedHostMiddlewareWithPathBypass
+from presentation.http.middleware import CORSMiddlewareWithLogging, TrustedHostMiddlewareWithPathBypass
 from presentation.http.routers import admin_router, api_v1_router, healthcheck_router
 from settings.factory import ConfigFactory
 
@@ -33,14 +32,13 @@ def create_fastapi_app() -> FastAPI:
     )
     include_routers(application)
 
-    if config.cors.enabled:
-        application.add_middleware(
-            CORSMiddleware,
-            allow_origins=config.cors.allowed_origins,
-            allow_credentials=config.cors.ALLOW_CREDENTIALS,
-            allow_methods=config.cors.allowed_methods,
-            allow_headers=config.cors.allowed_headers,
-        )
+    application.add_middleware(
+        CORSMiddlewareWithLogging,
+        allow_origins=["*"],
+        allow_credentials=config.cors.ALLOW_CREDENTIALS,
+        allow_methods=config.cors.allowed_methods,
+        allow_headers=config.cors.allowed_headers,
+    )
     application.add_middleware(
         TrustedHostMiddlewareWithPathBypass,
         allowed_hosts=config.app.allowed_hosts,
