@@ -1,8 +1,8 @@
 """Seed base achievements
 
-Revision ID: 2d5f8d8c9b6e
-Revises: 31d79bc8dd94
-Create Date: 2026-05-26 18:30:00.000000
+Revision ID: 7dfe2c29004d
+Revises: 9e27ae6f7f21
+Create Date: 2026-05-27 07:26:34.514719
 """
 
 from collections.abc import Sequence

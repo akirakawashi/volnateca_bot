@@ -1,8 +1,8 @@
-"""Initial migration
+"""initial migration
 
-Revision ID: 31d79bc8dd94
+Revision ID: 9e27ae6f7f21
 Revises: 
-Create Date: 2026-05-20 17:29:19.114477
+Create Date: 2026-05-27 07:26:25.816078
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = '31d79bc8dd94'
+revision: str = '9e27ae6f7f21'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -151,6 +151,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_transactions_prizes_id'), 'transactions', ['prizes_id'], unique=False)
     op.create_index(op.f('ix_transactions_tasks_id'), 'transactions', ['tasks_id'], unique=False)
+    op.create_index('ix_transactions_transaction_type_created_at_users_id', 'transactions', ['transaction_type', 'created_at', 'users_id'], unique=False)
     op.create_index(op.f('ix_transactions_users_id'), 'transactions', ['users_id'], unique=False)
     op.create_table('prize_redemptions',
     sa.Column('prize_redemptions_id', sa.Integer(), nullable=False),
@@ -316,6 +317,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_prize_redemptions_prizes_id'), table_name='prize_redemptions')
     op.drop_table('prize_redemptions')
     op.drop_index(op.f('ix_transactions_users_id'), table_name='transactions')
+    op.drop_index('ix_transactions_transaction_type_created_at_users_id', table_name='transactions')
     op.drop_index(op.f('ix_transactions_tasks_id'), table_name='transactions')
     op.drop_index(op.f('ix_transactions_prizes_id'), table_name='transactions')
     op.drop_table('transactions')
