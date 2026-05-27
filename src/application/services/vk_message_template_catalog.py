@@ -10,6 +10,15 @@ class MessageTemplateDefinition:
 
 
 MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
+    "consent_request": MessageTemplateDefinition(
+        code="consent_request",
+        description="Запрос согласия с условиями конфиденциальности и правилами",
+        default_template=(
+            "Добрый день! Вы хотите принять участие в volnateca!\n"
+            "Согласны ли вы с условиями конфиденциальности и правилами?"
+        ),
+    ),
+
     "registration_welcome": MessageTemplateDefinition(
         code="registration_welcome",
         description="Приветственное сообщение после регистрации",
@@ -241,7 +250,7 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         ),
         variables=("rank", "points_awarded", "balance_points"),
     ),
-    
+
     "level_up": MessageTemplateDefinition(
         code="level_up",
         description="Сообщение о новом уровне",
