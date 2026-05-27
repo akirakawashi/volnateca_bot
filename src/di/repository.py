@@ -8,6 +8,7 @@ from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
+from application.interface.repositories.referral_intents import IReferralIntentRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
@@ -20,6 +21,7 @@ from infrastructure.database.repositories.quiz import QuizRepository
 from infrastructure.database.db_manager import DBManager
 from infrastructure.database.repositories.admin.prize import PrizeAdminRepository
 from infrastructure.database.repositories.admin.quiz import QuizAdminRepository
+from infrastructure.database.repositories.referral_intents import ReferralIntentRepository
 from infrastructure.database.repositories.referrals import ReferralRepository
 from infrastructure.database.repositories.task_completions import TaskCompletionRepository
 from infrastructure.database.repositories.tasks import TaskRepository
@@ -83,6 +85,13 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> ReferralRepository:
         return ReferralRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IReferralIntentRepository)
+    def get_referral_intent_repository(
+        self,
+        session: AsyncSession,
+    ) -> ReferralIntentRepository:
+        return ReferralIntentRepository(session=session)
 
     @provide(scope=Scope.REQUEST, provides=IAchievementRepository)
     def get_achievement_repository(

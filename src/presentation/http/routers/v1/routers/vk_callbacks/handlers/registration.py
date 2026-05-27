@@ -4,6 +4,10 @@ from application.command.answer_quiz_question import (
     AnswerQuizQuestionCommand,
     AnswerQuizQuestionHandler,
 )
+from application.command.capture_vk_referral_intent import (
+    CaptureVKReferralIntentCommand,
+    CaptureVKReferralIntentHandler,
+)
 from application.command.get_quiz_first_question import (
     GetQuizFirstQuestionCommand,
     GetQuizFirstQuestionHandler,
@@ -15,14 +19,16 @@ from application.command.get_store_catalog import (
     GetStorePrizeCardHandler,
 )
 from application.command.get_vk_user_tasks import GetVKUserTasksCommand, GetVKUserTasksHandler
-from application.command.process_referral import ProcessReferralCommand, ProcessReferralHandler
 from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
 from application.command.register_vk_user_and_check_subscription import (
-    RegisterVKUserAndCheckSubscriptionCommand,
     RegisterVKUserAndCheckSubscriptionDTO,
-    RegisterVKUserAndCheckSubscriptionHandler,
+)
+from application.command.register_vk_user_with_referral_context import (
+    RegisterVKUserWithReferralContextCommand,
+    RegisterVKUserWithReferralContextHandler,
 )
 from application.common.dto.store import StoreSection
+from application.common.dto.referral import ProcessReferralDTO
 from application.common.dto.task import TaskCompletionResultStatus
 from application.interface.clients import IVKMessageClient
 from application.interface.repositories.users import IUserRepository
@@ -86,13 +92,13 @@ DEFAULT_START_MESSAGES = frozenset(("начать", "start", "/start", "стар
 
 async def handle_registration_callback(
     data: VKCallbackPayload,
-    interactor: RegisterVKUserAndCheckSubscriptionHandler,
+    register_with_referral_context_interactor: RegisterVKUserWithReferralContextHandler,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
     get_store_catalog_interactor: GetStoreCatalogHandler,
     get_store_prize_card_interactor: GetStorePrizeCardHandler,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
-    process_referral_interactor: ProcessReferralHandler,
+    capture_referral_intent_interactor: CaptureVKReferralIntentHandler,
     group_id: int,
     message_client: IVKMessageClient,
     user_repository: IUserRepository,
@@ -114,10 +120,25 @@ async def handle_registration_callback(
     action = button_payload.get("action") if button_payload is not None else None
 
     if action is None:
+        existing_user = None
+        existing_user_loaded = False
+        raw_ref = data.get_ref_key()
+        if raw_ref is not None:
+            existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
+            existing_user_loaded = True
+            if existing_user is None:
+                await capture_referral_intent_interactor(
+                    command_data=CaptureVKReferralIntentCommand(
+                        invited_vk_user_id=vk_user_id,
+                        raw_ref=raw_ref,
+                    ),
+                )
+
         if not _is_default_start_message(data):
             return vk_ok_response()
 
-        existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
+        if not existing_user_loaded:
+            existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
         if existing_user is not None:
             await _send_main_menu_message(
                 data=data,
@@ -133,7 +154,7 @@ async def handle_registration_callback(
             data=data,
             vk_user_id=vk_user_id,
             message_client=message_client,
-            ref_key=data.get_ref_key(),
+            ref_key=raw_ref,
         )
         return vk_ok_response()
 
@@ -179,31 +200,31 @@ async def handle_registration_callback(
     if action != CONSENT_ACCEPT_ACTION:
         return vk_ok_response()
 
-    result = await interactor(
-        command_data=RegisterVKUserAndCheckSubscriptionCommand(
+    registration_context = await register_with_referral_context_interactor(
+        command_data=RegisterVKUserWithReferralContextCommand(
             event_id=data.event_id,
             vk_user_id=vk_user_id,
             first_name=data.get_first_name(),
             last_name=data.get_last_name(),
+            raw_ref=_extract_consent_ref_key(button_payload=button_payload, data=data),
         ),
     )
-    if result.registration.created:
+    registration_result = registration_context.registration_result
+    if registration_result.registration.created:
         await _send_registration_welcome_message(
             data=data,
-            result=result,
+            result=registration_result,
             message_client=message_client,
         )
         await _send_subscription_reward_message_after_registration(
             data=data,
-            result=result,
+            result=registration_result,
             message_client=message_client,
         )
-        await _process_referral_on_registration(
+        await _send_referral_notifications(
             data=data,
-            result=result,
-            process_referral_interactor=process_referral_interactor,
+            referral_result=registration_context.referral_result,
             message_client=message_client,
-            raw_ref=_extract_consent_ref_key(button_payload=button_payload, data=data),
         )
     return vk_ok_response()
 
@@ -684,35 +705,15 @@ async def _handle_store_claim(
     )
 
 
-async def _process_referral_on_registration(
+async def _send_referral_notifications(
     *,
     data: VKCallbackPayload,
-    result: RegisterVKUserAndCheckSubscriptionDTO,
-    process_referral_interactor: ProcessReferralHandler,
+    referral_result: ProcessReferralDTO | None,
     message_client: IVKMessageClient,
-    raw_ref: str | None = None,
 ) -> None:
-    """Обрабатывает реф-ссылку при первой регистрации нового пользователя.
-
-    Во время consent-flow ref может прийти либо из исходного события VK,
-    либо из payload кнопки "Да", если пользователь сначала подтвердил
-    согласие, а уже потом был зарегистрирован.
-    """
-    raw_ref = raw_ref if raw_ref is not None else data.get_ref_key()
-    if raw_ref is None:
+    """Отправляет уведомления по уже обработанному реферальному результату."""
+    if referral_result is None:
         return
-    try:
-        inviter_vk_user_id = int(raw_ref)
-    except (ValueError, TypeError):
-        return
-
-    referral_result = await process_referral_interactor(
-        command_data=ProcessReferralCommand(
-            invited_vk_user_id=result.registration.vk_user_id,
-            inviter_vk_user_id=inviter_vk_user_id,
-        ),
-    )
-
     if not referral_result.created or referral_result.inviter_users_id is None:
         return
     if referral_result.inviter_balance_points is None:

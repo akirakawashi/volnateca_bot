@@ -13,6 +13,7 @@ from application.admin.command.message_templates import (
 )
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.award_monthly_top import AwardMonthlyTopHandler
+from application.command.capture_vk_referral_intent import CaptureVKReferralIntentHandler
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
@@ -30,6 +31,7 @@ from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
+from application.command.register_vk_user_with_referral_context import RegisterVKUserWithReferralContextHandler
 from application.interface.clients import IVKUserClient, IVKWallClient
 from application.interface.services import IVKMessageTemplateService
 from application.interface.repositories.achievements import IAchievementRepository
@@ -38,6 +40,7 @@ from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
+from application.interface.repositories.referral_intents import IReferralIntentRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
@@ -96,6 +99,32 @@ class InteractorProvider(Provider):
         return RegisterVKUserAndCheckSubscriptionHandler(
             register_vk_user_interactor=register_vk_user_interactor,
             complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_capture_vk_referral_intent_handler(
+        self,
+        referral_intent_repository: IReferralIntentRepository,
+        uow: IUnitOfWork,
+    ) -> CaptureVKReferralIntentHandler:
+        return CaptureVKReferralIntentHandler(
+            referral_intent_repository=referral_intent_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_register_vk_user_with_referral_context_handler(
+        self,
+        register_vk_user_interactor: RegisterVKUserAndCheckSubscriptionHandler,
+        process_referral_interactor: ProcessReferralHandler,
+        referral_intent_repository: IReferralIntentRepository,
+        uow: IUnitOfWork,
+    ) -> RegisterVKUserWithReferralContextHandler:
+        return RegisterVKUserWithReferralContextHandler(
+            register_vk_user_interactor=register_vk_user_interactor,
+            process_referral_interactor=process_referral_interactor,
+            referral_intent_repository=referral_intent_repository,
+            uow=uow,
         )
 
     @provide(scope=Scope.REQUEST)
