@@ -9,7 +9,6 @@ from application.command.register_vk_user_and_check_subscription import (
 )
 from application.common.dto.referral import ProcessReferralDTO
 from application.interface.repositories.referral_intents import IReferralIntentRepository
-from application.interface.uow import IUnitOfWork
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -40,12 +39,10 @@ class RegisterVKUserWithReferralContextHandler(
         register_vk_user_interactor: RegisterVKUserAndCheckSubscriptionHandler,
         process_referral_interactor: ProcessReferralHandler,
         referral_intent_repository: IReferralIntentRepository,
-        uow: IUnitOfWork,
     ) -> None:
         self._register_vk_user_interactor = register_vk_user_interactor
         self._process_referral_interactor = process_referral_interactor
         self._referral_intent_repository = referral_intent_repository
-        self._uow = uow
 
     async def __call__(
         self,
@@ -74,12 +71,6 @@ class RegisterVKUserWithReferralContextHandler(
                         inviter_vk_user_id=inviter_vk_user_id,
                     ),
                 )
-
-        if raw_ref is not None:
-            await self._referral_intent_repository.delete_by_invited_vk_user_id(
-                invited_vk_user_id=command_data.vk_user_id,
-            )
-            await self._uow.commit()
 
         return RegisterVKUserWithReferralContextDTO(
             registration_result=registration_result,

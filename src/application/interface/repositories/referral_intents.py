@@ -20,11 +20,3 @@ class IReferralIntentRepository(ABC):
         invited_vk_user_id: int,
     ) -> str | None:
         raise NotImplementedError
-
-    @abstractmethod
-    async def delete_by_invited_vk_user_id(
-        self,
-        *,
-        invited_vk_user_id: int,
-    ) -> None:
-        raise NotImplementedError

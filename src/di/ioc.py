@@ -118,13 +118,11 @@ class InteractorProvider(Provider):
         register_vk_user_interactor: RegisterVKUserAndCheckSubscriptionHandler,
         process_referral_interactor: ProcessReferralHandler,
         referral_intent_repository: IReferralIntentRepository,
-        uow: IUnitOfWork,
     ) -> RegisterVKUserWithReferralContextHandler:
         return RegisterVKUserWithReferralContextHandler(
             register_vk_user_interactor=register_vk_user_interactor,
             process_referral_interactor=process_referral_interactor,
             referral_intent_repository=referral_intent_repository,
-            uow=uow,
         )
 
     @provide(scope=Scope.REQUEST)
