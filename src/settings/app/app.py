@@ -1,6 +1,6 @@
 from zoneinfo import ZoneInfo
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import SettingsConfigDict
 
 from settings.base import Settings
@@ -16,7 +16,14 @@ class AppSettings(Settings):
     ADMIN_LOGIN: str = Field(min_length=1)
     ADMIN_PASSWORD: str = Field(min_length=1)
     ADMIN_TOKEN: str = Field(min_length=1)
-    ALLOWED_HOSTS: str = "localhost,127.0.0.1"
+    ALLOWED_HOSTS: str = Field(min_length=1)
+
+    @field_validator("ALLOWED_HOSTS")
+    @classmethod
+    def validate_allowed_hosts(cls, value: str) -> str:
+        if not any(item.strip() for item in value.split(",")):
+            raise ValueError("APP_ALLOWED_HOSTS must contain at least one host")
+        return value
 
     @property
     def project_timezone(self) -> ZoneInfo:
