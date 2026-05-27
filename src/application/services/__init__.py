@@ -17,7 +17,6 @@ from application.services.project_completion_achievement_service import (
     ProjectCompletionAchievementService,
     ProjectCompletionAward,
 )
-from application.services.user_message_intent import RuleBasedUserMessageIntentClassifier
 from application.services.week_completion_achievement_service import (
     WEEK_COMPLETION_ACHIEVEMENT_CODE,
     WeekCompletionAchievementService,
@@ -37,7 +36,6 @@ __all__ = [
     "PROJECT_COMPLETION_REQUIRED_WEEK_KEYS",
     "ProjectCompletionAchievementService",
     "ProjectCompletionAward",
-    "RuleBasedUserMessageIntentClassifier",
     "TaskAwardSpec",
     "WEEK_COMPLETION_ACHIEVEMENT_CODE",
     "WeekCompletionAchievementService",

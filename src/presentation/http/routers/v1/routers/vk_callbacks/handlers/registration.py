@@ -24,10 +24,8 @@ from application.command.register_vk_user_and_check_subscription import (
 )
 from application.common.dto.store import StoreSection
 from application.common.dto.task import TaskCompletionResultStatus
-from application.common.dto.user_message import UserMessageIntent
 from application.interface.clients import IVKMessageClient
 from application.interface.repositories.users import IUserRepository
-from application.interface.services import IUserMessageIntentClassifier
 from domain.services.level import get_level_name
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
     send_project_completion_reward_if_needed,
@@ -46,12 +44,10 @@ from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
     build_store_root_keyboard,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
-    VKMessageText,
     build_balance_message,
     build_consent_request_message,
-    build_free_text_fallback_message,
-    build_help_message,
     build_level_up_message,
+    build_main_menu_message,
     build_quiz_answer_result_message,
     build_quiz_completed_message,
     build_quiz_failed_message,
@@ -77,9 +73,15 @@ from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallback
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 from utils.vk_attachments import normalize_vk_photo_attachment
 
+START_GAME_ACTION = "start_game"
+BALANCE_ACTION = "balance"
+TASKS_ACTION = "tasks"
+SHOP_ACTION = "shop"
+REFERRAL_ACTION = "referral"
 CONSENT_ACCEPT_ACTION = "consent_accept"
 CONSENT_DECLINE_ACTION = "consent_decline"
 CONSENT_REF_PAYLOAD_KEY = "consent_ref"
+START_REF_PAYLOAD_KEY = "ref"
 
 
 async def handle_registration_callback(
@@ -93,13 +95,12 @@ async def handle_registration_callback(
     process_referral_interactor: ProcessReferralHandler,
     group_id: int,
     message_client: IVKMessageClient,
-    intent_classifier: IUserMessageIntentClassifier,
     user_repository: IUserRepository,
 ) -> PlainTextResponse:
     """Обрабатывает первый контакт пользователя и обычные сообщения в бота.
 
-    Новый пользователь сначала должен согласиться с правилами. Пока согласия
-    нет, запись в users не создаётся.
+    Игра реагирует только на payload-кнопки. Свободный текст не считается
+    игровым действием и молча игнорируется.
 
     Уже зарегистрированного пользователя обрабатывает только для message_new,
     чтобы callback-и подписки/разрешения сообщений не дублировали ответы.
@@ -112,19 +113,29 @@ async def handle_registration_callback(
     button_payload = data.get_button_payload()
     action = button_payload.get("action") if button_payload is not None else None
 
+    if action is None:
+        return vk_ok_response()
+
     existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
     if existing_user is not None:
         if action in (CONSENT_ACCEPT_ACTION, CONSENT_DECLINE_ACTION):
             return vk_ok_response()
+        result = RegisterVKUserAndCheckSubscriptionDTO(
+            registration=existing_user,
+            subscription=None,
+        )
+        if action == START_GAME_ACTION:
+            await _send_main_menu_message(
+                data=data,
+                result=result,
+                message_client=message_client,
+            )
+            return vk_ok_response()
         if data.is_message_new():
             await _handle_registered_user_message(
                 data=data,
-                result=RegisterVKUserAndCheckSubscriptionDTO(
-                    registration=existing_user,
-                    subscription=None,
-                ),
+                result=result,
                 message_client=message_client,
-                intent_classifier=intent_classifier,
                 get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
                 get_store_catalog_interactor=get_store_catalog_interactor,
                 get_store_prize_card_interactor=get_store_prize_card_interactor,
@@ -136,13 +147,15 @@ async def handle_registration_callback(
 
     if action == CONSENT_DECLINE_ACTION:
         return vk_ok_response()
-    if action != CONSENT_ACCEPT_ACTION:
+    if action == START_GAME_ACTION:
         await _send_consent_request_message(
             data=data,
             vk_user_id=vk_user_id,
             message_client=message_client,
-            ref_key=data.get_ref_key(),
+            ref_key=_extract_start_ref_key(button_payload=button_payload, data=data),
         )
+        return vk_ok_response()
+    if action != CONSENT_ACCEPT_ACTION:
         return vk_ok_response()
 
     result = await interactor(
@@ -189,6 +202,22 @@ async def _send_consent_request_message(
         keyboard=build_consent_keyboard(ref_key=ref_key),
         message_client=message_client,
         log_message="Сообщение с запросом согласия VK",
+    )
+
+
+async def _send_main_menu_message(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+) -> None:
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_main_menu_message(),
+        message_client=message_client,
+        log_message="Главное меню VK",
     )
 
 
@@ -263,7 +292,6 @@ async def _handle_registered_user_message(
     data: VKCallbackPayload,
     result: RegisterVKUserAndCheckSubscriptionDTO,
     message_client: IVKMessageClient,
-    intent_classifier: IUserMessageIntentClassifier,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
     get_store_catalog_interactor: GetStoreCatalogHandler,
     get_store_prize_card_interactor: GetStorePrizeCardHandler,
@@ -271,12 +299,41 @@ async def _handle_registered_user_message(
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     group_id: int,
 ) -> None:
-    """Обрабатывает интерактивное меню и текстовые intent-ы зарегистрированного пользователя."""
+    """Обрабатывает только payload-кнопки зарегистрированного пользователя."""
 
-    # Проверяем payload кнопки — приоритет выше текстового intent
     button_payload = data.get_button_payload()
     if button_payload is not None:
         action = button_payload.get("action")
+        if action == BALANCE_ACTION:
+            await _handle_balance(
+                data=data,
+                result=result,
+                message_client=message_client,
+            )
+            return
+        if action == TASKS_ACTION:
+            await _handle_tasks(
+                data=data,
+                result=result,
+                message_client=message_client,
+                get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+            )
+            return
+        if action == SHOP_ACTION:
+            await _handle_store_root(
+                data=data,
+                result=result,
+                message_client=message_client,
+            )
+            return
+        if action == REFERRAL_ACTION:
+            await _handle_referral(
+                data=data,
+                result=result,
+                group_id=group_id,
+                message_client=message_client,
+            )
+            return
         if action == "store_root":
             await _handle_store_root(
                 data=data,
@@ -366,52 +423,78 @@ async def _handle_registered_user_message(
                 )
                 return
 
-    message_text = data.get_message_text()
-    classified = await intent_classifier.classify(text=message_text)
-    if classified.intent == UserMessageIntent.TASKS:
-        tasks_result = await get_vk_user_tasks_interactor(
-            command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
-        )
-        if tasks_result.active_quiz is not None:
-            quiz = tasks_result.active_quiz
-            await send_vk_user_message(
-                data=data,
-                vk_user_id=result.registration.vk_user_id,
-                users_id=result.registration.users_id,
-                message=build_quiz_offer_message(
-                    task_name=quiz.task_name,
-                    points=quiz.points,
-                ),
-                keyboard=build_quiz_offer_keyboard(tasks_id=quiz.tasks_id),
-                message_client=message_client,
-                log_message="Предложение квиза VK",
-            )
-            return
-        response = build_tasks_message(tasks=tasks_result.tasks)
-    elif classified.intent == UserMessageIntent.REFERRAL:
-        response = build_referral_link_message(
-            vk_user_id=result.registration.vk_user_id,
-            group_id=group_id,
-        )
-    elif classified.intent == UserMessageIntent.SHOP:
-        await _handle_store_root(
-            data=data,
-            result=result,
-            message_client=message_client,
-        )
-        return
-    else:
-        response = _build_registered_user_response(
-            intent=classified.intent,
-            balance_points=result.registration.balance_points,
-        )
+    return
+
+
+async def _handle_balance(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+) -> None:
     await send_vk_user_message(
         data=data,
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
-        message=response,
+        message=build_balance_message(balance_points=result.registration.balance_points),
         message_client=message_client,
-        log_message="Ответ VK зарегистрированному пользователю",
+        log_message="Баланс VK",
+    )
+
+
+async def _handle_tasks(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+    get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+) -> None:
+    tasks_result = await get_vk_user_tasks_interactor(
+        command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
+    )
+    if tasks_result.active_quiz is not None:
+        quiz = tasks_result.active_quiz
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_quiz_offer_message(
+                task_name=quiz.task_name,
+                points=quiz.points,
+            ),
+            keyboard=build_quiz_offer_keyboard(tasks_id=quiz.tasks_id),
+            message_client=message_client,
+            log_message="Предложение квиза VK",
+        )
+        return
+
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_tasks_message(tasks=tasks_result.tasks),
+        message_client=message_client,
+        log_message="Список заданий VK",
+    )
+
+
+async def _handle_referral(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    group_id: int,
+    message_client: IVKMessageClient,
+) -> None:
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_referral_link_message(
+            vk_user_id=result.registration.vk_user_id,
+            group_id=group_id,
+        ),
+        message_client=message_client,
+        log_message="Реферальная ссылка VK",
     )
 
 
@@ -672,6 +755,18 @@ def _extract_consent_ref_key(
     return data.get_ref_key()
 
 
+def _extract_start_ref_key(
+    *,
+    button_payload: dict[str, object] | None,
+    data: VKCallbackPayload,
+) -> str | None:
+    if button_payload is not None:
+        raw_ref = button_payload.get(START_REF_PAYLOAD_KEY)
+        if isinstance(raw_ref, str) and raw_ref.strip():
+            return raw_ref.strip()
+    return data.get_ref_key()
+
+
 async def _handle_start_quiz(
     *,
     data: VKCallbackPayload,
@@ -898,15 +993,3 @@ def _parse_positive_int(raw_value: object) -> int | None:
         parsed = int(raw_value)
         return parsed if parsed > 0 else None
     return None
-
-
-def _build_registered_user_response(
-    *,
-    intent: UserMessageIntent,
-    balance_points: int,
-) -> VKMessageText:
-    if intent == UserMessageIntent.BALANCE:
-        return build_balance_message(balance_points=balance_points)
-    if intent == UserMessageIntent.HELP:
-        return build_help_message()
-    return build_free_text_fallback_message()

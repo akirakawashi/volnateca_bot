@@ -32,6 +32,10 @@ def build_registration_welcome_message(
     )
 
 
+def build_main_menu_message() -> VKMessageText:
+    return VKMessageText(text="Главное меню")
+
+
 def build_consent_request_message() -> VKMessageText:
     return _template_message("consent_request")
 
@@ -415,6 +419,7 @@ __all__ = [
     "build_help_message",
     "build_level_up_message",
     "build_like_reward_message",
+    "build_main_menu_message",
     "build_monthly_top_reward_message",
     "build_project_completion_reward_message",
     "build_quiz_answer_result_message",

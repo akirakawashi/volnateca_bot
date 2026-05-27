@@ -19,7 +19,7 @@ from application.command.register_vk_user_and_check_subscription import (
 )
 from application.interface.clients import IVKMessageClient
 from application.interface.repositories.users import IUserRepository
-from application.interface.services import IUserMessageIntentClassifier, IVKMessageTemplateService
+from application.interface.services import IVKMessageTemplateService
 from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_comment_callback,
@@ -61,7 +61,6 @@ class VKCallbackDispatcher:
     process_referral_interactor: ProcessReferralHandler
     vk_message_client: IVKMessageClient
     vk_message_template_service: IVKMessageTemplateService
-    user_message_intent_classifier: IUserMessageIntentClassifier
     user_repository: IUserRepository
 
     async def handle(self, data: VKCallbackSchema) -> PlainTextResponse:
@@ -129,7 +128,6 @@ class VKCallbackDispatcher:
                     process_referral_interactor=self.process_referral_interactor,
                     group_id=self.vk_settings.GROUP_ID,
                     message_client=self.vk_message_client,
-                    intent_classifier=self.user_message_intent_classifier,
                     user_repository=self.user_repository,
                 )
 

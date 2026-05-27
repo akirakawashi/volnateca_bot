@@ -6,11 +6,10 @@ from application.interface.repositories.task_completions import ITaskCompletionR
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
-from application.interface.services import IUserMessageIntentClassifier, IVKMessageTemplateService
+from application.interface.services import IVKMessageTemplateService
 from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
 from application.services.project_completion_achievement_service import ProjectCompletionAchievementService
-from application.services.user_message_intent import RuleBasedUserMessageIntentClassifier
 from application.services.vk_message_template_service import VKMessageTemplateService
 from application.services.week_completion_achievement_service import WeekCompletionAchievementService
 
@@ -76,7 +75,3 @@ class ServicesProvider(Provider):
             achievements=achievements,
             award_achievement_service=award_achievement_service,
         )
-
-    @provide(scope=Scope.APP, provides=IUserMessageIntentClassifier)
-    def get_user_message_intent_classifier(self) -> RuleBasedUserMessageIntentClassifier:
-        return RuleBasedUserMessageIntentClassifier()
