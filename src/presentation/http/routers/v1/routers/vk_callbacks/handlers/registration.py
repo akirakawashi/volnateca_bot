@@ -79,7 +79,6 @@ from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallback
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
 from utils.vk_attachments import normalize_vk_photo_attachment
 
-START_GAME_ACTION = "start_game"
 BALANCE_ACTION = "balance"
 TASKS_ACTION = "tasks"
 SHOP_ACTION = "shop"
@@ -166,13 +165,6 @@ async def handle_registration_callback(
             registration=existing_user,
             subscription=None,
         )
-        if action == START_GAME_ACTION:
-            await _send_main_menu_message(
-                data=data,
-                result=result,
-                message_client=message_client,
-            )
-            return vk_ok_response()
         if data.is_message_new():
             await _handle_registered_user_message(
                 data=data,
@@ -188,14 +180,6 @@ async def handle_registration_callback(
         return vk_ok_response()
 
     if action == CONSENT_DECLINE_ACTION:
-        return vk_ok_response()
-    if action == START_GAME_ACTION:
-        await _send_consent_request_message(
-            data=data,
-            vk_user_id=vk_user_id,
-            message_client=message_client,
-            ref_key=data.get_ref_key(),
-        )
         return vk_ok_response()
     if action != CONSENT_ACCEPT_ACTION:
         return vk_ok_response()

@@ -107,18 +107,6 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         variables=("tasks_block",),
     ),
 
-    "help": MessageTemplateDefinition(
-        code="help",
-        description="Справка по меню",
-        default_template=(
-            "🌊 Меню Волнатеки\n\n"
-            "💫 Баланс — покажу твои дискошары\n"
-            "🎯 Задания — покажу активности проекта\n"
-            "🎁 Магазин — покажу призы\n"
-            "🤝 Рефералка — покажу ссылку для друзей"
-        ),
-    ),
-
     "quiz_offer": MessageTemplateDefinition(
         code="quiz_offer",
         description="Предложение начать викторину",
@@ -172,12 +160,6 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
             "❌ Квиз завершён без награды.\n\n"
             "Баллы начисляются только если все ответы правильные."
         ),
-    ),
-
-    "free_text_fallback": MessageTemplateDefinition(
-        code="free_text_fallback",
-        description="Ответ на нераспознанный свободный текст",
-        default_template="🤔 Пока я лучше всего понимаю команды:\n\n💫 Баланс\n🎯 Задания\n🎁 Магазин\n🤝 Рефералка",
     ),
 
     "referral_link": MessageTemplateDefinition(

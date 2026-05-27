@@ -209,10 +209,6 @@ def build_store_claim_unavailable_message(*, prize_name: str | None) -> VKMessag
     )
 
 
-def build_help_message() -> VKMessageText:
-    return _template_message("help")
-
-
 def build_quiz_offer_message(*, task_name: str, points: int) -> VKMessageText:
     return _template_message("quiz_offer", task_name=task_name, points=points)
 
@@ -260,10 +256,6 @@ def build_quiz_completed_message(
 
 def build_quiz_failed_message() -> VKMessageText:
     return _template_message("quiz_failed")
-
-
-def build_free_text_fallback_message() -> VKMessageText:
-    return _template_message("free_text_fallback")
 
 
 def build_referral_link_message(*, vk_user_id: int, group_id: int) -> VKMessageText:
@@ -415,8 +407,6 @@ __all__ = [
     "build_balance_message",
     "build_comment_reward_message",
     "build_consent_request_message",
-    "build_free_text_fallback_message",
-    "build_help_message",
     "build_level_up_message",
     "build_like_reward_message",
     "build_main_menu_message",
