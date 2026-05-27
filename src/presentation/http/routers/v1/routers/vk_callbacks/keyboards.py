@@ -354,6 +354,7 @@ def _format_store_carousel_state(state: StorePrizeUserState) -> str:
 __all__ = [
     "VKKeyboard",
     "VKTemplate",
+    "build_consent_keyboard",
     "build_main_menu_keyboard",
     "build_quiz_offer_keyboard",
     "build_quiz_question_keyboard",

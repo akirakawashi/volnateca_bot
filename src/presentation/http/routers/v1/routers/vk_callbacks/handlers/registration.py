@@ -81,7 +81,7 @@ REFERRAL_ACTION = "referral"
 CONSENT_ACCEPT_ACTION = "consent_accept"
 CONSENT_DECLINE_ACTION = "consent_decline"
 CONSENT_REF_PAYLOAD_KEY = "consent_ref"
-START_REF_PAYLOAD_KEY = "ref"
+DEFAULT_START_MESSAGES = frozenset(("начать", "start", "/start", "старт"))
 
 
 async def handle_registration_callback(
@@ -99,8 +99,8 @@ async def handle_registration_callback(
 ) -> PlainTextResponse:
     """Обрабатывает первый контакт пользователя и обычные сообщения в бота.
 
-    Игра реагирует только на payload-кнопки. Свободный текст не считается
-    игровым действием и молча игнорируется.
+    Игра реагирует на payload-кнопки и штатную VK-команду "Начать".
+    Остальной свободный текст не считается игровым действием и молча игнорируется.
 
     Уже зарегистрированного пользователя обрабатывает только для message_new,
     чтобы callback-и подписки/разрешения сообщений не дублировали ответы.
@@ -114,6 +114,27 @@ async def handle_registration_callback(
     action = button_payload.get("action") if button_payload is not None else None
 
     if action is None:
+        if not _is_default_start_message(data):
+            return vk_ok_response()
+
+        existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
+        if existing_user is not None:
+            await _send_main_menu_message(
+                data=data,
+                result=RegisterVKUserAndCheckSubscriptionDTO(
+                    registration=existing_user,
+                    subscription=None,
+                ),
+                message_client=message_client,
+            )
+            return vk_ok_response()
+
+        await _send_consent_request_message(
+            data=data,
+            vk_user_id=vk_user_id,
+            message_client=message_client,
+            ref_key=data.get_ref_key(),
+        )
         return vk_ok_response()
 
     existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
@@ -152,7 +173,7 @@ async def handle_registration_callback(
             data=data,
             vk_user_id=vk_user_id,
             message_client=message_client,
-            ref_key=_extract_start_ref_key(button_payload=button_payload, data=data),
+            ref_key=data.get_ref_key(),
         )
         return vk_ok_response()
     if action != CONSENT_ACCEPT_ACTION:
@@ -755,16 +776,10 @@ def _extract_consent_ref_key(
     return data.get_ref_key()
 
 
-def _extract_start_ref_key(
-    *,
-    button_payload: dict[str, object] | None,
-    data: VKCallbackPayload,
-) -> str | None:
-    if button_payload is not None:
-        raw_ref = button_payload.get(START_REF_PAYLOAD_KEY)
-        if isinstance(raw_ref, str) and raw_ref.strip():
-            return raw_ref.strip()
-    return data.get_ref_key()
+def _is_default_start_message(data: VKCallbackPayload) -> bool:
+    if not data.is_message_new():
+        return False
+    return data.get_message_text().strip().casefold() in DEFAULT_START_MESSAGES
 
 
 async def _handle_start_quiz(
