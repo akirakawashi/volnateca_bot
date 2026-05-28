@@ -1,5 +1,9 @@
 from dishka import Provider, Scope, provide
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from application.admin.interface.broadcast_recipients import IBroadcastRecipientReader
+from application.admin.services import BroadcastManager
+from application.interface.clients import IVKMessageClient
 from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.message_templates import IMessageTemplateRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
@@ -12,9 +16,28 @@ from application.services.award_task_service import AwardTaskService
 from application.services.project_completion_achievement_service import ProjectCompletionAchievementService
 from application.services.vk_message_template_service import VKMessageTemplateService
 from application.services.week_completion_achievement_service import WeekCompletionAchievementService
+from infrastructure.database.repositories.broadcast_recipients import SQLAlchemyBroadcastRecipientReader
 
 
 class ServicesProvider(Provider):
+    @provide(scope=Scope.APP, provides=IBroadcastRecipientReader)
+    def get_broadcast_recipient_reader(
+        self,
+        pool: async_sessionmaker[AsyncSession],
+    ) -> SQLAlchemyBroadcastRecipientReader:
+        return SQLAlchemyBroadcastRecipientReader(session_pool=pool)
+
+    @provide(scope=Scope.APP)
+    def get_broadcast_manager(
+        self,
+        recipient_reader: IBroadcastRecipientReader,
+        message_client: IVKMessageClient,
+    ) -> BroadcastManager:
+        return BroadcastManager(
+            recipient_reader=recipient_reader,
+            message_client=message_client,
+        )
+
     @provide(scope=Scope.REQUEST, provides=IVKMessageTemplateService)
     def get_vk_message_template_service(
         self,

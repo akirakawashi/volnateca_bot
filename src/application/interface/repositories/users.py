@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from application.common.dto.user import VKUserRegistrationDTO
+from application.common.dto.user import ActiveVKUserDTO, VKUserRegistrationDTO
 from application.common.dto.wallet import UserBalanceSnapshot
 
 
@@ -10,6 +10,23 @@ class IUserRepository(ABC):
         self,
         vk_user_id: int,
     ) -> VKUserRegistrationDTO | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def count_active_users(self) -> int:
+        """Возвращает количество активных зарегистрированных пользователей."""
+
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_active_users_page(
+        self,
+        *,
+        after_users_id: int | None,
+        limit: int,
+    ) -> tuple[ActiveVKUserDTO, ...]:
+        """Возвращает страницу активных пользователей через keyset pagination."""
+
         raise NotImplementedError
 
     @abstractmethod

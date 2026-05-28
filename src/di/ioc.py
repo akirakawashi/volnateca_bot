@@ -1,6 +1,7 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.admin.command.broadcast import GetBroadcastStatusHandler, StartBroadcastHandler
 # TODO: удалить SeedDevScenarioHandler и get_seed_dev_scenario_handler перед релизом.
 from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 from application.admin.command.seed_store_prizes import SeedStorePrizesHandler
@@ -47,6 +48,7 @@ from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
+from application.admin.services import BroadcastManager
 from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
 from settings.app.app import AppSettings
@@ -54,6 +56,20 @@ from settings.vk import VKSettings
 
 
 class InteractorProvider(Provider):
+    @provide(scope=Scope.REQUEST)
+    def get_start_broadcast_handler(
+        self,
+        broadcast_manager: BroadcastManager,
+    ) -> StartBroadcastHandler:
+        return StartBroadcastHandler(broadcast_manager=broadcast_manager)
+
+    @provide(scope=Scope.REQUEST)
+    def get_broadcast_status_handler(
+        self,
+        broadcast_manager: BroadcastManager,
+    ) -> GetBroadcastStatusHandler:
+        return GetBroadcastStatusHandler(broadcast_manager=broadcast_manager)
+
     @provide(scope=Scope.REQUEST)
     def get_list_message_templates_handler(
         self,
