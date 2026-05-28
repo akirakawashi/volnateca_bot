@@ -134,20 +134,10 @@ def build_tasks_message(
 
 
 def build_tasks_navigation_message(*, pagination: TaskPaginationDTO | None = None) -> VKMessageText:
-    if pagination is None:
-        return VKMessageText(text="🎯 Панель заданий\nКнопки ниже помогут вернуться в меню.")
-
-    if pagination.has_previous or pagination.has_next:
-        return VKMessageText(
-            text=(
-                "🎯 Панель заданий\n"
-            ),
-        )
-
-    return VKMessageText(
-        text=(
-            "🎯 Панель заданий\n"
-        ),
+    return _template_message(
+        "tasks_navigation",
+        page=1 if pagination is None else pagination.page,
+        total_pages=1 if pagination is None else pagination.total_pages,
     )
 
 
@@ -156,28 +146,22 @@ def build_tasks_carousel_message(
     tasks: tuple[VKUserAvailableTaskDTO, ...],
     pagination: TaskPaginationDTO | None = None,
 ) -> VKMessageText:
-    available_count = len(tasks) if pagination is None else pagination.total_items
-    page_line = ""
-    if pagination is not None:
-        page_line = f"Страница {pagination.page} из {pagination.total_pages}\n"
-
-    return VKMessageText(
-        text=(
-            f"Доступно: {available_count}\n"
-            f"{page_line}\n"
-            "Листай карточки →"
-        ),
+    return _template_message(
+        "tasks_carousel",
+        available_count=len(tasks) if pagination is None else pagination.total_items,
+        page=1 if pagination is None else pagination.page,
+        total_pages=1 if pagination is None else pagination.total_pages,
     )
 
 
 def build_task_info_message(*, task: VKUserAvailableTaskDTO) -> VKMessageText:
-    lines = [
-        task.task_name,
-        f"+{task.points} ✦",
-    ]
-    if task.action_url is not None:
-        lines.append(f"\n{task.action_url}")
-    return VKMessageText(text="\n".join(lines))
+    action_url_block = f"\n\n{task.action_url}" if task.action_url is not None else ""
+    return _template_message(
+        "task_info",
+        task_name=task.task_name,
+        points=task.points,
+        action_url_block=action_url_block,
+    )
 
 
 def build_store_root_message(*, balance_points: int) -> VKMessageText:
@@ -208,22 +192,22 @@ def build_store_catalog_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
 
 
 def build_store_catalog_navigation_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
-    return VKMessageText(
-        text=(
-            "🎁 Панель магазина\n"
-        ),
+    return _template_message(
+        "store_catalog_navigation",
+        section_label=catalog.section.label,
+        page=catalog.pagination.page,
+        total_pages=catalog.pagination.total_pages,
     )
 
 
 def build_store_catalog_carousel_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
-    return VKMessageText(
-        text=(
-            f"Раздел: {catalog.section.label}\n"
-            f"Доступно призов: {catalog.pagination.total_items}\n"
-            f"💫 Баланс: {catalog.balance_points} ✦\n"
-            f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}\n\n"
-            "Листай карточки и нажимай «Открыть», чтобы посмотреть приз."
-        ),
+    return _template_message(
+        "store_catalog_carousel",
+        section_label=catalog.section.label,
+        total_items=catalog.pagination.total_items,
+        balance_points=catalog.balance_points,
+        page=catalog.pagination.page,
+        total_pages=catalog.pagination.total_pages,
     )
 
 
