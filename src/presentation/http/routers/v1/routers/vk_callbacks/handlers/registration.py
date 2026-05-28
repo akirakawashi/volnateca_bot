@@ -52,6 +52,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
     build_store_prize_card_keyboard,
     build_store_prize_not_found_keyboard,
     build_store_root_keyboard,
+    build_task_info_keyboard,
     build_tasks_carousel_template,
     build_tasks_navigation_keyboard,
 )
@@ -91,6 +92,7 @@ from utils.vk_attachments import normalize_vk_photo_attachment
 
 BALANCE_ACTION = "balance"
 TASKS_ACTION = "tasks"
+TASKS_PAGE_ACTION = "tasks_page"
 SHOP_ACTION = "shop"
 REFERRAL_ACTION = "referral"
 CONSENT_ACCEPT_ACTION = "consent_accept"
@@ -355,6 +357,18 @@ async def _handle_registered_user_message(
                 data=data,
                 result=result,
                 page=_parse_tasks_page(button_payload.get("page")),
+                include_quiz_offer=True,
+                message_client=message_client,
+                get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+                task_images_settings=task_images_settings,
+            )
+            return
+        if action == TASKS_PAGE_ACTION:
+            await _handle_tasks(
+                data=data,
+                result=result,
+                page=_parse_tasks_page(button_payload.get("page")),
+                include_quiz_offer=False,
                 message_client=message_client,
                 get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
                 task_images_settings=task_images_settings,
@@ -472,6 +486,7 @@ async def _handle_registered_user_message(
                     data=data,
                     result=result,
                     tasks_id=tasks_id,
+                    page=_parse_tasks_page(button_payload.get("page")),
                     message_client=message_client,
                     get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
                 )
@@ -485,11 +500,12 @@ async def _handle_task_info(
     data: VKCallbackPayload,
     result: RegisterVKUserAndCheckSubscriptionDTO,
     tasks_id: int,
+    page: int,
     message_client: IVKMessageClient,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
 ) -> None:
     tasks_result = await get_vk_user_tasks_interactor(
-        command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
+        command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id, page=page),
     )
     task = next((t for t in tasks_result.tasks if t.tasks_id == tasks_id), None)
     if task is None:
@@ -499,6 +515,7 @@ async def _handle_task_info(
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
         message=build_task_info_message(task=task),
+        keyboard=build_task_info_keyboard(tasks_result.pagination),
         message_client=message_client,
         log_message="Детали задания VK",
     )
@@ -525,6 +542,7 @@ async def _handle_tasks(
     data: VKCallbackPayload,
     result: RegisterVKUserAndCheckSubscriptionDTO,
     page: int,
+    include_quiz_offer: bool,
     message_client: IVKMessageClient,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
     task_images_settings: TaskTypeImagesSettings,
@@ -532,7 +550,7 @@ async def _handle_tasks(
     tasks_result = await get_vk_user_tasks_interactor(
         command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id, page=page),
     )
-    if tasks_result.active_quiz is not None:
+    if include_quiz_offer and tasks_result.active_quiz is not None:
         quiz = tasks_result.active_quiz
         await send_vk_user_message(
             data=data,

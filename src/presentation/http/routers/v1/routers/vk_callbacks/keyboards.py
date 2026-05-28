@@ -249,6 +249,26 @@ def build_tasks_navigation_keyboard(pagination: TaskPaginationDTO | None = None)
     return {"one_time": False, "buttons": buttons}
 
 
+def build_task_info_keyboard(pagination: TaskPaginationDTO | None = None) -> VKKeyboard:
+    page = 1 if pagination is None else pagination.page
+    buttons: list[list[dict[str, object]]] = [
+        [
+            _payload_button(
+                label="К списку заданий",
+                color="primary",
+                payload={"action": "tasks_page", "page": page},
+            ),
+        ],
+    ]
+
+    navigation_row = _build_tasks_navigation_row(pagination)
+    if navigation_row:
+        buttons.append(navigation_row)
+
+    buttons.extend(_build_main_menu_rows())
+    return {"one_time": False, "buttons": buttons}
+
+
 def _build_store_catalog_navigation_row(catalog: StoreCatalogDTO) -> list[dict[str, object]]:
     buttons: list[dict[str, object]] = []
     if catalog.pagination.has_previous:
@@ -378,7 +398,7 @@ def _build_tasks_navigation_row(pagination: TaskPaginationDTO | None) -> list[di
             _payload_button(
                 label="← Назад",
                 color="secondary",
-                payload={"action": "tasks", "page": pagination.page - 1},
+                payload={"action": "tasks_page", "page": pagination.page - 1},
             ),
         )
     if pagination.has_next:
@@ -386,7 +406,7 @@ def _build_tasks_navigation_row(pagination: TaskPaginationDTO | None) -> list[di
             _payload_button(
                 label="Вперёд →",
                 color="secondary",
-                payload={"action": "tasks", "page": pagination.page + 1},
+                payload={"action": "tasks_page", "page": pagination.page + 1},
             ),
         )
     return buttons
@@ -448,6 +468,7 @@ __all__ = [
     "build_store_prize_card_keyboard",
     "build_store_prize_not_found_keyboard",
     "build_store_root_keyboard",
+    "build_task_info_keyboard",
     "build_tasks_carousel_template",
     "build_tasks_navigation_keyboard",
 ]
