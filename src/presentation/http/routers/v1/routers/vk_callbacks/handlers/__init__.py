@@ -4,7 +4,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.confirmation imp
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.ignored import handle_ignored_callback
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.like import handle_like_callback
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.poll import handle_poll_vote_callback
-from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration import (
+from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.entrypoint import (
     handle_registration_callback,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.comment import handle_comment_callback
