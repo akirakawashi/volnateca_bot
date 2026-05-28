@@ -135,12 +135,18 @@ def build_tasks_message(
 
 def build_tasks_navigation_message(*, pagination: TaskPaginationDTO | None = None) -> VKMessageText:
     if pagination is None:
-        return VKMessageText(text="🎯 Задания")
+        return VKMessageText(text="🎯 Панель заданий\nКнопки ниже помогут вернуться в меню.")
+
+    if pagination.has_previous or pagination.has_next:
+        return VKMessageText(
+            text=(
+                "🎯 Панель заданий\n"
+            ),
+        )
 
     return VKMessageText(
         text=(
-            "🎯 Задания\n"
-            f"Страница {pagination.page} из {pagination.total_pages}"
+            "🎯 Панель заданий\n"
         ),
     )
 
@@ -157,7 +163,6 @@ def build_tasks_carousel_message(
 
     return VKMessageText(
         text=(
-            f"🎯 Задания\n\n"
             f"Доступно: {available_count}\n"
             f"{page_line}\n"
             "Листай карточки →"
@@ -205,8 +210,7 @@ def build_store_catalog_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
 def build_store_catalog_navigation_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
     return VKMessageText(
         text=(
-            f"🎁 Магазин · {catalog.section.label}\n"
-            f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}"
+            "🎁 Панель магазина\n"
         ),
     )
 
@@ -214,7 +218,8 @@ def build_store_catalog_navigation_message(*, catalog: StoreCatalogDTO) -> VKMes
 def build_store_catalog_carousel_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
     return VKMessageText(
         text=(
-            f"🎁 Магазин · {catalog.section.label}\n\n"
+            f"Раздел: {catalog.section.label}\n"
+            f"Доступно призов: {catalog.pagination.total_items}\n"
             f"💫 Баланс: {catalog.balance_points} ✦\n"
             f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}\n\n"
             "Листай карточки и нажимай «Открыть», чтобы посмотреть приз."
