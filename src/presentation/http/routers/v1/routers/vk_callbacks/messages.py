@@ -124,6 +124,26 @@ def build_tasks_message(*, tasks: tuple[VKUserAvailableTaskDTO, ...]) -> VKMessa
     return _template_message("tasks_list", tasks_block="\n\n".join(blocks))
 
 
+def build_tasks_carousel_message(*, tasks: tuple[VKUserAvailableTaskDTO, ...]) -> VKMessageText:
+    return VKMessageText(
+        text=(
+            f"🎯 Задания\n\n"
+            f"Доступно: {len(tasks)}\n\n"
+            "Листай карточки →"
+        ),
+    )
+
+
+def build_task_info_message(*, task: VKUserAvailableTaskDTO) -> VKMessageText:
+    lines = [
+        task.task_name,
+        f"+{task.points} ✦",
+    ]
+    if task.action_url is not None:
+        lines.append(f"\n{task.action_url}")
+    return VKMessageText(text="\n".join(lines))
+
+
 def build_store_root_message(*, balance_points: int) -> VKMessageText:
     return VKMessageText(
         text=(
@@ -433,6 +453,8 @@ __all__ = [
     "build_store_root_message",
     "build_subscription_reward_message",
     "build_task_accrual_message",
+    "build_task_info_message",
     "build_tasks_message",
+    "build_tasks_carousel_message",
     "build_week_completion_reward_message",
 ]

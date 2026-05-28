@@ -6,6 +6,8 @@ from application.common.dto.store import (
     StorePrizeUserState,
     list_store_sections,
 )
+from application.common.dto.task import VKUserAvailableTaskDTO
+from settings.vk.task_images import TaskTypeImagesSettings
 from utils.vk_attachments import to_vk_carousel_photo_id
 
 VKKeyboard = dict[str, object]
@@ -351,6 +353,42 @@ def _format_store_carousel_state(state: StorePrizeUserState) -> str:
     return "разобрали"
 
 
+def build_tasks_carousel_template(
+    tasks: tuple[VKUserAvailableTaskDTO, ...],
+    task_images_settings: TaskTypeImagesSettings,
+) -> VKTemplate | None:
+    if not tasks:
+        return None
+
+    elements: list[dict[str, object]] = []
+    for task in tasks:
+        photo_id = to_vk_carousel_photo_id(task_images_settings.get_image(task.task_type))
+        if photo_id is None:
+            return None
+
+        button_payload: dict[str, object] = {"action": "task_info", "tasks_id": task.tasks_id}
+        elements.append(
+            {
+                "title": _truncate_carousel_text(task.task_name, max_length=80),
+                "description": _truncate_carousel_text(f"+{task.points} ✦", max_length=80),
+                "photo_id": photo_id,
+                "action": {"type": "open_photo"},
+                "buttons": [
+                    _payload_button(
+                        label="Подробнее",
+                        color="primary",
+                        payload=button_payload,
+                    ),
+                ],
+            },
+        )
+
+    return {
+        "type": "carousel",
+        "elements": elements,
+    }
+
+
 __all__ = [
     "VKKeyboard",
     "VKTemplate",
@@ -365,4 +403,5 @@ __all__ = [
     "build_store_prize_card_keyboard",
     "build_store_prize_not_found_keyboard",
     "build_store_root_keyboard",
+    "build_tasks_carousel_template",
 ]
