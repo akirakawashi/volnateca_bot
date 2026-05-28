@@ -6,7 +6,7 @@ from application.common.dto.store import (
     StorePrizeUserState,
     list_store_sections,
 )
-from application.common.dto.task import VKUserAvailableTaskDTO
+from application.common.dto.task import TaskPaginationDTO, VKUserAvailableTaskDTO
 from settings.vk.task_images import TaskTypeImagesSettings
 from utils.vk_attachments import to_vk_carousel_photo_id
 
@@ -38,16 +38,7 @@ def build_consent_keyboard(*, ref_key: str | None = None) -> VKKeyboard:
 def build_main_menu_keyboard() -> VKKeyboard:
     return {
         "one_time": False,
-        "buttons": [
-            [
-                _payload_button(label="💫 Баланс", color="primary", payload={"action": "balance"}),
-                _payload_button(label="🎯 Задания", color="primary", payload={"action": "tasks"}),
-            ],
-            [
-                _payload_button(label="🎁 Магазин", color="secondary", payload={"action": "shop"}),
-                _payload_button(label="🤝 Рефералка", color="secondary", payload={"action": "referral"}),
-            ],
-        ],
+        "buttons": _build_main_menu_rows(),
     }
 
 
@@ -247,6 +238,17 @@ def build_store_exit_keyboard() -> VKKeyboard:
     return build_main_menu_keyboard()
 
 
+def build_tasks_navigation_keyboard(pagination: TaskPaginationDTO | None = None) -> VKKeyboard:
+    buttons: list[list[dict[str, object]]] = []
+
+    navigation_row = _build_tasks_navigation_row(pagination)
+    if navigation_row:
+        buttons.append(navigation_row)
+
+    buttons.extend(_build_main_menu_rows())
+    return {"one_time": False, "buttons": buttons}
+
+
 def _build_store_catalog_navigation_row(catalog: StoreCatalogDTO) -> list[dict[str, object]]:
     buttons: list[dict[str, object]] = []
     if catalog.pagination.has_previous:
@@ -274,6 +276,19 @@ def _build_store_catalog_navigation_row(catalog: StoreCatalogDTO) -> list[dict[s
             ),
         )
     return buttons
+
+
+def _build_main_menu_rows() -> list[list[dict[str, object]]]:
+    return [
+        [
+            _payload_button(label="💫 Баланс", color="primary", payload={"action": "balance"}),
+            _payload_button(label="🎯 Задания", color="primary", payload={"action": "tasks"}),
+        ],
+        [
+            _payload_button(label="🎁 Магазин", color="secondary", payload={"action": "shop"}),
+            _payload_button(label="🤝 Рефералка", color="secondary", payload={"action": "referral"}),
+        ],
+    ]
 
 
 def _build_store_section_rows() -> list[list[dict[str, object]]]:
@@ -353,9 +368,35 @@ def _format_store_carousel_state(state: StorePrizeUserState) -> str:
     return "разобрали"
 
 
+def _build_tasks_navigation_row(pagination: TaskPaginationDTO | None) -> list[dict[str, object]]:
+    if pagination is None:
+        return []
+
+    buttons: list[dict[str, object]] = []
+    if pagination.has_previous:
+        buttons.append(
+            _payload_button(
+                label="← Назад",
+                color="secondary",
+                payload={"action": "tasks", "page": pagination.page - 1},
+            ),
+        )
+    if pagination.has_next:
+        buttons.append(
+            _payload_button(
+                label="Вперёд →",
+                color="secondary",
+                payload={"action": "tasks", "page": pagination.page + 1},
+            ),
+        )
+    return buttons
+
+
 def build_tasks_carousel_template(
     tasks: tuple[VKUserAvailableTaskDTO, ...],
     task_images_settings: TaskTypeImagesSettings,
+    *,
+    page: int = 1,
 ) -> VKTemplate | None:
     if not tasks:
         return None
@@ -366,7 +407,11 @@ def build_tasks_carousel_template(
         if photo_id is None:
             return None
 
-        button_payload: dict[str, object] = {"action": "task_info", "tasks_id": task.tasks_id}
+        button_payload: dict[str, object] = {
+            "action": "task_info",
+            "tasks_id": task.tasks_id,
+            "page": page,
+        }
         elements.append(
             {
                 "title": _truncate_carousel_text(task.task_name, max_length=80),
@@ -404,4 +449,5 @@ __all__ = [
     "build_store_prize_not_found_keyboard",
     "build_store_root_keyboard",
     "build_tasks_carousel_template",
+    "build_tasks_navigation_keyboard",
 ]

@@ -6,7 +6,7 @@ from application.common.dto.store import (
     StorePrizeUserState,
     StorePrizeView,
 )
-from application.common.dto.task import VKUserAvailableTaskDTO
+from application.common.dto.task import TaskPaginationDTO, VKUserAvailableTaskDTO
 from application.services.vk_message_template_catalog import get_message_template_definition
 from domain.enums.prize import PrizeType
 
@@ -107,28 +107,59 @@ def build_balance_message(*, balance_points: int) -> VKMessageText:
     return _template_message("balance", balance_points=balance_points)
 
 
-def build_tasks_message(*, tasks: tuple[VKUserAvailableTaskDTO, ...]) -> VKMessageText:
+def build_tasks_message(
+    *,
+    tasks: tuple[VKUserAvailableTaskDTO, ...],
+    pagination: TaskPaginationDTO | None = None,
+) -> VKMessageText:
     if not tasks:
         return _template_message("tasks_empty")
 
+    start_index = 0 if pagination is None else (pagination.page - 1) * pagination.page_size
     blocks: list[str] = []
     for index, task in enumerate(tasks, start=1):
         lines = [
-            f"{index}. {task.task_name}",
+            f"{start_index + index}. {task.task_name}",
             f"+{task.points} ✦",
         ]
         if task.action_url is not None:
             lines.append(task.action_url)
         blocks.append("\n".join(lines))
 
-    return _template_message("tasks_list", tasks_block="\n\n".join(blocks))
+    tasks_block = "\n\n".join(blocks)
+    if pagination is not None:
+        tasks_block = f"Страница {pagination.page} из {pagination.total_pages}\n\n{tasks_block}"
+
+    return _template_message("tasks_list", tasks_block=tasks_block)
 
 
-def build_tasks_carousel_message(*, tasks: tuple[VKUserAvailableTaskDTO, ...]) -> VKMessageText:
+def build_tasks_navigation_message(*, pagination: TaskPaginationDTO | None = None) -> VKMessageText:
+    if pagination is None:
+        return VKMessageText(text="🎯 Задания")
+
+    return VKMessageText(
+        text=(
+            "🎯 Задания\n"
+            f"Страница {pagination.page} из {pagination.total_pages}"
+        ),
+    )
+
+
+def build_tasks_carousel_message(
+    *,
+    tasks: tuple[VKUserAvailableTaskDTO, ...],
+    pagination: TaskPaginationDTO | None = None,
+) -> VKMessageText:
+    available_count = len(tasks) if pagination is None else pagination.total_items
+    page_line = ""
+    if pagination is not None:
+        page_line = f"Страница {pagination.page} из {pagination.total_pages}\n"
+
     return VKMessageText(
         text=(
             f"🎯 Задания\n\n"
-            f"Доступно: {len(tasks)}\n\n"
+            f"Доступно: {available_count}\n"
+            f"{page_line}\n"
             "Листай карточки →"
         ),
     )
@@ -456,5 +487,6 @@ __all__ = [
     "build_task_info_message",
     "build_tasks_message",
     "build_tasks_carousel_message",
+    "build_tasks_navigation_message",
     "build_week_completion_reward_message",
 ]

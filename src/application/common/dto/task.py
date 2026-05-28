@@ -3,6 +3,8 @@ from enum import Enum
 
 from domain.enums.task import TaskRepeatPolicy, TaskType
 
+TASKS_PAGE_SIZE = 6
+
 
 class TaskCompletionResultStatus(str, Enum):
     COMPLETED = "completed"
@@ -59,6 +61,16 @@ class VKUserAvailableTaskDTO:
         if self.external_id.startswith(("wall", "poll")):
             return f"https://vk.com/{self.external_id}"
         return None
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class TaskPaginationDTO:
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+    has_previous: bool
+    has_next: bool
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
