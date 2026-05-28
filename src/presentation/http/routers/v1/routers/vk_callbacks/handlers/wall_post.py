@@ -4,8 +4,8 @@ from application.command.ensure_vk_poll_task import (
     EnsureVKPollTaskCommand,
     EnsureVKPollTaskHandler,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
-from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.responses import vk_ok_response
 
 
 async def handle_wall_post_callback(

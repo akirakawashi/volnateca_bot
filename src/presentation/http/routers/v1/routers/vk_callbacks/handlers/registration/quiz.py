@@ -24,11 +24,11 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement impo
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.tasks import (
     send_tasks_catalog,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards import (
     build_quiz_question_keyboard,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_level_up_message,
     build_quiz_answer_result_message,
     build_quiz_completed_message,
@@ -36,7 +36,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_quiz_question_message,
     build_quiz_unavailable_message,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 from settings.vk.task_images import TaskTypeImagesSettings
 
 

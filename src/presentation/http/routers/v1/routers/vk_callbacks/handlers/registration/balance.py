@@ -4,9 +4,9 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionDTO,
 )
 from application.interface.clients import IVKMessageClient
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.messages import build_balance_message
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import build_balance_message
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 
 
 async def handle_balance(

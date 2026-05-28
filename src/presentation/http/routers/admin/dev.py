@@ -18,8 +18,8 @@ from presentation.http.dto.request import VKCallbackSchema
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement import (
     send_monthly_top_reward_if_needed,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import bind_vk_message_template_service
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import bind_vk_message_template_service
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 
 # TODO: удалить dev_admin_router перед релизом — только для локальной отладки.
 dev_admin_router = APIRouter(route_class=DishkaRoute)

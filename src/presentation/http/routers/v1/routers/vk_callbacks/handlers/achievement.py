@@ -1,13 +1,13 @@
 from application.interface.clients import IVKMessageClient
 from domain.services.level import get_level_name
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_level_up_message,
     build_monthly_top_reward_message,
     build_project_completion_reward_message,
     build_week_completion_reward_message,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 
 
 async def send_week_completion_reward_if_needed(

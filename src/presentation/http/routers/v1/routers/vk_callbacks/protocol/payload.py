@@ -6,7 +6,7 @@ from pydantic import BaseModel, ValidationError
 
 from application.common.dto.vk import VKPollDTO, VKWallPostDTO
 from presentation.http.dto.request import VKCallbackSchema, VKCallbackWallPostSchema
-from presentation.http.routers.v1.routers.vk_callbacks.event_objects import (
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.event_objects import (
     VKCallbackEventObjectSchema,
     VKCommentObjectSchema,
     VKLikeObjectSchema,
@@ -16,7 +16,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.event_objects import (
     VKUserObjectSchema,
     VKWallPostObjectSchema,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.event_types import VKEventGroups, VKEventType
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.event_types import VKEventGroups, VKEventType
 
 EventObjectT = TypeVar("EventObjectT", bound=VKCallbackEventObjectSchema)
 

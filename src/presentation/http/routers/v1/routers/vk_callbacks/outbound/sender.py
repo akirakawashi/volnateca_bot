@@ -4,13 +4,13 @@ from loguru import logger
 
 from application.interface.clients import IVKMessageClient
 from application.interface.services import IVKMessageTemplateService
-from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards import (
     VKKeyboard,
     VKTemplate,
     build_main_menu_keyboard,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.messages import VKMessageText
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import VKMessageText
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 
 _message_template_service_ctx: ContextVar[IVKMessageTemplateService | None] = ContextVar(
     "message_template_service",

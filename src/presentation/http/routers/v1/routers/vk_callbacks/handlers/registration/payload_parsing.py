@@ -5,7 +5,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.act
     CONSENT_REF_PAYLOAD_KEY,
     DEFAULT_START_MESSAGES,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 
 
 def parse_tasks_page(raw_page: object) -> int:

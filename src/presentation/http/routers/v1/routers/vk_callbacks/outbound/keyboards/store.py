@@ -1,92 +1,20 @@
-import json
-
 from application.common.dto.store import (
     StoreCatalogDTO,
     StorePrizeCardDTO,
     StorePrizeUserState,
     list_store_sections,
 )
-from application.common.dto.task import TaskPaginationDTO, VKUserAvailableTaskDTO
-from settings.vk.task_images import TaskTypeImagesSettings
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards._buttons import (
+    VKKeyboard,
+    VKTemplate,
+    _payload_button,
+    _truncate_button_label,
+    _truncate_carousel_text,
+)
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards.registration import (
+    build_main_menu_keyboard,
+)
 from utils.vk_attachments import to_vk_carousel_photo_id
-
-VKKeyboard = dict[str, object]
-VKTemplate = dict[str, object]
-
-
-def build_consent_keyboard(*, ref_key: str | None = None) -> VKKeyboard:
-    accept_payload: dict[str, object] = {"action": "consent_accept"}
-    clean_ref_key = ref_key.strip() if ref_key is not None else ""
-    if clean_ref_key:
-        accept_payload["consent_ref"] = clean_ref_key
-
-    return {
-        "one_time": True,
-        "buttons": [
-            [
-                _payload_button(label="Да", color="positive", payload=accept_payload),
-                _payload_button(
-                    label="Нет",
-                    color="negative",
-                    payload={"action": "consent_decline"},
-                ),
-            ],
-        ],
-    }
-
-
-def build_main_menu_keyboard() -> VKKeyboard:
-    return {
-        "one_time": False,
-        "buttons": _build_main_menu_rows(),
-    }
-
-
-def build_quiz_offer_keyboard(tasks_id: int) -> VKKeyboard:
-    return {
-        "one_time": True,
-        "buttons": [
-            [
-                _payload_button(
-                    label="✅ Участвовать",
-                    color="positive",
-                    payload={"action": "start_quiz", "tasks_id": tasks_id},
-                ),
-                _payload_button(
-                    label="❌ Пропустить",
-                    color="secondary",
-                    payload={"action": "skip_quiz"},
-                ),
-            ],
-        ],
-    }
-
-
-def build_quiz_question_keyboard(
-    quiz_questions_id: int,
-    options: list[tuple[int, str]],
-) -> VKKeyboard:
-    """Клавиатура с вариантами ответов на вопрос квиза.
-
-    Args:
-        quiz_questions_id: ID вопроса.
-        options: список пар (quiz_question_options_id, option_text).
-    """
-    buttons = [
-        [
-            _payload_button(
-                label=option_text[:40],
-                color="secondary",
-                payload={
-                    "action": "quiz_answer",
-                    "quiz_questions_id": quiz_questions_id,
-                    "option_id": option_id,
-                },
-            )
-        ]
-        for option_id, option_text in options
-    ]
-    return {"one_time": True, "buttons": buttons}
 
 
 def build_store_root_keyboard() -> VKKeyboard:
@@ -238,37 +166,6 @@ def build_store_exit_keyboard() -> VKKeyboard:
     return build_main_menu_keyboard()
 
 
-def build_tasks_navigation_keyboard(pagination: TaskPaginationDTO | None = None) -> VKKeyboard:
-    buttons: list[list[dict[str, object]]] = []
-
-    navigation_row = _build_tasks_navigation_row(pagination)
-    if navigation_row:
-        buttons.append(navigation_row)
-
-    buttons.extend(_build_main_menu_rows())
-    return {"one_time": False, "buttons": buttons}
-
-
-def build_task_info_keyboard(pagination: TaskPaginationDTO | None = None) -> VKKeyboard:
-    page = 1 if pagination is None else pagination.page
-    buttons: list[list[dict[str, object]]] = [
-        [
-            _payload_button(
-                label="К списку заданий",
-                color="primary",
-                payload={"action": "tasks_page", "page": page},
-            ),
-        ],
-    ]
-
-    navigation_row = _build_tasks_navigation_row(pagination)
-    if navigation_row:
-        buttons.append(navigation_row)
-
-    buttons.extend(_build_main_menu_rows())
-    return {"one_time": False, "buttons": buttons}
-
-
 def _build_store_catalog_navigation_row(catalog: StoreCatalogDTO) -> list[dict[str, object]]:
     buttons: list[dict[str, object]] = []
     if catalog.pagination.has_previous:
@@ -296,19 +193,6 @@ def _build_store_catalog_navigation_row(catalog: StoreCatalogDTO) -> list[dict[s
             ),
         )
     return buttons
-
-
-def _build_main_menu_rows() -> list[list[dict[str, object]]]:
-    return [
-        [
-            _payload_button(label="💫 Баланс", color="primary", payload={"action": "balance"}),
-            _payload_button(label="🎯 Задания", color="primary", payload={"action": "tasks"}),
-        ],
-        [
-            _payload_button(label="🎁 Магазин", color="secondary", payload={"action": "shop"}),
-            _payload_button(label="🤝 Рефералка", color="secondary", payload={"action": "referral"}),
-        ],
-    ]
 
 
 def _build_store_section_rows() -> list[list[dict[str, object]]]:
@@ -343,17 +227,6 @@ def _build_store_exit_row(*, label: str = "Выйти из магазина") ->
     ]
 
 
-def _payload_button(*, label: str, color: str, payload: dict) -> dict[str, object]:
-    return {
-        "action": {
-            "type": "text",
-            "label": label,
-            "payload": json.dumps(payload, ensure_ascii=False),
-        },
-        "color": color,
-    }
-
-
 def _store_state_icon(state: StorePrizeUserState) -> str:
     if state == StorePrizeUserState.AVAILABLE:
         return "✅"
@@ -364,20 +237,6 @@ def _store_state_icon(state: StorePrizeUserState) -> str:
     return "⏳"
 
 
-def _truncate_button_label(label: str) -> str:
-    clean_label = label.strip()
-    if len(clean_label) <= 40:
-        return clean_label
-    return f"{clean_label[:39]}…"
-
-
-def _truncate_carousel_text(text: str, *, max_length: int) -> str:
-    clean_text = " ".join(text.split())
-    if len(clean_text) <= max_length:
-        return clean_text
-    return f"{clean_text[: max_length - 1]}…"
-
-
 def _format_store_carousel_state(state: StorePrizeUserState) -> str:
     if state == StorePrizeUserState.AVAILABLE:
         return "доступен"
@@ -386,89 +245,3 @@ def _format_store_carousel_state(state: StorePrizeUserState) -> str:
     if state == StorePrizeUserState.LEVEL_LOCKED:
         return "закрыт по уровню"
     return "разобрали"
-
-
-def _build_tasks_navigation_row(pagination: TaskPaginationDTO | None) -> list[dict[str, object]]:
-    if pagination is None:
-        return []
-
-    buttons: list[dict[str, object]] = []
-    if pagination.has_previous:
-        buttons.append(
-            _payload_button(
-                label="← Назад",
-                color="secondary",
-                payload={"action": "tasks_page", "page": pagination.page - 1},
-            ),
-        )
-    if pagination.has_next:
-        buttons.append(
-            _payload_button(
-                label="Вперёд →",
-                color="secondary",
-                payload={"action": "tasks_page", "page": pagination.page + 1},
-            ),
-        )
-    return buttons
-
-
-def build_tasks_carousel_template(
-    tasks: tuple[VKUserAvailableTaskDTO, ...],
-    task_images_settings: TaskTypeImagesSettings,
-    *,
-    page: int = 1,
-) -> VKTemplate | None:
-    if not tasks:
-        return None
-
-    elements: list[dict[str, object]] = []
-    for task in tasks:
-        photo_id = to_vk_carousel_photo_id(task_images_settings.get_image(task.task_type))
-        if photo_id is None:
-            return None
-
-        button_payload: dict[str, object] = {
-            "action": "task_info",
-            "tasks_id": task.tasks_id,
-            "page": page,
-        }
-        elements.append(
-            {
-                "title": _truncate_carousel_text(task.task_name, max_length=80),
-                "description": _truncate_carousel_text(f"+{task.points} ✦", max_length=80),
-                "photo_id": photo_id,
-                "action": {"type": "open_photo"},
-                "buttons": [
-                    _payload_button(
-                        label="Подробнее",
-                        color="primary",
-                        payload=button_payload,
-                    ),
-                ],
-            },
-        )
-
-    return {
-        "type": "carousel",
-        "elements": elements,
-    }
-
-
-__all__ = [
-    "VKKeyboard",
-    "VKTemplate",
-    "build_consent_keyboard",
-    "build_main_menu_keyboard",
-    "build_quiz_offer_keyboard",
-    "build_quiz_question_keyboard",
-    "build_store_catalog_carousel_template",
-    "build_store_catalog_keyboard",
-    "build_store_catalog_navigation_keyboard",
-    "build_store_exit_keyboard",
-    "build_store_prize_card_keyboard",
-    "build_store_prize_not_found_keyboard",
-    "build_store_root_keyboard",
-    "build_task_info_keyboard",
-    "build_tasks_carousel_template",
-    "build_tasks_navigation_keyboard",
-]

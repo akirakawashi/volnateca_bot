@@ -39,7 +39,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.tas
     handle_task_info,
     handle_tasks,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 from settings.vk.task_images import TaskTypeImagesSettings
 
 

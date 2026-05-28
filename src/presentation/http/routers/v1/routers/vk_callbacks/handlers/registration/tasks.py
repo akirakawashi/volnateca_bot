@@ -10,21 +10,21 @@ from application.command.register_vk_user_and_check_subscription import (
 )
 from application.common.dto.task import VKUserAvailableTaskDTO
 from application.interface.clients import IVKMessageClient
-from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards import (
     build_quiz_offer_keyboard,
     build_task_info_keyboard,
     build_tasks_carousel_template,
     build_tasks_navigation_keyboard,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_quiz_offer_message,
     build_task_info_message,
     build_tasks_carousel_message,
     build_tasks_message,
     build_tasks_navigation_message,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 from settings.vk.task_images import TaskTypeImagesSettings
 
 

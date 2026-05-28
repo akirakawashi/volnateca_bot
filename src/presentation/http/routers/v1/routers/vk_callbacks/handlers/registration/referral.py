@@ -6,14 +6,14 @@ from application.command.register_vk_user_and_check_subscription import (
 from application.common.dto.referral import ProcessReferralDTO
 from application.interface.clients import IVKMessageClient
 from domain.services.level import get_level_name
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_level_up_message,
     build_referral_bonus_message,
     build_referral_link_message,
     build_referral_milestone_message,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 
 
 async def handle_referral(

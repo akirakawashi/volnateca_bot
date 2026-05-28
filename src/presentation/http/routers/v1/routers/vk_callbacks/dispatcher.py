@@ -30,8 +30,8 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_subscription_callback,
     handle_wall_post_callback,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import bind_vk_message_template_service
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import bind_vk_message_template_service
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 from settings.vk import TaskTypeImagesSettings, VKSettings
 
 

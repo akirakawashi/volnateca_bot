@@ -44,16 +44,16 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.pay
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.referral import (
     send_referral_notifications,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.keyboards import build_consent_keyboard
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards import build_consent_keyboard
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_consent_request_message,
     build_main_menu_message,
     build_registration_welcome_message,
     build_subscription_reward_message,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
-from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.responses import vk_ok_response
 from settings.vk.task_images import TaskTypeImagesSettings
 
 
