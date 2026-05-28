@@ -6,7 +6,7 @@ from settings.app.docs import DocsSettings
 from settings.app.logger import LoggingSettings
 from settings.db.db import DBSettings
 from settings.factory import ConfigFactory
-from settings.vk import VKSettings
+from settings.vk import TaskTypeImagesSettings, VKSettings
 
 
 class ConfigProvider(Provider):
@@ -37,3 +37,7 @@ class ConfigProvider(Provider):
     @provide(scope=Scope.APP)
     def get_vk_config(self, cfg_factory: ConfigFactory) -> VKSettings:
         return cfg_factory.vk
+
+    @provide(scope=Scope.APP)
+    def get_task_images_config(self, cfg_factory: ConfigFactory) -> TaskTypeImagesSettings:
+        return cfg_factory.task_images

@@ -32,7 +32,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
 )
 from presentation.http.routers.v1.routers.vk_callbacks.message_sender import bind_vk_message_template_service
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
-from settings.vk import VKSettings
+from settings.vk import TaskTypeImagesSettings, VKSettings
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -44,6 +44,7 @@ class VKCallbackDispatcher:
     """
 
     vk_settings: VKSettings
+    task_images_settings: TaskTypeImagesSettings
     complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
@@ -127,6 +128,7 @@ class VKCallbackDispatcher:
                         self.register_vk_user_with_referral_context_interactor
                     ),
                     group_id=self.vk_settings.GROUP_ID,
+                    task_images_settings=self.task_images_settings,
                     message_client=self.vk_message_client,
                     user_repository=self.user_repository,
                 )

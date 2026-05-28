@@ -107,6 +107,51 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         variables=("tasks_block",),
     ),
 
+    "tasks_navigation": MessageTemplateDefinition(
+        code="tasks_navigation",
+        description="Панель управления каруселью заданий",
+        default_template="🎯 Панель заданий\n",
+        variables=("page", "total_pages"),
+    ),
+
+    "tasks_carousel": MessageTemplateDefinition(
+        code="tasks_carousel",
+        description="Текст над каруселью заданий",
+        default_template=(
+            "Доступно: {available_count}\n"
+            "Страница {page} из {total_pages}\n\n"
+            "Листай карточки →"
+        ),
+        variables=("available_count", "page", "total_pages"),
+    ),
+
+    "task_info": MessageTemplateDefinition(
+        code="task_info",
+        description="Детали задания из карусели",
+        default_template="{task_name}\n+{points} ✦{action_url_block}",
+        variables=("task_name", "points", "action_url_block"),
+    ),
+
+    "store_catalog_navigation": MessageTemplateDefinition(
+        code="store_catalog_navigation",
+        description="Панель управления каруселью магазина",
+        default_template="🎁 Панель магазина\n",
+        variables=("section_label", "page", "total_pages"),
+    ),
+
+    "store_catalog_carousel": MessageTemplateDefinition(
+        code="store_catalog_carousel",
+        description="Текст над каруселью магазина",
+        default_template=(
+            "Раздел: {section_label}\n"
+            "Доступно призов: {total_items}\n"
+            "💫 Баланс: {balance_points} ✦\n"
+            "Страница {page} из {total_pages}\n\n"
+            "Листай карточки и нажимай «Открыть», чтобы посмотреть приз."
+        ),
+        variables=("section_label", "total_items", "balance_points", "page", "total_pages"),
+    ),
+
     "quiz_offer": MessageTemplateDefinition(
         code="quiz_offer",
         description="Предложение начать викторину",

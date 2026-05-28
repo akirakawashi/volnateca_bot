@@ -3,7 +3,7 @@ from settings.app.cors import CorsSettings
 from settings.app.docs import DocsSettings
 from settings.app.logger import LoggingSettings
 from settings.db.db import DBSettings
-from settings.vk import VKSettings
+from settings.vk import TaskTypeImagesSettings, VKSettings
 
 
 class ConfigFactory:
@@ -14,3 +14,4 @@ class ConfigFactory:
         self.cors = CorsSettings()
         self.logging = LoggingSettings()
         self.vk = VKSettings()
+        self.task_images = TaskTypeImagesSettings()

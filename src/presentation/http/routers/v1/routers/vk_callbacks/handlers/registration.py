@@ -18,7 +18,11 @@ from application.command.get_store_catalog import (
     GetStorePrizeCardCommand,
     GetStorePrizeCardHandler,
 )
-from application.command.get_vk_user_tasks import GetVKUserTasksCommand, GetVKUserTasksHandler
+from application.command.get_vk_user_tasks import (
+    GetVKUserTasksCommand,
+    GetVKUserTasksDTO,
+    GetVKUserTasksHandler,
+)
 from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionDTO,
@@ -27,9 +31,9 @@ from application.command.register_vk_user_with_referral_context import (
     RegisterVKUserWithReferralContextCommand,
     RegisterVKUserWithReferralContextHandler,
 )
-from application.common.dto.store import StoreSection
 from application.common.dto.referral import ProcessReferralDTO
-from application.common.dto.task import TaskCompletionResultStatus
+from application.common.dto.store import StoreSection
+from application.common.dto.task import TaskCompletionResultStatus, VKUserAvailableTaskDTO
 from application.interface.clients import IVKMessageClient
 from application.interface.repositories.users import IUserRepository
 from domain.services.level import get_level_name
@@ -48,6 +52,9 @@ from presentation.http.routers.v1.routers.vk_callbacks.keyboards import (
     build_store_prize_card_keyboard,
     build_store_prize_not_found_keyboard,
     build_store_root_keyboard,
+    build_task_info_keyboard,
+    build_tasks_carousel_template,
+    build_tasks_navigation_keyboard,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_balance_message,
@@ -72,15 +79,20 @@ from presentation.http.routers.v1.routers.vk_callbacks.messages import (
     build_store_prize_card_message,
     build_store_root_message,
     build_subscription_reward_message,
+    build_tasks_carousel_message,
+    build_task_info_message,
     build_tasks_message,
+    build_tasks_navigation_message,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
 from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
 from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
+from settings.vk.task_images import TaskTypeImagesSettings
 from utils.vk_attachments import normalize_vk_photo_attachment
 
 BALANCE_ACTION = "balance"
 TASKS_ACTION = "tasks"
+TASKS_PAGE_ACTION = "tasks_page"
 SHOP_ACTION = "shop"
 REFERRAL_ACTION = "referral"
 CONSENT_ACCEPT_ACTION = "consent_accept"
@@ -99,6 +111,7 @@ async def handle_registration_callback(
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     capture_referral_intent_interactor: CaptureVKReferralIntentHandler,
     group_id: int,
+    task_images_settings: TaskTypeImagesSettings,
     message_client: IVKMessageClient,
     user_repository: IUserRepository,
 ) -> PlainTextResponse:
@@ -176,6 +189,7 @@ async def handle_registration_callback(
                 get_quiz_first_question_interactor=get_quiz_first_question_interactor,
                 answer_quiz_question_interactor=answer_quiz_question_interactor,
                 group_id=group_id,
+                task_images_settings=task_images_settings,
             )
         return vk_ok_response()
 
@@ -324,6 +338,7 @@ async def _handle_registered_user_message(
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     group_id: int,
+    task_images_settings: TaskTypeImagesSettings,
 ) -> None:
     """Обрабатывает только payload-кнопки зарегистрированного пользователя."""
 
@@ -341,8 +356,22 @@ async def _handle_registered_user_message(
             await _handle_tasks(
                 data=data,
                 result=result,
+                page=_parse_tasks_page(button_payload.get("page")),
+                include_quiz_offer=True,
                 message_client=message_client,
                 get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+                task_images_settings=task_images_settings,
+            )
+            return
+        if action == TASKS_PAGE_ACTION:
+            await _handle_tasks(
+                data=data,
+                result=result,
+                page=_parse_tasks_page(button_payload.get("page")),
+                include_quiz_offer=False,
+                message_client=message_client,
+                get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+                task_images_settings=task_images_settings,
             )
             return
         if action == SHOP_ACTION:
@@ -425,6 +454,7 @@ async def _handle_registered_user_message(
                     message_client=message_client,
                     get_quiz_first_question_interactor=get_quiz_first_question_interactor,
                     get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+                    task_images_settings=task_images_settings,
                 )
                 return
         elif action == "skip_quiz":
@@ -433,6 +463,7 @@ async def _handle_registered_user_message(
                 result=result,
                 message_client=message_client,
                 get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+                task_images_settings=task_images_settings,
             )
             return
         elif action == "quiz_answer":
@@ -448,8 +479,46 @@ async def _handle_registered_user_message(
                     answer_quiz_question_interactor=answer_quiz_question_interactor,
                 )
                 return
+        elif action == "task_info":
+            tasks_id = button_payload.get("tasks_id")
+            if isinstance(tasks_id, int):
+                await _handle_task_info(
+                    data=data,
+                    result=result,
+                    tasks_id=tasks_id,
+                    page=_parse_tasks_page(button_payload.get("page")),
+                    message_client=message_client,
+                    get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+                )
+                return
 
     return
+
+
+async def _handle_task_info(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    tasks_id: int,
+    page: int,
+    message_client: IVKMessageClient,
+    get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+) -> None:
+    tasks_result = await get_vk_user_tasks_interactor(
+        command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id, page=page),
+    )
+    task = next((t for t in tasks_result.tasks if t.tasks_id == tasks_id), None)
+    if task is None:
+        return
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_task_info_message(task=task),
+        keyboard=build_task_info_keyboard(tasks_result.pagination),
+        message_client=message_client,
+        log_message="Детали задания VK",
+    )
 
 
 async def _handle_balance(
@@ -472,13 +541,16 @@ async def _handle_tasks(
     *,
     data: VKCallbackPayload,
     result: RegisterVKUserAndCheckSubscriptionDTO,
+    page: int,
+    include_quiz_offer: bool,
     message_client: IVKMessageClient,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+    task_images_settings: TaskTypeImagesSettings,
 ) -> None:
     tasks_result = await get_vk_user_tasks_interactor(
-        command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
+        command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id, page=page),
     )
-    if tasks_result.active_quiz is not None:
+    if include_quiz_offer and tasks_result.active_quiz is not None:
         quiz = tasks_result.active_quiz
         await send_vk_user_message(
             data=data,
@@ -494,14 +566,78 @@ async def _handle_tasks(
         )
         return
 
+    await _send_tasks_catalog(
+        data=data,
+        result=result,
+        tasks_result=tasks_result,
+        message_client=message_client,
+        task_images_settings=task_images_settings,
+        carousel_log_message="Карусель заданий VK",
+        list_log_message="Список заданий VK",
+    )
+
+
+async def _send_tasks_catalog(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    tasks_result: GetVKUserTasksDTO,
+    message_client: IVKMessageClient,
+    task_images_settings: TaskTypeImagesSettings,
+    carousel_log_message: str,
+    list_log_message: str,
+) -> None:
+    tasks = _get_tasks_page(tasks_result)
+    pagination = tasks_result.pagination
+    page = 1 if pagination is None else pagination.page
+    carousel_template = build_tasks_carousel_template(
+        tasks,
+        task_images_settings,
+        page=page,
+    )
+    if carousel_template is not None:
+        await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_tasks_navigation_message(pagination=pagination),
+            keyboard=build_tasks_navigation_keyboard(pagination),
+            message_client=message_client,
+            log_message="Навигация заданий VK",
+        )
+
+        sent = await send_vk_user_message(
+            data=data,
+            vk_user_id=result.registration.vk_user_id,
+            users_id=result.registration.users_id,
+            message=build_tasks_carousel_message(tasks=tasks, pagination=pagination),
+            keyboard=None,
+            template=carousel_template,
+            message_client=message_client,
+            log_message=carousel_log_message,
+        )
+        if sent:
+            return
+
     await send_vk_user_message(
         data=data,
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
-        message=build_tasks_message(tasks=tasks_result.tasks),
+        message=build_tasks_message(tasks=tasks, pagination=pagination),
+        keyboard=build_tasks_navigation_keyboard(pagination),
         message_client=message_client,
-        log_message="Список заданий VK",
+        log_message=list_log_message,
     )
+
+
+def _get_tasks_page(tasks_result: GetVKUserTasksDTO) -> tuple[VKUserAvailableTaskDTO, ...]:
+    pagination = tasks_result.pagination
+    if pagination is None:
+        return tasks_result.tasks
+    if not tasks_result.page_tasks and tasks_result.tasks:
+        start = (pagination.page - 1) * pagination.page_size
+        return tasks_result.tasks[start : start + pagination.page_size]
+    return tasks_result.page_tasks
 
 
 async def _handle_referral(
@@ -767,6 +903,11 @@ def _is_default_start_message(data: VKCallbackPayload) -> bool:
     return data.get_message_text().strip().casefold() in DEFAULT_START_MESSAGES
 
 
+def _parse_tasks_page(raw_page: object) -> int:
+    page = _parse_positive_int(raw_page)
+    return page if page is not None else 1
+
+
 async def _handle_start_quiz(
     *,
     data: VKCallbackPayload,
@@ -775,6 +916,7 @@ async def _handle_start_quiz(
     message_client: IVKMessageClient,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+    task_images_settings: TaskTypeImagesSettings,
 ) -> None:
     question = await get_quiz_first_question_interactor(
         command_data=GetQuizFirstQuestionCommand(
@@ -796,13 +938,14 @@ async def _handle_start_quiz(
         tasks_result = await get_vk_user_tasks_interactor(
             command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
         )
-        await send_vk_user_message(
+        await _send_tasks_catalog(
             data=data,
-            vk_user_id=result.registration.vk_user_id,
-            users_id=result.registration.users_id,
-            message=build_tasks_message(tasks=tasks_result.tasks),
+            result=result,
+            tasks_result=tasks_result,
             message_client=message_client,
-            log_message="Квиз не найден при старте — показываем список заданий",
+            task_images_settings=task_images_settings,
+            carousel_log_message="Карусель заданий VK после недоступного квиза",
+            list_log_message="Квиз не найден при старте — показываем список заданий",
         )
         return
 
@@ -831,17 +974,19 @@ async def _handle_skip_quiz(
     result: RegisterVKUserAndCheckSubscriptionDTO,
     message_client: IVKMessageClient,
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
+    task_images_settings: TaskTypeImagesSettings,
 ) -> None:
     tasks_result = await get_vk_user_tasks_interactor(
         command_data=GetVKUserTasksCommand(vk_user_id=result.registration.vk_user_id),
     )
-    await send_vk_user_message(
+    await _send_tasks_catalog(
         data=data,
-        vk_user_id=result.registration.vk_user_id,
-        users_id=result.registration.users_id,
-        message=build_tasks_message(tasks=tasks_result.tasks),
+        result=result,
+        tasks_result=tasks_result,
         message_client=message_client,
-        log_message="Список заданий VK после пропуска квиза",
+        task_images_settings=task_images_settings,
+        carousel_log_message="Карусель заданий VK после пропуска квиза",
+        list_log_message="Список заданий VK после пропуска квиза",
     )
 
 

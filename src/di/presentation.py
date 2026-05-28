@@ -16,7 +16,7 @@ from application.interface.clients import IVKMessageClient
 from application.interface.repositories.users import IUserRepository
 from application.interface.services import IVKMessageTemplateService
 from presentation.http.routers.v1.routers.vk_callbacks.dispatcher import VKCallbackDispatcher
-from settings.vk import VKSettings
+from settings.vk import TaskTypeImagesSettings, VKSettings
 
 
 class PresentationProvider(Provider):
@@ -24,6 +24,7 @@ class PresentationProvider(Provider):
     def get_vk_callback_dispatcher(
         self,
         vk_settings: VKSettings,
+        task_images_settings: TaskTypeImagesSettings,
         complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler,
         complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler,
         complete_vk_like_task_interactor: CompleteVKLikeTaskHandler,
@@ -43,6 +44,7 @@ class PresentationProvider(Provider):
     ) -> VKCallbackDispatcher:
         return VKCallbackDispatcher(
             vk_settings=vk_settings,
+            task_images_settings=task_images_settings,
             complete_vk_repost_task_interactor=complete_vk_repost_task_interactor,
             complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
             complete_vk_like_task_interactor=complete_vk_like_task_interactor,

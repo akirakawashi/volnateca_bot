@@ -6,7 +6,7 @@ from application.common.dto.store import (
     StorePrizeUserState,
     StorePrizeView,
 )
-from application.common.dto.task import VKUserAvailableTaskDTO
+from application.common.dto.task import TaskPaginationDTO, VKUserAvailableTaskDTO
 from application.services.vk_message_template_catalog import get_message_template_definition
 from domain.enums.prize import PrizeType
 
@@ -107,21 +107,61 @@ def build_balance_message(*, balance_points: int) -> VKMessageText:
     return _template_message("balance", balance_points=balance_points)
 
 
-def build_tasks_message(*, tasks: tuple[VKUserAvailableTaskDTO, ...]) -> VKMessageText:
+def build_tasks_message(
+    *,
+    tasks: tuple[VKUserAvailableTaskDTO, ...],
+    pagination: TaskPaginationDTO | None = None,
+) -> VKMessageText:
     if not tasks:
         return _template_message("tasks_empty")
 
+    start_index = 0 if pagination is None else (pagination.page - 1) * pagination.page_size
     blocks: list[str] = []
     for index, task in enumerate(tasks, start=1):
         lines = [
-            f"{index}. {task.task_name}",
+            f"{start_index + index}. {task.task_name}",
             f"+{task.points} ✦",
         ]
         if task.action_url is not None:
             lines.append(task.action_url)
         blocks.append("\n".join(lines))
 
-    return _template_message("tasks_list", tasks_block="\n\n".join(blocks))
+    tasks_block = "\n\n".join(blocks)
+    if pagination is not None:
+        tasks_block = f"Страница {pagination.page} из {pagination.total_pages}\n\n{tasks_block}"
+
+    return _template_message("tasks_list", tasks_block=tasks_block)
+
+
+def build_tasks_navigation_message(*, pagination: TaskPaginationDTO | None = None) -> VKMessageText:
+    return _template_message(
+        "tasks_navigation",
+        page=1 if pagination is None else pagination.page,
+        total_pages=1 if pagination is None else pagination.total_pages,
+    )
+
+
+def build_tasks_carousel_message(
+    *,
+    tasks: tuple[VKUserAvailableTaskDTO, ...],
+    pagination: TaskPaginationDTO | None = None,
+) -> VKMessageText:
+    return _template_message(
+        "tasks_carousel",
+        available_count=len(tasks) if pagination is None else pagination.total_items,
+        page=1 if pagination is None else pagination.page,
+        total_pages=1 if pagination is None else pagination.total_pages,
+    )
+
+
+def build_task_info_message(*, task: VKUserAvailableTaskDTO) -> VKMessageText:
+    action_url_block = f"\n\n{task.action_url}" if task.action_url is not None else ""
+    return _template_message(
+        "task_info",
+        task_name=task.task_name,
+        points=task.points,
+        action_url_block=action_url_block,
+    )
 
 
 def build_store_root_message(*, balance_points: int) -> VKMessageText:
@@ -152,22 +192,22 @@ def build_store_catalog_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
 
 
 def build_store_catalog_navigation_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
-    return VKMessageText(
-        text=(
-            f"🎁 Магазин · {catalog.section.label}\n"
-            f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}"
-        ),
+    return _template_message(
+        "store_catalog_navigation",
+        section_label=catalog.section.label,
+        page=catalog.pagination.page,
+        total_pages=catalog.pagination.total_pages,
     )
 
 
 def build_store_catalog_carousel_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
-    return VKMessageText(
-        text=(
-            f"🎁 Магазин · {catalog.section.label}\n\n"
-            f"💫 Баланс: {catalog.balance_points} ✦\n"
-            f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}\n\n"
-            "Листай карточки и нажимай «Открыть», чтобы посмотреть приз."
-        ),
+    return _template_message(
+        "store_catalog_carousel",
+        section_label=catalog.section.label,
+        total_items=catalog.pagination.total_items,
+        balance_points=catalog.balance_points,
+        page=catalog.pagination.page,
+        total_pages=catalog.pagination.total_pages,
     )
 
 
@@ -433,6 +473,9 @@ __all__ = [
     "build_store_root_message",
     "build_subscription_reward_message",
     "build_task_accrual_message",
+    "build_task_info_message",
     "build_tasks_message",
+    "build_tasks_carousel_message",
+    "build_tasks_navigation_message",
     "build_week_completion_reward_message",
 ]
