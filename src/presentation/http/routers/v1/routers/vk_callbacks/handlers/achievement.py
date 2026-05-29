@@ -102,11 +102,11 @@ async def send_monthly_top_reward_if_needed(
     balance_points: int | None,
     level_up: int | None,
     message_client: IVKMessageClient,
-) -> None:
+) -> bool:
     if users_id is None or points_awarded <= 0 or balance_points is None:
-        return
+        return False
 
-    await send_vk_user_message(
+    sent = await send_vk_user_message(
         data=data,
         vk_user_id=vk_user_id,
         users_id=users_id,
@@ -132,6 +132,8 @@ async def send_monthly_top_reward_if_needed(
             message_client=message_client,
             log_message="Сообщение о новом уровне (топ-10 месяца)",
         )
+
+    return sent
 
 
 __all__ = [

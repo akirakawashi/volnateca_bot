@@ -1,8 +1,8 @@
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
-from application.common.dto.user import VKUserRegistrationDTO
+from application.common.dto.user import ActiveVKUserDTO, VKUserRegistrationDTO
 from application.common.dto.wallet import UserBalanceSnapshot
 from application.interface.repositories.users import IUserRepository
 from domain.enums.transaction import TransactionSource, TransactionType
@@ -26,6 +26,35 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             return None
 
         return self._to_registration_dto(user=user, created=False)
+
+    async def count_active_users(self) -> int:
+        result = await self._session.execute(
+            select(func.count(col(User.users_id))).where(col(User.is_active).is_(True)),
+        )
+        return int(result.scalar_one())
+
+    async def list_active_users_page(
+        self,
+        *,
+        after_users_id: int | None,
+        limit: int,
+    ) -> tuple[ActiveVKUserDTO, ...]:
+        if limit < 1:
+            return ()
+
+        statement = select(col(User.users_id), col(User.vk_user_id)).where(col(User.is_active).is_(True))
+        if after_users_id is not None:
+            statement = statement.where(col(User.users_id) > after_users_id)
+
+        result = await self._session.execute(
+            statement.order_by(col(User.users_id)).limit(limit),
+        )
+
+        return tuple(
+            ActiveVKUserDTO(users_id=users_id, vk_user_id=vk_user_id)
+            for users_id, vk_user_id in result.all()
+            if users_id is not None
+        )
 
     async def create_registered_user(
         self,

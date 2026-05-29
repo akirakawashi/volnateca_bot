@@ -9,3 +9,9 @@ class VKUserRegistrationDTO:
     balance_points: int
     current_level: int
     created: bool
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class ActiveVKUserDTO:
+    users_id: int
+    vk_user_id: int
