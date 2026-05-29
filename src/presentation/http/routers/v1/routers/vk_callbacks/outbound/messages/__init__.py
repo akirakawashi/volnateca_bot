@@ -1,0 +1,85 @@
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages._template import VKMessageText
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.achievements import (
+    build_level_up_message,
+    build_monthly_top_reward_message,
+    build_project_completion_reward_message,
+    build_week_completion_reward_message,
+)
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.quiz import (
+    build_quiz_answer_result_message,
+    build_quiz_completed_message,
+    build_quiz_failed_message,
+    build_quiz_offer_message,
+    build_quiz_question_message,
+    build_quiz_unavailable_message,
+)
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.registration import (
+    build_balance_message,
+    build_consent_request_message,
+    build_main_menu_message,
+    build_referral_bonus_message,
+    build_referral_link_message,
+    build_referral_milestone_message,
+    build_registration_welcome_message,
+)
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.rewards import (
+    build_comment_reward_message,
+    build_like_reward_message,
+    build_repost_reward_message,
+    build_subscription_reward_message,
+)
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.store import (
+    build_store_catalog_carousel_message,
+    build_store_catalog_message,
+    build_store_catalog_navigation_message,
+    build_store_claim_unavailable_message,
+    build_store_exit_message,
+    build_store_prize_card_message,
+    build_store_prize_not_found_message,
+    build_store_root_message,
+)
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.tasks import (
+    build_task_accrual_message,
+    build_task_info_message,
+    build_tasks_carousel_message,
+    build_tasks_message,
+    build_tasks_navigation_message,
+)
+
+__all__ = [
+    "VKMessageText",
+    "build_balance_message",
+    "build_comment_reward_message",
+    "build_consent_request_message",
+    "build_level_up_message",
+    "build_like_reward_message",
+    "build_main_menu_message",
+    "build_monthly_top_reward_message",
+    "build_project_completion_reward_message",
+    "build_quiz_answer_result_message",
+    "build_quiz_completed_message",
+    "build_quiz_failed_message",
+    "build_quiz_offer_message",
+    "build_quiz_question_message",
+    "build_quiz_unavailable_message",
+    "build_referral_bonus_message",
+    "build_referral_link_message",
+    "build_referral_milestone_message",
+    "build_registration_welcome_message",
+    "build_repost_reward_message",
+    "build_store_catalog_message",
+    "build_store_catalog_carousel_message",
+    "build_store_catalog_navigation_message",
+    "build_store_claim_unavailable_message",
+    "build_store_exit_message",
+    "build_store_prize_card_message",
+    "build_store_prize_not_found_message",
+    "build_store_root_message",
+    "build_subscription_reward_message",
+    "build_task_accrual_message",
+    "build_task_info_message",
+    "build_tasks_message",
+    "build_tasks_carousel_message",
+    "build_tasks_navigation_message",
+    "build_week_completion_reward_message",
+]

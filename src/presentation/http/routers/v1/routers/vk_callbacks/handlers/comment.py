@@ -11,13 +11,13 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement impo
     send_project_completion_reward_if_needed,
     send_week_completion_reward_if_needed,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_comment_reward_message,
     build_level_up_message,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
-from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.responses import vk_ok_response
 
 
 async def handle_comment_callback(

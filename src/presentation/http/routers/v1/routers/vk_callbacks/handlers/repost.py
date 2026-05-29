@@ -15,14 +15,19 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.achievement impo
     send_project_completion_reward_if_needed,
     send_week_completion_reward_if_needed,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_level_up_message,
     build_like_reward_message,
     build_repost_reward_message,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
-from presentation.http.routers.v1.routers.vk_callbacks.responses import vk_ok_response
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.protocol._extractors import (
+    extract_repost_author_user_id,
+    extract_reposted_wall_post_external_ids,
+    is_repost_published_on_author_wall,
+)
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.responses import vk_ok_response
 
 
 async def handle_repost_callback(
@@ -37,11 +42,15 @@ async def handle_repost_callback(
     отдельный callback like_add — поэтому лайк засчитывается здесь явно.
     """
 
-    vk_user_id = data.get_repost_user_id()
+    repost_object = data.get_repost_object()
+    if not is_repost_published_on_author_wall(repost_object=repost_object):
+        return vk_ok_response()
+
+    vk_user_id = extract_repost_author_user_id(repost_object=repost_object)
     if vk_user_id is None:
         return vk_ok_response()
 
-    target_post_external_ids = data.get_reposted_wall_post_external_ids()
+    target_post_external_ids = extract_reposted_wall_post_external_ids(repost_object=repost_object)
     if not target_post_external_ids:
         return vk_ok_response()
 

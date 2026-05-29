@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from presentation.http.dto.request import VKCallbackMessageSchema, VKCallbackWallPostSchema
 
@@ -13,7 +13,9 @@ __all__ = [
     "VKPollVoteObjectSchema",
     "VKRepostObjectSchema",
     "VKUserObjectSchema",
+    "VKWallPostAttachmentSchema",
     "VKWallPostObjectSchema",
+    "VKWallPostPollSchema",
 ]
 
 
@@ -41,10 +43,22 @@ class VKPollVoteObjectSchema(VKCallbackEventObjectSchema):
     option_id: int | None = None
 
 
+class VKWallPostPollSchema(VKCallbackEventObjectSchema):
+    owner_id: int | None = None
+    poll_id: int | None = Field(default=None, validation_alias=AliasChoices("id", "poll_id"))
+    question: str | None = None
+
+
+class VKWallPostAttachmentSchema(VKCallbackEventObjectSchema):
+    type: str | None = None
+    poll: VKWallPostPollSchema | None = None
+
+
 class VKWallPostObjectSchema(VKCallbackEventObjectSchema):
     post_id: int = Field(alias="id")
     owner_id: int
     text: str | None = None
+    attachments: list[object] = Field(default_factory=list)
 
 
 class VKRepostObjectSchema(VKWallPostObjectSchema):

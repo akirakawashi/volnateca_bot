@@ -1,13 +1,13 @@
 from application.interface.clients import IVKMessageClient
 from domain.services.level import get_level_name
-from presentation.http.routers.v1.routers.vk_callbacks.message_sender import send_vk_user_message
-from presentation.http.routers.v1.routers.vk_callbacks.messages import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_level_up_message,
     build_monthly_top_reward_message,
     build_project_completion_reward_message,
     build_week_completion_reward_message,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.payload import VKCallbackPayload
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 
 
 async def send_week_completion_reward_if_needed(
@@ -102,11 +102,11 @@ async def send_monthly_top_reward_if_needed(
     balance_points: int | None,
     level_up: int | None,
     message_client: IVKMessageClient,
-) -> None:
+) -> bool:
     if users_id is None or points_awarded <= 0 or balance_points is None:
-        return
+        return False
 
-    await send_vk_user_message(
+    sent = await send_vk_user_message(
         data=data,
         vk_user_id=vk_user_id,
         users_id=users_id,
@@ -132,6 +132,8 @@ async def send_monthly_top_reward_if_needed(
             message_client=message_client,
             log_message="Сообщение о новом уровне (топ-10 месяца)",
         )
+
+    return sent
 
 
 __all__ = [

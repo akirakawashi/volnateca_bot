@@ -13,19 +13,9 @@ class SeedDevScenarioRequest(BaseModel):
     users_id: int = Field(default=1, ge=1)
 
 
-class AwardMonthlyTopRequest(BaseModel):
-    month: str = Field(..., description="YYYY-MM")
-    limit: int = Field(default=10, ge=1)
-
-
 class SeedDevScenarioResponse(BaseModel):
     messages: list[str]
 
 
 class SeedStorePrizesResponse(BaseModel):
-    messages: list[str]
-
-
-class AwardMonthlyTopResponse(BaseModel):
-    month: str
     messages: list[str]
