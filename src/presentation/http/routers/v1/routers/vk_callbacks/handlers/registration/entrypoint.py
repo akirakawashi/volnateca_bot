@@ -14,6 +14,8 @@ from application.command.capture_vk_referral_intent import (
 )
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
+from application.command.list_user_redemptions import ListUserRedemptionsHandler
+from application.command.redeem_prize import RedeemPrizeHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.register_vk_user import REGISTRATION_BONUS_POINTS
 from application.command.register_vk_user_and_check_subscription import (
@@ -69,6 +71,8 @@ async def handle_registration_callback(
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
     get_store_catalog_interactor: GetStoreCatalogHandler,
     get_store_prize_card_interactor: GetStorePrizeCardHandler,
+    redeem_prize_interactor: RedeemPrizeHandler,
+    list_user_redemptions_interactor: ListUserRedemptionsHandler,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     start_task_promo_code_interactor: StartTaskPromoCodeHandler,
@@ -127,6 +131,8 @@ async def handle_registration_callback(
                     get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
                     get_store_catalog_interactor=get_store_catalog_interactor,
                     get_store_prize_card_interactor=get_store_prize_card_interactor,
+                    redeem_prize_interactor=redeem_prize_interactor,
+                    list_user_redemptions_interactor=list_user_redemptions_interactor,
                     get_quiz_first_question_interactor=get_quiz_first_question_interactor,
                     answer_quiz_question_interactor=answer_quiz_question_interactor,
                     start_task_promo_code_interactor=start_task_promo_code_interactor,
@@ -175,6 +181,8 @@ async def handle_registration_callback(
                 get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
                 get_store_catalog_interactor=get_store_catalog_interactor,
                 get_store_prize_card_interactor=get_store_prize_card_interactor,
+                redeem_prize_interactor=redeem_prize_interactor,
+                list_user_redemptions_interactor=list_user_redemptions_interactor,
                 get_quiz_first_question_interactor=get_quiz_first_question_interactor,
                 answer_quiz_question_interactor=answer_quiz_question_interactor,
                 start_task_promo_code_interactor=start_task_promo_code_interactor,

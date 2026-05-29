@@ -180,6 +180,19 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         variables=("section_label", "total_items", "balance_points", "page", "total_pages"),
     ),
 
+    "store_pickup_success": MessageTemplateDefinition(
+        code="store_pickup_success",
+        description="Успешная покупка приза и код самовывоза",
+        default_template=(
+            "✅ {prize_name}\n\n"
+            "Списано: {points_spent} ✦\n"
+            "Баланс: {balance_points} ✦\n\n"
+            "Код для пункта выдачи: {redemption_code}\n\n"
+            "Покажи этот код при самовывозе. Статус заявки — в разделе «Мои призы»."
+        ),
+        variables=("prize_name", "points_spent", "balance_points", "redemption_code"),
+    ),
+
     "quiz_offer": MessageTemplateDefinition(
         code="quiz_offer",
         description="Предложение начать викторину",

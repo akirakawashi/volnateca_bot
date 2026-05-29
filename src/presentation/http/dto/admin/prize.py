@@ -9,11 +9,7 @@ ALLOWED_ADMIN_PRIZE_TYPES = (
     PrizeType.PARTNER,
     PrizeType.SUPER_PRIZE,
 )
-ALLOWED_ADMIN_RECEIVE_TYPES = (
-    PrizeReceiveType.PICKUP,
-    PrizeReceiveType.DELIVERY,
-    PrizeReceiveType.MANAGER_CONTACT,
-)
+ALLOWED_ADMIN_RECEIVE_TYPES = (PrizeReceiveType.PICKUP,)
 
 
 class CreatePrizeRequestSchema(BaseModel):
@@ -24,7 +20,7 @@ class CreatePrizeRequestSchema(BaseModel):
     receive_type: PrizeReceiveType
     status: PrizeStatus = PrizeStatus.AVAILABLE
     cost_points: int = Field(gt=0)
-    quantity_total: int | None = Field(default=None, ge=1)
+    quantity_total: int = Field(ge=1)
     required_level: int | None = Field(default=None, ge=1, le=4)
     sort_order: int = Field(default=0, ge=0)
     is_active: bool = True
@@ -65,7 +61,7 @@ class CreatePrizeRequestSchema(BaseModel):
     @classmethod
     def validate_receive_type(cls, value: PrizeReceiveType) -> PrizeReceiveType:
         if value not in ALLOWED_ADMIN_RECEIVE_TYPES:
-            raise ValueError("receive_type promo_code не поддерживается")
+            raise ValueError("Поддерживается только receive_type pickup")
         return value
 
     def to_command(self) -> CreatePrizeCommand:
@@ -94,7 +90,7 @@ class PrizeResponseSchema(BaseModel):
     receive_type: PrizeReceiveType
     status: PrizeStatus
     cost_points: int
-    quantity_total: int | None
+    quantity_total: int
     quantity_claimed: int
     required_level: int | None
     sort_order: int

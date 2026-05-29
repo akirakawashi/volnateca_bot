@@ -1,10 +1,12 @@
+from application.command.list_user_redemptions import ListUserRedemptionsDTO
 from application.common.dto.store import (
     StoreCatalogDTO,
     StorePrizeCardDTO,
     StorePrizeUserState,
     StorePrizeView,
 )
-from domain.enums.prize import PrizeType
+from application.services.redeem_prize_service import RedeemPrizeOutcome, RedeemPrizeOutcomeStatus
+from domain.enums.prize import PrizeRedemptionStatus, PrizeType
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.template import (
     VKMessageText,
     build_template_message,
@@ -16,7 +18,7 @@ def build_store_root_message(*, balance_points: int) -> VKMessageText:
         text=(
             "🎁 Магазин призов\n\n"
             f"💫 Баланс: {balance_points} ✦\n\n"
-            "Выбери раздел каталога:"
+            "Выбери раздел каталога или открой «Мои призы»."
         ),
     )
 
@@ -85,15 +87,64 @@ def build_store_prize_not_found_message() -> VKMessageText:
     return VKMessageText(text="🎁 Магазин призов\n\nЭтот приз уже недоступен в каталоге.")
 
 
-def build_store_claim_unavailable_message(*, prize_name: str | None) -> VKMessageText:
-    title = f"🎁 {prize_name}" if prize_name else "🎁 Магазин призов"
+def build_store_claim_confirm_message(*, card: StorePrizeCardDTO) -> VKMessageText:
+    prize = card.prize
+    if prize is None:
+        return build_store_prize_not_found_message()
+
+    balance_after = card.balance_points - prize.cost_points
     return VKMessageText(
         text=(
-            f"{title}\n\n"
-            "Получение призов пока не подключено.\n"
-            "Каталог уже можно смотреть, баллы не списываются."
+            f"🎁 {prize.prize_name}\n\n"
+            f"Списать {prize.cost_points} ✦?\n"
+            f"Баланс после покупки: {balance_after} ✦\n"
+            f"Остаток приза: {prize.quantity_remaining} из {prize.quantity_total}\n\n"
+            "Подтверди покупку — заявка на самовывоз будет создана сразу."
         ),
     )
+
+
+def build_store_redeem_outcome_message(
+    *,
+    outcome: RedeemPrizeOutcome,
+    balance_points: int,
+) -> VKMessageText:
+    if outcome.status in (
+        RedeemPrizeOutcomeStatus.COMPLETED,
+        RedeemPrizeOutcomeStatus.IDEMPOTENT_REPLAY,
+    ):
+        return build_template_message(
+            "store_pickup_success",
+            prize_name=outcome.prize_name or "Приз",
+            redemption_code=outcome.redemption_code or "",
+            points_spent=outcome.points_spent,
+            balance_points=outcome.balance_points if outcome.balance_points is not None else balance_points,
+        )
+
+    if outcome.status == RedeemPrizeOutcomeStatus.SOLD_OUT:
+        return VKMessageText(text="🔴 Этот приз уже разобрали. Попробуй другой из каталога.")
+    if outcome.status == RedeemPrizeOutcomeStatus.INSUFFICIENT_BALANCE:
+        return VKMessageText(text=f"💫 Не хватает баллов. Баланс: {balance_points} ✦")
+    if outcome.status == RedeemPrizeOutcomeStatus.LEVEL_LOCKED:
+        return VKMessageText(text="🔒 Приз доступен с более высоким уровнем участника.")
+    if outcome.status == RedeemPrizeOutcomeStatus.PRIZE_NOT_FOUND:
+        return build_store_prize_not_found_message()
+    return VKMessageText(text="Приз сейчас недоступен для покупки.")
+
+
+def build_store_my_redemptions_message(*, listing: ListUserRedemptionsDTO) -> VKMessageText:
+    if not listing.redemptions:
+        return VKMessageText(
+            text="📦 Мои призы\n\nУ тебя пока нет заявок. Выбери приз в магазине и оформи самовывоз.",
+        )
+
+    lines = ["📦 Мои призы", ""]
+    for item in listing.redemptions:
+        lines.append(
+            f"• {item.prize_name} — {_format_redemption_status(item.prize_redemption_status)}\n"
+            f"  Код: {item.redemption_code}",
+        )
+    return VKMessageText(text="\n".join(lines))
 
 
 def _build_store_catalog_prize_line(*, index: int, prize: StorePrizeView) -> str:
@@ -117,9 +168,15 @@ def _format_store_prize_state(prize: StorePrizeView) -> str:
 def _format_prize_quantity(prize: StorePrizeView) -> str:
     if prize.user_state == StorePrizeUserState.SOLD_OUT:
         return "разобрали"
-    if prize.quantity_total is None:
-        return "без ограничения"
     return f"{prize.quantity_remaining} из {prize.quantity_total}"
+
+
+def _format_redemption_status(status: PrizeRedemptionStatus) -> str:
+    if status == PrizeRedemptionStatus.RESERVED:
+        return "ожидает выдачи"
+    if status == PrizeRedemptionStatus.ISSUED:
+        return "выдан"
+    return "отменён"
 
 
 def _format_prize_type(prize_type: PrizeType) -> str:

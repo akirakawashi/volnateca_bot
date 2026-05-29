@@ -6,6 +6,12 @@ from application.admin.command.broadcast import GetBroadcastStatusHandler, Start
 from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 from application.admin.command.seed_store_prizes import SeedStorePrizesHandler
 from application.admin.command.create_prize import CreatePrizeHandler
+from application.admin.command.prize_redemption import (
+    CancelPrizeRedemptionHandler,
+    FulfillPrizeRedemptionHandler,
+    GetPrizeRedemptionHandler,
+    ListPrizeRedemptionsHandler,
+)
 from application.admin.command.list_prizes import ListPrizesHandler
 from application.admin.command.message_templates import (
     DeleteMessageTemplateHandler,
@@ -30,6 +36,8 @@ from application.admin.command.task_promo_code import (
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
+from application.command.list_user_redemptions import ListUserRedemptionsHandler
+from application.command.redeem_prize import RedeemPrizeHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.process_referral import ProcessReferralHandler
 from application.command.register_vk_user import RegisterVKUserHandler
@@ -46,6 +54,7 @@ from application.command.task_promo_code import (
 from application.interface.clients import IVKUserClient, IVKWallClient
 from application.interface.services import IVKMessageTemplateService
 from application.interface.repositories.achievements import IAchievementRepository
+from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
@@ -64,6 +73,9 @@ from application.interface.uow import IUnitOfWork
 from application.admin.services import BroadcastManager
 from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
+from application.services.cancel_redemption_service import CancelRedemptionService
+from application.services.fulfill_redemption_service import FulfillRedemptionService
+from application.services.redeem_prize_service import RedeemPrizeService
 from settings.app.app import AppSettings
 from settings.vk import VKSettings
 
@@ -258,6 +270,26 @@ class InteractorProvider(Provider):
         return GetStorePrizeCardHandler(prize_repository=prize_repository)
 
     @provide(scope=Scope.REQUEST)
+    def get_redeem_prize_handler(
+        self,
+        redeem_prize_service: RedeemPrizeService,
+        uow: IUnitOfWork,
+    ) -> RedeemPrizeHandler:
+        return RedeemPrizeHandler(
+            redeem_prize_service=redeem_prize_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_list_user_redemptions_handler(
+        self,
+        prize_redemption_repository: IPrizeRedemptionRepository,
+    ) -> ListUserRedemptionsHandler:
+        return ListUserRedemptionsHandler(
+            prize_redemption_repository=prize_redemption_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
     def get_quiz_first_question_handler(
         self,
         quiz_repository: IQuizRepository,
@@ -401,6 +433,46 @@ class InteractorProvider(Provider):
     ) -> CreatePrizeHandler:
         return CreatePrizeHandler(
             prize_admin_repository=prize_admin_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_list_prize_redemptions_handler(
+        self,
+        prize_redemption_repository: IPrizeRedemptionRepository,
+    ) -> ListPrizeRedemptionsHandler:
+        return ListPrizeRedemptionsHandler(
+            prize_redemption_repository=prize_redemption_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_get_prize_redemption_handler(
+        self,
+        prize_redemption_repository: IPrizeRedemptionRepository,
+    ) -> GetPrizeRedemptionHandler:
+        return GetPrizeRedemptionHandler(
+            prize_redemption_repository=prize_redemption_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_fulfill_prize_redemption_handler(
+        self,
+        fulfill_redemption_service: FulfillRedemptionService,
+        uow: IUnitOfWork,
+    ) -> FulfillPrizeRedemptionHandler:
+        return FulfillPrizeRedemptionHandler(
+            fulfill_redemption_service=fulfill_redemption_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_cancel_prize_redemption_handler(
+        self,
+        cancel_redemption_service: CancelRedemptionService,
+        uow: IUnitOfWork,
+    ) -> CancelPrizeRedemptionHandler:
+        return CancelPrizeRedemptionHandler(
+            cancel_redemption_service=cancel_redemption_service,
             uow=uow,
         )
 

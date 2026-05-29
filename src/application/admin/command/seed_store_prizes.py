@@ -24,7 +24,7 @@ class StorePrizeFixture:
     receive_type: PrizeReceiveType
     status: PrizeStatus
     cost_points: int
-    quantity_total: int | None
+    quantity_total: int
     quantity_claimed: int
     sort_order: int
     required_level: int | None = None

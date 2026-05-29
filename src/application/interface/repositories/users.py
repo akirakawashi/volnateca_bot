@@ -54,6 +54,15 @@ class IUserRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_balance_snapshot_by_users_id_for_update(
+        self,
+        users_id: int,
+    ) -> UserBalanceSnapshot | None:
+        """Блокирует пользователя по users_id и возвращает снимок баланса."""
+
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_balance_snapshot_for_update(
         self,
         vk_user_id: int,
@@ -79,5 +88,29 @@ class IUserRepository(ABC):
         """Записывает в таблицу users новые значения баланса и накопленных
         очков, рассчитанные WalletService.
         """
+
+        raise NotImplementedError
+
+    @abstractmethod
+    async def apply_spend(
+        self,
+        *,
+        users_id: int,
+        balance_points: int,
+        spent_points_total: int,
+    ) -> None:
+        """Записывает баланс и spent_points_total после списания за приз."""
+
+        raise NotImplementedError
+
+    @abstractmethod
+    async def apply_refund(
+        self,
+        *,
+        users_id: int,
+        balance_points: int,
+        spent_points_total: int,
+    ) -> None:
+        """Записывает баланс и spent_points_total после возврата за отменённый приз."""
 
         raise NotImplementedError

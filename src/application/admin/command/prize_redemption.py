@@ -1,0 +1,161 @@
+from dataclasses import dataclass
+
+from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
+from application.base_interactor import Interactor
+from application.common.dto.prize_redemption import PrizeRedemptionRecord
+from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
+from application.interface.uow import IUnitOfWork
+from application.services.cancel_redemption_service import (
+    CancelRedemptionOutcome,
+    CancelRedemptionService,
+)
+from application.services.fulfill_redemption_service import (
+    FulfillRedemptionOutcome,
+    FulfillRedemptionService,
+)
+from domain.enums.prize import PrizeRedemptionStatus
+
+ADMIN_REDEMPTIONS_PAGE_SIZE = 50
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class ListPrizeRedemptionsCommand:
+    status: PrizeRedemptionStatus | None = None
+    prizes_id: int | None = None
+    page: int = 1
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class GetPrizeRedemptionCommand:
+    prize_redemptions_id: int
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class FulfillPrizeRedemptionCommand:
+    prize_redemptions_id: int
+    comment: str | None = None
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class CancelPrizeRedemptionCommand:
+    prize_redemptions_id: int
+    cancel_reason: str | None = None
+
+
+class ListPrizeRedemptionsHandler(
+    Interactor[ListPrizeRedemptionsCommand, tuple[PrizeRedemptionAdminDTO, ...]],
+):
+    def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
+        self._prize_redemptions = prize_redemption_repository
+
+    async def __call__(
+        self,
+        command_data: ListPrizeRedemptionsCommand,
+    ) -> tuple[PrizeRedemptionAdminDTO, ...]:
+        page = max(1, command_data.page)
+        offset = (page - 1) * ADMIN_REDEMPTIONS_PAGE_SIZE
+        records = await self._prize_redemptions.list_for_fulfillment(
+            status=command_data.status,
+            prizes_id=command_data.prizes_id,
+            limit=ADMIN_REDEMPTIONS_PAGE_SIZE,
+            offset=offset,
+        )
+        return tuple(_to_admin_dto(record) for record in records)
+
+
+class GetPrizeRedemptionHandler(
+    Interactor[GetPrizeRedemptionCommand, PrizeRedemptionAdminDTO | None],
+):
+    def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
+        self._prize_redemptions = prize_redemption_repository
+
+    async def __call__(
+        self,
+        command_data: GetPrizeRedemptionCommand,
+    ) -> PrizeRedemptionAdminDTO | None:
+        record = await self._prize_redemptions.get_by_id(
+            prize_redemptions_id=command_data.prize_redemptions_id,
+        )
+        if record is None:
+            return None
+        return _to_admin_dto(record)
+
+
+class FulfillPrizeRedemptionHandler(
+    Interactor[FulfillPrizeRedemptionCommand, FulfillRedemptionOutcome],
+):
+    def __init__(
+        self,
+        fulfill_redemption_service: FulfillRedemptionService,
+        uow: IUnitOfWork,
+    ) -> None:
+        self._fulfill_redemption_service = fulfill_redemption_service
+        self._uow = uow
+
+    async def __call__(
+        self,
+        command_data: FulfillPrizeRedemptionCommand,
+    ) -> FulfillRedemptionOutcome:
+        outcome = await self._fulfill_redemption_service.fulfill(
+            prize_redemptions_id=command_data.prize_redemptions_id,
+            comment=command_data.comment,
+        )
+        await self._uow.commit()
+        return outcome
+
+
+class CancelPrizeRedemptionHandler(
+    Interactor[CancelPrizeRedemptionCommand, CancelRedemptionOutcome],
+):
+    def __init__(
+        self,
+        cancel_redemption_service: CancelRedemptionService,
+        uow: IUnitOfWork,
+    ) -> None:
+        self._cancel_redemption_service = cancel_redemption_service
+        self._uow = uow
+
+    async def __call__(
+        self,
+        command_data: CancelPrizeRedemptionCommand,
+    ) -> CancelRedemptionOutcome:
+        outcome = await self._cancel_redemption_service.cancel(
+            prize_redemptions_id=command_data.prize_redemptions_id,
+            cancel_reason=command_data.cancel_reason,
+        )
+        await self._uow.commit()
+        return outcome
+
+
+def _to_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedemptionAdminDTO:
+    return PrizeRedemptionAdminDTO(
+        prize_redemptions_id=record.prize_redemptions_id,
+        users_id=record.users_id,
+        vk_user_id=record.vk_user_id,
+        prizes_id=record.prizes_id,
+        prize_name=record.prize_name or "",
+        transactions_id=record.transactions_id,
+        refund_transactions_id=record.refund_transactions_id,
+        prize_redemption_status=record.prize_redemption_status,
+        receive_type=record.receive_type,
+        redemption_code=record.redemption_code,
+        points_spent=record.points_spent,
+        comment=record.comment,
+        issued_at=record.issued_at,
+        canceled_at=record.canceled_at,
+        cancel_reason=record.cancel_reason,
+        created_at=record.created_at,
+    )
+
+
+__all__ = [
+    "ADMIN_REDEMPTIONS_PAGE_SIZE",
+    "CancelPrizeRedemptionCommand",
+    "CancelPrizeRedemptionHandler",
+    "FulfillPrizeRedemptionCommand",
+    "FulfillPrizeRedemptionHandler",
+    "GetPrizeRedemptionCommand",
+    "GetPrizeRedemptionHandler",
+    "ListPrizeRedemptionsCommand",
+    "ListPrizeRedemptionsHandler",
+]

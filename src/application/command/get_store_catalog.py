@@ -103,9 +103,7 @@ def _build_store_prize_view(
     balance_points: int,
     current_level: int,
 ) -> StorePrizeView:
-    quantity_remaining = (
-        None if prize.quantity_total is None else max(0, prize.quantity_total - prize.quantity_claimed)
-    )
+    quantity_remaining = max(0, prize.quantity_total - prize.quantity_claimed)
     missing_points = max(0, prize.cost_points - balance_points)
 
     return StorePrizeView(
@@ -136,7 +134,7 @@ def _resolve_store_prize_user_state(
 ) -> StorePrizeUserState:
     if prize.status == PrizeStatus.SOLD_OUT:
         return StorePrizeUserState.SOLD_OUT
-    if prize.quantity_total is not None and prize.quantity_claimed >= prize.quantity_total:
+    if prize.quantity_claimed >= prize.quantity_total:
         return StorePrizeUserState.SOLD_OUT
     if prize.required_level is not None and current_level < prize.required_level:
         return StorePrizeUserState.LEVEL_LOCKED

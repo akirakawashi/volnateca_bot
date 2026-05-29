@@ -10,6 +10,8 @@ from application.command.complete_vk_subscription_task import CompleteVKSubscrip
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
+from application.command.list_user_redemptions import ListUserRedemptionsHandler
+from application.command.redeem_prize import RedeemPrizeHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.register_vk_user_with_referral_context import RegisterVKUserWithReferralContextHandler
 from application.command.task_promo_code import (
@@ -39,6 +41,8 @@ class PresentationProvider(Provider):
         ensure_vk_poll_task_interactor: EnsureVKPollTaskHandler,
         get_store_catalog_interactor: GetStoreCatalogHandler,
         get_store_prize_card_interactor: GetStorePrizeCardHandler,
+        redeem_prize_interactor: RedeemPrizeHandler,
+        list_user_redemptions_interactor: ListUserRedemptionsHandler,
         get_vk_user_tasks_interactor: GetVKUserTasksHandler,
         get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
         answer_quiz_question_interactor: AnswerQuizQuestionHandler,
@@ -63,6 +67,8 @@ class PresentationProvider(Provider):
             ensure_vk_poll_task_interactor=ensure_vk_poll_task_interactor,
             get_store_catalog_interactor=get_store_catalog_interactor,
             get_store_prize_card_interactor=get_store_prize_card_interactor,
+            redeem_prize_interactor=redeem_prize_interactor,
+            list_user_redemptions_interactor=list_user_redemptions_interactor,
             get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
             get_quiz_first_question_interactor=get_quiz_first_question_interactor,
             answer_quiz_question_interactor=answer_quiz_question_interactor,
