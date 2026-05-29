@@ -132,6 +132,34 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         variables=("task_name", "points", "action_url_block"),
     ),
 
+    "custom_promo_task_start": MessageTemplateDefinition(
+        code="custom_promo_task_start",
+        description="Старт задания с промокодом от Меняйки",
+        default_template=(
+            "{task_name}\n"
+            "+{points} ✦\n\n"
+            "Перейди в Меняйку, обменяй ГБ на промокод партнёра и пришли сюда промокод для бота.\n\n"
+            "{menyayka_url}\n\n"
+            "Жду промокод"
+        ),
+        variables=("task_name", "points", "menyayka_url"),
+    ),
+
+    "custom_promo_invalid_code": MessageTemplateDefinition(
+        code="custom_promo_invalid_code",
+        description="Неверный промокод для задания Меняйки",
+        default_template=(
+            "Код неверный.\n\n"
+            "Задание осталось активным. Открой 🎯 Задания и попробуй ещё раз."
+        ),
+    ),
+
+    "custom_promo_canceled": MessageTemplateDefinition(
+        code="custom_promo_canceled",
+        description="Выход из ожидания промокода для задания Меняйки",
+        default_template="Вышли из задания. Его можно открыть снова в 🎯 Заданиях.",
+    ),
+
     "store_catalog_navigation": MessageTemplateDefinition(
         code="store_catalog_navigation",
         description="Панель управления каруселью магазина",

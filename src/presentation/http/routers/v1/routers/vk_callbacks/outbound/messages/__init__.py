@@ -1,4 +1,4 @@
-from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages._template import VKMessageText
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.template import VKMessageText
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.achievements import (
     build_level_up_message,
     build_monthly_top_reward_message,
@@ -39,6 +39,9 @@ from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.store i
     build_store_root_message,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.tasks import (
+    build_custom_promo_canceled_message,
+    build_custom_promo_invalid_code_message,
+    build_custom_promo_task_start_message,
     build_task_accrual_message,
     build_task_info_message,
     build_tasks_carousel_message,
@@ -51,6 +54,9 @@ __all__ = [
     "build_balance_message",
     "build_comment_reward_message",
     "build_consent_request_message",
+    "build_custom_promo_canceled_message",
+    "build_custom_promo_invalid_code_message",
+    "build_custom_promo_task_start_message",
     "build_level_up_message",
     "build_like_reward_message",
     "build_main_menu_message",

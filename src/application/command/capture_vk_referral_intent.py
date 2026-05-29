@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from application.base_interactor import Interactor
+from application.common.helpers import parse_vk_user_id
 from application.interface.repositories.referral_intents import IReferralIntentRepository
 from application.interface.uow import IUnitOfWork
 
@@ -23,7 +24,7 @@ class CaptureVKReferralIntentHandler(Interactor[CaptureVKReferralIntentCommand, 
         self._uow = uow
 
     async def __call__(self, command_data: CaptureVKReferralIntentCommand) -> None:
-        if _parse_vk_user_id(command_data.raw_ref) is None:
+        if parse_vk_user_id(command_data.raw_ref) is None:
             return
 
         await self._referral_intent_repository.create_if_absent(
@@ -31,10 +32,3 @@ class CaptureVKReferralIntentHandler(Interactor[CaptureVKReferralIntentCommand, 
             raw_ref=command_data.raw_ref,
         )
         await self._uow.commit()
-
-
-def _parse_vk_user_id(raw_ref: str) -> int | None:
-    try:
-        return int(raw_ref)
-    except (TypeError, ValueError):
-        return None

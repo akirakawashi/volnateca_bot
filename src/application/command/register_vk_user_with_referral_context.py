@@ -8,6 +8,7 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
 from application.common.dto.referral import ProcessReferralDTO
+from application.common.helpers import parse_vk_user_id
 from application.interface.repositories.referral_intents import IReferralIntentRepository
 
 
@@ -63,7 +64,7 @@ class RegisterVKUserWithReferralContextHandler(
             raw_ref=command_data.raw_ref,
         )
         if registration_result.registration.created:
-            inviter_vk_user_id = _parse_vk_user_id(raw_ref)
+            inviter_vk_user_id = parse_vk_user_id(raw_ref)
             if inviter_vk_user_id is not None:
                 referral_result = await self._process_referral_interactor(
                     command_data=ProcessReferralCommand(
@@ -84,15 +85,6 @@ class RegisterVKUserWithReferralContextHandler(
         raw_ref: str | None,
     ) -> str | None:
         clean_ref = raw_ref.strip() if raw_ref is not None else ""
-        if clean_ref and _parse_vk_user_id(clean_ref) is not None:
+        if clean_ref and parse_vk_user_id(clean_ref) is not None:
             return clean_ref
         return await self._referral_intent_repository.get_raw_ref(invited_vk_user_id=vk_user_id)
-
-
-def _parse_vk_user_id(raw_ref: str | None) -> int | None:
-    if raw_ref is None:
-        return None
-    try:
-        return int(raw_ref)
-    except (TypeError, ValueError):
-        return None

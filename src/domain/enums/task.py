@@ -31,8 +31,25 @@ class TaskCompletionStatus(str, Enum):
     CANCELED = "canceled"  # Выполнение отменено администратором или системой
 
 
+class TaskPromoCodeStatus(str, Enum):
+    """Статус промокода, который подтверждает выполнение задания."""
+
+    AVAILABLE = "available"  # Код можно активировать в боте
+    USED = "used"  # Код уже активирован пользователем
+
+
+class TaskPromoCodeWaitStatus(str, Enum):
+    """Состояние диалога, в котором бот ждёт промокод для задания."""
+
+    WAITING = "waiting"  # Бот ждёт следующий текст пользователя как промокод
+    CANCELED = "canceled"  # Пользователь вышел или сценарий сброшен
+    COMPLETED = "completed"  # Код принят, задание засчитано
+
+
 __all__ = [
     "TaskCompletionStatus",
+    "TaskPromoCodeStatus",
+    "TaskPromoCodeWaitStatus",
     "TaskRepeatPolicy",
     "TaskType",
 ]

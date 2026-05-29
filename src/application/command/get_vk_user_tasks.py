@@ -7,6 +7,7 @@ from application.common.dto.task import (
     TaskPaginationDTO,
     VKUserAvailableTaskDTO,
 )
+from application.common.helpers import normalize_page
 from application.interface.repositories.tasks import ITaskRepository
 
 
@@ -37,7 +38,7 @@ class GetVKUserTasksHandler(Interactor[GetVKUserTasksCommand, GetVKUserTasksDTO]
         )
         total_items = len(tasks)
         total_pages = max(1, (total_items + TASKS_PAGE_SIZE - 1) // TASKS_PAGE_SIZE)
-        page = _normalize_page(page=command_data.page, total_pages=total_pages)
+        page = normalize_page(page=command_data.page, total_pages=total_pages)
         start = (page - 1) * TASKS_PAGE_SIZE
         page_tasks = tuple(tasks[start : start + TASKS_PAGE_SIZE])
         active_quiz = await self.task_repository.get_active_quiz_task_for_vk_user(
@@ -57,7 +58,3 @@ class GetVKUserTasksHandler(Interactor[GetVKUserTasksCommand, GetVKUserTasksDTO]
                 has_next=page < total_pages,
             ),
         )
-
-
-def _normalize_page(*, page: int, total_pages: int) -> int:
-    return min(max(1, page), total_pages)

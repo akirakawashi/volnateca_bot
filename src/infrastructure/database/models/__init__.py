@@ -1,12 +1,13 @@
 from domain.enums import (
     AchievementRepeatPolicy,
     AchievementType,
-    PromoCodeStatus,
     PrizeReceiveType,
     PrizeRedemptionStatus,
     PrizeStatus,
     PrizeType,
     TaskCompletionStatus,
+    TaskPromoCodeStatus,
+    TaskPromoCodeWaitStatus,
     TaskRepeatPolicy,
     TaskType,
     TransactionSource,
@@ -15,7 +16,6 @@ from domain.enums import (
 from infrastructure.database.base import BaseModel
 from infrastructure.database.models.achievements import Achievement
 from infrastructure.database.models.message_templates import MessageTemplate
-from infrastructure.database.models.prize_promo_codes import PrizePromoCode
 from infrastructure.database.models.prize_redemptions import PrizeRedemption
 from infrastructure.database.models.prizes import Prize
 from infrastructure.database.models.quiz_answers import QuizAnswer
@@ -23,6 +23,8 @@ from infrastructure.database.models.quiz_question_options import QuizQuestionOpt
 from infrastructure.database.models.quiz_questions import QuizQuestion
 from infrastructure.database.models.referrals import Referral
 from infrastructure.database.models.task_completions import TaskCompletion
+from infrastructure.database.models.task_promo_code_waits import TaskPromoCodeWait
+from infrastructure.database.models.task_promo_codes import TaskPromoCode
 from infrastructure.database.models.tasks import Task
 from infrastructure.database.models.transactions import Transaction
 from infrastructure.database.models.user_achievements import UserAchievement
@@ -35,9 +37,7 @@ __all__ = [
     "AchievementType",
     "BaseModel",
     "MessageTemplate",
-    "PromoCodeStatus",
     "Prize",
-    "PrizePromoCode",
     "PrizeReceiveType",
     "PrizeRedemption",
     "PrizeRedemptionStatus",
@@ -50,6 +50,10 @@ __all__ = [
     "Task",
     "TaskCompletion",
     "TaskCompletionStatus",
+    "TaskPromoCode",
+    "TaskPromoCodeStatus",
+    "TaskPromoCodeWait",
+    "TaskPromoCodeWaitStatus",
     "TaskRepeatPolicy",
     "TaskType",
     "Transaction",

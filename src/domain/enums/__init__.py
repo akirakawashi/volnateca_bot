@@ -3,7 +3,6 @@ from domain.enums.achievement import (
     AchievementType,
 )
 from domain.enums.prize import (
-    PromoCodeStatus,
     PrizeReceiveType,
     PrizeRedemptionStatus,
     PrizeStatus,
@@ -11,6 +10,8 @@ from domain.enums.prize import (
 )
 from domain.enums.task import (
     TaskCompletionStatus,
+    TaskPromoCodeStatus,
+    TaskPromoCodeWaitStatus,
     TaskRepeatPolicy,
     TaskType,
 )
@@ -22,12 +23,13 @@ from domain.enums.transaction import (
 __all__ = [
     "AchievementRepeatPolicy",
     "AchievementType",
-    "PromoCodeStatus",
     "PrizeReceiveType",
     "PrizeRedemptionStatus",
     "PrizeStatus",
     "PrizeType",
     "TaskCompletionStatus",
+    "TaskPromoCodeStatus",
+    "TaskPromoCodeWaitStatus",
     "TaskRepeatPolicy",
     "TaskType",
     "TransactionSource",

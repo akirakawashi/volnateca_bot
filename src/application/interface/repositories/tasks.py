@@ -136,6 +136,21 @@ class ITaskRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_task_for_award_for_update(
+        self,
+        tasks_id: int,
+    ) -> TaskForAwardDTO | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def deactivate_task(
+        self,
+        *,
+        tasks_id: int,
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def is_week_completed_by_vk_user(
         self,
         *,

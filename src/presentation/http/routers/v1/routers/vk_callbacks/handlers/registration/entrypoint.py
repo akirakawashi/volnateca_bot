@@ -23,6 +23,12 @@ from application.command.register_vk_user_with_referral_context import (
     RegisterVKUserWithReferralContextCommand,
     RegisterVKUserWithReferralContextHandler,
 )
+from application.command.task_promo_code import (
+    ActivateTaskPromoCodeHandler,
+    CancelTaskPromoCodeHandler,
+    GetTaskPromoCodeWaitHandler,
+    StartTaskPromoCodeHandler,
+)
 from application.common.dto.task import TaskCompletionResultStatus
 from application.interface.clients import IVKMessageClient
 from application.interface.repositories.users import IUserRepository
@@ -65,6 +71,10 @@ async def handle_registration_callback(
     get_store_prize_card_interactor: GetStorePrizeCardHandler,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
+    start_task_promo_code_interactor: StartTaskPromoCodeHandler,
+    activate_task_promo_code_interactor: ActivateTaskPromoCodeHandler,
+    cancel_task_promo_code_interactor: CancelTaskPromoCodeHandler,
+    get_task_promo_code_wait_interactor: GetTaskPromoCodeWaitHandler,
     capture_referral_intent_interactor: CaptureVKReferralIntentHandler,
     group_id: int,
     task_images_settings: TaskTypeImagesSettings,
@@ -102,20 +112,43 @@ async def handle_registration_callback(
                     ),
                 )
 
-        if not is_default_start_message(data):
-            return vk_ok_response()
-
         if not existing_user_loaded:
             existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
         if existing_user is not None:
+            result = RegisterVKUserAndCheckSubscriptionDTO(
+                registration=existing_user,
+                subscription=None,
+            )
+            if data.is_message_new():
+                handled = await handle_registered_user_message(
+                    data=data,
+                    result=result,
+                    message_client=message_client,
+                    get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
+                    get_store_catalog_interactor=get_store_catalog_interactor,
+                    get_store_prize_card_interactor=get_store_prize_card_interactor,
+                    get_quiz_first_question_interactor=get_quiz_first_question_interactor,
+                    answer_quiz_question_interactor=answer_quiz_question_interactor,
+                    start_task_promo_code_interactor=start_task_promo_code_interactor,
+                    activate_task_promo_code_interactor=activate_task_promo_code_interactor,
+                    cancel_task_promo_code_interactor=cancel_task_promo_code_interactor,
+                    get_task_promo_code_wait_interactor=get_task_promo_code_wait_interactor,
+                    group_id=group_id,
+                    task_images_settings=task_images_settings,
+                )
+                if handled:
+                    return vk_ok_response()
+            if not is_default_start_message(data):
+                return vk_ok_response()
+
             await _send_main_menu_message(
                 data=data,
-                result=RegisterVKUserAndCheckSubscriptionDTO(
-                    registration=existing_user,
-                    subscription=None,
-                ),
+                result=result,
                 message_client=message_client,
             )
+            return vk_ok_response()
+
+        if not is_default_start_message(data):
             return vk_ok_response()
 
         await _send_consent_request_message(
@@ -144,6 +177,10 @@ async def handle_registration_callback(
                 get_store_prize_card_interactor=get_store_prize_card_interactor,
                 get_quiz_first_question_interactor=get_quiz_first_question_interactor,
                 answer_quiz_question_interactor=answer_quiz_question_interactor,
+                start_task_promo_code_interactor=start_task_promo_code_interactor,
+                activate_task_promo_code_interactor=activate_task_promo_code_interactor,
+                cancel_task_promo_code_interactor=cancel_task_promo_code_interactor,
+                get_task_promo_code_wait_interactor=get_task_promo_code_wait_interactor,
                 group_id=group_id,
                 task_images_settings=task_images_settings,
             )

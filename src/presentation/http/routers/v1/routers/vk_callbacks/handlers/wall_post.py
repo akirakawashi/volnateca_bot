@@ -4,7 +4,7 @@ from application.command.ensure_vk_poll_task import (
     EnsureVKPollTaskCommand,
     EnsureVKPollTaskHandler,
 )
-from presentation.http.routers.v1.routers.vk_callbacks.protocol._extractors import (
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.extractors import (
     extract_wall_post_poll,
     extract_wall_post_poll_question,
     extract_wall_post_text,

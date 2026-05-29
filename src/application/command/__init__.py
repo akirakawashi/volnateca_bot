@@ -14,9 +14,17 @@ from application.command.register_vk_user_and_check_subscription import (
 from application.command.register_vk_user_with_referral_context import (
     RegisterVKUserWithReferralContextHandler,
 )
+from application.command.task_promo_code import (
+    ActivateTaskPromoCodeHandler,
+    CancelTaskPromoCodeHandler,
+    GetTaskPromoCodeWaitHandler,
+    StartTaskPromoCodeHandler,
+)
 
 __all__ = [
+    "ActivateTaskPromoCodeHandler",
     "AwardMonthlyTopHandler",
+    "CancelTaskPromoCodeHandler",
     "CaptureVKReferralIntentHandler",
     "CompleteVKLikeTaskHandler",
     "CompleteVKPollTaskHandler",
@@ -25,8 +33,10 @@ __all__ = [
     "EnsureVKPollTaskHandler",
     "GetStoreCatalogHandler",
     "GetStorePrizeCardHandler",
+    "GetTaskPromoCodeWaitHandler",
     "GetVKUserTasksHandler",
     "RegisterVKUserAndCheckSubscriptionHandler",
     "RegisterVKUserHandler",
     "RegisterVKUserWithReferralContextHandler",
+    "StartTaskPromoCodeHandler",
 ]
