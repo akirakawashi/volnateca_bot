@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
@@ -713,6 +713,27 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             select(Task).where(col(Task.tasks_id) == tasks_id),
         )
         task = result.scalar_one_or_none()
+        return self._to_task_for_award(task=task)
+
+    async def get_task_for_award_for_update(self, tasks_id: int) -> TaskForAwardDTO | None:
+        result = await self._session.execute(
+            select(Task).where(col(Task.tasks_id) == tasks_id).with_for_update(),
+        )
+        task = result.scalar_one_or_none()
+        return self._to_task_for_award(task=task)
+
+    async def deactivate_task(
+        self,
+        *,
+        tasks_id: int,
+    ) -> None:
+        await self._session.execute(
+            update(Task).where(col(Task.tasks_id) == tasks_id).values(is_active=False),
+        )
+        await self._session.flush()
+
+    @staticmethod
+    def _to_task_for_award(task: Task | None) -> TaskForAwardDTO | None:
         if task is None or task.tasks_id is None:
             return None
         return TaskForAwardDTO(

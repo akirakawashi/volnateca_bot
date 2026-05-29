@@ -8,7 +8,6 @@ from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
-    from infrastructure.database.models.prize_promo_codes import PrizePromoCode
     from infrastructure.database.models.prize_redemptions import PrizeRedemption
     from infrastructure.database.models.transactions import Transaction
 
@@ -109,6 +108,5 @@ class Prize(BaseModel, table=True):
         ),
     )
 
-    promo_codes: list["PrizePromoCode"] = Relationship(back_populates="prize")
     prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="prize")
     transactions: list["Transaction"] = Relationship(back_populates="prize")

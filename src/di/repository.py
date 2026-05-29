@@ -8,9 +8,12 @@ from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
+from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
 from application.interface.repositories.referral_intents import IReferralIntentRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
+from application.interface.repositories.task_promo_code_waits import ITaskPromoCodeWaitRepository
+from application.interface.repositories.task_promo_codes import ITaskPromoCodeRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
@@ -21,9 +24,12 @@ from infrastructure.database.repositories.quiz import QuizRepository
 from infrastructure.database.db_manager import DBManager
 from infrastructure.database.repositories.admin.prize import PrizeAdminRepository
 from infrastructure.database.repositories.admin.quiz import QuizAdminRepository
+from infrastructure.database.repositories.admin.task_promo_code import TaskPromoCodeAdminRepository
 from infrastructure.database.repositories.referral_intents import ReferralIntentRepository
 from infrastructure.database.repositories.referrals import ReferralRepository
 from infrastructure.database.repositories.task_completions import TaskCompletionRepository
+from infrastructure.database.repositories.task_promo_code_waits import TaskPromoCodeWaitRepository
+from infrastructure.database.repositories.task_promo_codes import TaskPromoCodeRepository
 from infrastructure.database.repositories.tasks import TaskRepository
 from infrastructure.database.repositories.transactions import TransactionRepository
 from infrastructure.database.repositories.users import UserRepository
@@ -57,6 +63,20 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> TaskCompletionRepository:
         return TaskCompletionRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=ITaskPromoCodeRepository)
+    def get_task_promo_code_repository(
+        self,
+        session: AsyncSession,
+    ) -> TaskPromoCodeRepository:
+        return TaskPromoCodeRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=ITaskPromoCodeWaitRepository)
+    def get_task_promo_code_wait_repository(
+        self,
+        session: AsyncSession,
+    ) -> TaskPromoCodeWaitRepository:
+        return TaskPromoCodeWaitRepository(session=session)
 
     @provide(scope=Scope.REQUEST, provides=ITransactionRepository)
     def get_transaction_repository(
@@ -113,6 +133,13 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> PrizeAdminRepository:
         return PrizeAdminRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=ITaskPromoCodeAdminRepository)
+    def get_task_promo_code_admin_repository(
+        self,
+        session: AsyncSession,
+    ) -> TaskPromoCodeAdminRepository:
+        return TaskPromoCodeAdminRepository(session=session)
 
     @provide(scope=Scope.REQUEST, provides=IDBManager)
     def get_db_manager(

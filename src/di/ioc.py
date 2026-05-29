@@ -23,6 +23,10 @@ from application.command.complete_vk_subscription_task import CompleteVKSubscrip
 from application.admin.command.create_quiz import CreateQuizHandler
 from application.admin.command.post_to_wall import PostToWallHandler
 from application.admin.command.truncate_db import TruncateDBHandler
+from application.admin.command.task_promo_code import (
+    CreateTaskPromoCodeTaskHandler,
+    GetTaskPromoCodeStatsHandler,
+)
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
@@ -33,6 +37,12 @@ from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
 from application.command.register_vk_user_with_referral_context import RegisterVKUserWithReferralContextHandler
+from application.command.task_promo_code import (
+    ActivateTaskPromoCodeHandler,
+    CancelTaskPromoCodeHandler,
+    GetTaskPromoCodeWaitHandler,
+    StartTaskPromoCodeHandler,
+)
 from application.interface.clients import IVKUserClient, IVKWallClient
 from application.interface.services import IVKMessageTemplateService
 from application.interface.repositories.achievements import IAchievementRepository
@@ -41,9 +51,12 @@ from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
+from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
 from application.interface.repositories.referral_intents import IReferralIntentRepository
 from application.interface.repositories.referrals import IReferralRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
+from application.interface.repositories.task_promo_code_waits import ITaskPromoCodeWaitRepository
+from application.interface.repositories.task_promo_codes import ITaskPromoCodeRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
@@ -267,6 +280,66 @@ class InteractorProvider(Provider):
         )
 
     @provide(scope=Scope.REQUEST)
+    def get_start_task_promo_code_handler(
+        self,
+        user_repository: IUserRepository,
+        task_repository: ITaskRepository,
+        wait_repository: ITaskPromoCodeWaitRepository,
+        uow: IUnitOfWork,
+    ) -> StartTaskPromoCodeHandler:
+        return StartTaskPromoCodeHandler(
+            user_repository=user_repository,
+            task_repository=task_repository,
+            wait_repository=wait_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_activate_task_promo_code_handler(
+        self,
+        user_repository: IUserRepository,
+        task_repository: ITaskRepository,
+        task_completion_repository: ITaskCompletionRepository,
+        promo_code_repository: ITaskPromoCodeRepository,
+        wait_repository: ITaskPromoCodeWaitRepository,
+        award_service: AwardTaskService,
+        uow: IUnitOfWork,
+    ) -> ActivateTaskPromoCodeHandler:
+        return ActivateTaskPromoCodeHandler(
+            user_repository=user_repository,
+            task_repository=task_repository,
+            task_completion_repository=task_completion_repository,
+            promo_code_repository=promo_code_repository,
+            wait_repository=wait_repository,
+            award_service=award_service,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_cancel_task_promo_code_handler(
+        self,
+        user_repository: IUserRepository,
+        wait_repository: ITaskPromoCodeWaitRepository,
+        uow: IUnitOfWork,
+    ) -> CancelTaskPromoCodeHandler:
+        return CancelTaskPromoCodeHandler(
+            user_repository=user_repository,
+            wait_repository=wait_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_task_promo_code_wait_handler(
+        self,
+        user_repository: IUserRepository,
+        wait_repository: ITaskPromoCodeWaitRepository,
+    ) -> GetTaskPromoCodeWaitHandler:
+        return GetTaskPromoCodeWaitHandler(
+            user_repository=user_repository,
+            wait_repository=wait_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
     def get_process_referral_handler(
         self,
         user_repository: IUserRepository,
@@ -330,6 +403,24 @@ class InteractorProvider(Provider):
             prize_admin_repository=prize_admin_repository,
             uow=uow,
         )
+
+    @provide(scope=Scope.REQUEST)
+    def get_create_task_promo_code_task_handler(
+        self,
+        task_promo_code_admin_repository: ITaskPromoCodeAdminRepository,
+        uow: IUnitOfWork,
+    ) -> CreateTaskPromoCodeTaskHandler:
+        return CreateTaskPromoCodeTaskHandler(
+            repository=task_promo_code_admin_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_task_promo_code_stats_handler(
+        self,
+        task_promo_code_admin_repository: ITaskPromoCodeAdminRepository,
+    ) -> GetTaskPromoCodeStatsHandler:
+        return GetTaskPromoCodeStatsHandler(repository=task_promo_code_admin_repository)
 
     @provide(scope=Scope.REQUEST)
     def get_post_to_wall_handler(

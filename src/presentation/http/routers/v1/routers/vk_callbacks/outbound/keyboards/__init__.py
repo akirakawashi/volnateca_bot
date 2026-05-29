@@ -21,6 +21,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards.store 
 )
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards.tasks import (
     build_task_info_keyboard,
+    build_task_promo_code_wait_keyboard,
     build_tasks_carousel_template,
     build_tasks_navigation_keyboard,
 )
@@ -40,6 +41,7 @@ __all__ = [
     "build_store_prize_not_found_keyboard",
     "build_store_root_keyboard",
     "build_task_info_keyboard",
+    "build_task_promo_code_wait_keyboard",
     "build_tasks_carousel_template",
     "build_tasks_navigation_keyboard",
 ]

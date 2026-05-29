@@ -4,6 +4,8 @@ from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages._templa
     _template_message,
 )
 
+MENYAYKA_URL = "https://volnamobile.ru/sale/"
+
 
 def build_task_accrual_message(
     *,
@@ -75,3 +77,24 @@ def build_task_info_message(*, task: VKUserAvailableTaskDTO) -> VKMessageText:
         points=task.points,
         action_url_block=action_url_block,
     )
+
+
+def build_custom_promo_task_start_message(
+    *,
+    task_name: str,
+    points: int,
+) -> VKMessageText:
+    return _template_message(
+        "custom_promo_task_start",
+        task_name=task_name,
+        points=points,
+        menyayka_url=MENYAYKA_URL,
+    )
+
+
+def build_custom_promo_invalid_code_message() -> VKMessageText:
+    return _template_message("custom_promo_invalid_code")
+
+
+def build_custom_promo_canceled_message() -> VKMessageText:
+    return _template_message("custom_promo_canceled")

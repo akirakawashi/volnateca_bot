@@ -8,6 +8,7 @@ from presentation.http.routers.admin.message_templates import message_templates_
 from presentation.http.routers.admin.monthly_top import monthly_top_admin_router
 from presentation.http.routers.admin.prizes import prizes_admin_router
 from presentation.http.routers.admin.quiz import quiz_admin_router
+from presentation.http.routers.admin.task_promo_code import task_promo_code_admin_router
 from presentation.http.routers.admin.wall_post import wall_admin_router
 
 admin_router = APIRouter(
@@ -19,6 +20,7 @@ admin_router.include_router(auth_admin_router)
 admin_router.include_router(broadcast_admin_router)
 admin_router.include_router(quiz_admin_router)
 admin_router.include_router(prizes_admin_router)
+admin_router.include_router(task_promo_code_admin_router)
 admin_router.include_router(wall_admin_router)
 admin_router.include_router(message_templates_admin_router)
 admin_router.include_router(monthly_top_admin_router)

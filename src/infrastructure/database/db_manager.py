@@ -11,7 +11,8 @@ from application.admin.interface.db_manager import IDBManager
 _TRUNCATED_TABLES = ", ".join(
     [
         "quiz_answers",
-        "prize_promo_codes",
+        "task_promo_code_waits",
+        "task_promo_codes",
         "quiz_question_options",
         "prize_redemptions",
         "task_completions",

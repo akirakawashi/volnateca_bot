@@ -12,6 +12,12 @@ from application.command.get_quiz_first_question import GetQuizFirstQuestionHand
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.register_vk_user_with_referral_context import RegisterVKUserWithReferralContextHandler
+from application.command.task_promo_code import (
+    ActivateTaskPromoCodeHandler,
+    CancelTaskPromoCodeHandler,
+    GetTaskPromoCodeWaitHandler,
+    StartTaskPromoCodeHandler,
+)
 from application.interface.clients import IVKMessageClient
 from application.interface.repositories.users import IUserRepository
 from application.interface.services import IVKMessageTemplateService
@@ -36,6 +42,10 @@ class PresentationProvider(Provider):
         get_vk_user_tasks_interactor: GetVKUserTasksHandler,
         get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
         answer_quiz_question_interactor: AnswerQuizQuestionHandler,
+        start_task_promo_code_interactor: StartTaskPromoCodeHandler,
+        activate_task_promo_code_interactor: ActivateTaskPromoCodeHandler,
+        cancel_task_promo_code_interactor: CancelTaskPromoCodeHandler,
+        get_task_promo_code_wait_interactor: GetTaskPromoCodeWaitHandler,
         capture_vk_referral_intent_interactor: CaptureVKReferralIntentHandler,
         register_vk_user_with_referral_context_interactor: RegisterVKUserWithReferralContextHandler,
         vk_message_client: IVKMessageClient,
@@ -56,6 +66,10 @@ class PresentationProvider(Provider):
             get_vk_user_tasks_interactor=get_vk_user_tasks_interactor,
             get_quiz_first_question_interactor=get_quiz_first_question_interactor,
             answer_quiz_question_interactor=answer_quiz_question_interactor,
+            start_task_promo_code_interactor=start_task_promo_code_interactor,
+            activate_task_promo_code_interactor=activate_task_promo_code_interactor,
+            cancel_task_promo_code_interactor=cancel_task_promo_code_interactor,
+            get_task_promo_code_wait_interactor=get_task_promo_code_wait_interactor,
             capture_vk_referral_intent_interactor=capture_vk_referral_intent_interactor,
             register_vk_user_with_referral_context_interactor=(
                 register_vk_user_with_referral_context_interactor

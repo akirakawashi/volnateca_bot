@@ -88,7 +88,7 @@ async def handle_task_info(
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
         message=build_task_info_message(task=task),
-        keyboard=build_task_info_keyboard(tasks_result.pagination),
+        keyboard=build_task_info_keyboard(tasks_result.pagination, task=task),
         message_client=message_client,
         log_message="Детали задания VK",
     )

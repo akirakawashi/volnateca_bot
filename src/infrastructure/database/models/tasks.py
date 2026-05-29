@@ -10,6 +10,8 @@ from infrastructure.database.base import BaseModel, enum_values
 if TYPE_CHECKING:
     from infrastructure.database.models.quiz_questions import QuizQuestion
     from infrastructure.database.models.task_completions import TaskCompletion
+    from infrastructure.database.models.task_promo_code_waits import TaskPromoCodeWait
+    from infrastructure.database.models.task_promo_codes import TaskPromoCode
     from infrastructure.database.models.transactions import Transaction
 
 
@@ -112,5 +114,7 @@ class Task(BaseModel, table=True):
     )
 
     task_completions: list["TaskCompletion"] = Relationship(back_populates="task")
+    task_promo_codes: list["TaskPromoCode"] = Relationship(back_populates="task")
+    task_promo_code_waits: list["TaskPromoCodeWait"] = Relationship(back_populates="task")
     transactions: list["Transaction"] = Relationship(back_populates="task")
     quiz_questions: list["QuizQuestion"] = Relationship(back_populates="task")
