@@ -14,3 +14,5 @@ class UserBalanceSnapshot:
     vk_user_id: int
     balance_points: int
     earned_points_total: int
+    spent_points_total: int
+    current_level: int

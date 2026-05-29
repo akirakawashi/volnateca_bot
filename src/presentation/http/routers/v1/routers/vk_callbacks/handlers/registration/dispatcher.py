@@ -3,6 +3,8 @@
 from application.command.answer_quiz_question import AnswerQuizQuestionHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
+from application.command.list_user_redemptions import ListUserRedemptionsHandler
+from application.command.redeem_prize import RedeemPrizeHandler
 from application.command.get_vk_user_tasks import GetVKUserTasksHandler
 from application.command.task_promo_code import (
     ActivateTaskPromoCodeHandler,
@@ -27,6 +29,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.act
 )
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.balance import handle_balance
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.payload_parsing import (
+    parse_payload_str,
     parse_positive_int,
     parse_store_page,
     parse_store_section,
@@ -41,7 +44,9 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.ref
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.store import (
     handle_store_catalog,
     handle_store_claim,
+    handle_store_claim_confirm,
     handle_store_exit,
+    handle_store_my_redemptions,
     handle_store_prize_card,
     handle_store_root,
 )
@@ -66,6 +71,8 @@ async def handle_registered_user_message(
     get_vk_user_tasks_interactor: GetVKUserTasksHandler,
     get_store_catalog_interactor: GetStoreCatalogHandler,
     get_store_prize_card_interactor: GetStorePrizeCardHandler,
+    redeem_prize_interactor: RedeemPrizeHandler,
+    list_user_redemptions_interactor: ListUserRedemptionsHandler,
     get_quiz_first_question_interactor: GetQuizFirstQuestionHandler,
     answer_quiz_question_interactor: AnswerQuizQuestionHandler,
     start_task_promo_code_interactor: StartTaskPromoCodeHandler,
@@ -212,6 +219,29 @@ async def handle_registered_user_message(
                 page=parse_store_page(button_payload.get("page")),
                 message_client=message_client,
                 get_store_prize_card_interactor=get_store_prize_card_interactor,
+            )
+            return True
+        if action == "store_claim_confirm":
+            prizes_id = parse_positive_int(button_payload.get("prizes_id"))
+            await handle_store_claim_confirm(
+                data=data,
+                result=result,
+                prizes_id=prizes_id,
+                section=parse_store_section(button_payload.get("section")),
+                page=parse_store_page(button_payload.get("page")),
+                idempotency_key=parse_payload_str(button_payload.get("idempotency_key")),
+                message_client=message_client,
+                get_store_prize_card_interactor=get_store_prize_card_interactor,
+                redeem_prize_interactor=redeem_prize_interactor,
+            )
+            return True
+        if action == "store_my_redemptions":
+            await handle_store_my_redemptions(
+                data=data,
+                result=result,
+                page=parse_store_page(button_payload.get("page")),
+                message_client=message_client,
+                list_user_redemptions_interactor=list_user_redemptions_interactor,
             )
             return True
         if action == "start_quiz":

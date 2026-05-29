@@ -51,7 +51,7 @@ class StorePrizeSnapshot:
     prize_type: PrizeType
     status: PrizeStatus
     cost_points: int
-    quantity_total: int | None
+    quantity_total: int
     quantity_claimed: int
     sort_order: int
     required_level: int | None = None
@@ -65,9 +65,9 @@ class StorePrizeView:
     image_attachment: str | None
     prize_type: PrizeType
     cost_points: int
-    quantity_total: int | None
+    quantity_total: int
     quantity_claimed: int
-    quantity_remaining: int | None
+    quantity_remaining: int
     required_level: int | None
     user_state: StorePrizeUserState
     missing_points: int

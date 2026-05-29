@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Text, func
+from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Index, Text, func
 from sqlmodel import Column, Field, Relationship
 
 from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus
@@ -22,7 +22,24 @@ class PrizeRedemption(BaseModel, table=True):
     """
 
     __tablename__ = "prize_redemptions"
-    __table_args__ = (CheckConstraint("points_spent >= 0", name="points_spent_non_negative"),)
+    __table_args__ = (
+        CheckConstraint("points_spent >= 0", name="points_spent_non_negative"),
+        Index(
+            "ix_prize_redemptions_users_id_status",
+            "users_id",
+            "prize_redemption_status",
+        ),
+        Index(
+            "ix_prize_redemptions_prizes_id_status",
+            "prizes_id",
+            "prize_redemption_status",
+        ),
+        Index(
+            "ix_prize_redemptions_status_created_at",
+            "prize_redemption_status",
+            "created_at",
+        ),
+    )
 
     prize_redemptions_id: int | None = Field(default=None, primary_key=True)
     users_id: int = Field(
@@ -37,11 +54,17 @@ class PrizeRedemption(BaseModel, table=True):
         index=True,
         description="ID приза, который пользователь запросил или получил",
     )
-    transactions_id: int | None = Field(
+    transactions_id: int = Field(
+        foreign_key="transactions.transactions_id",
+        nullable=False,
+        unique=True,
+        description="ID транзакции списания очков за получение приза",
+    )
+    refund_transactions_id: int | None = Field(
         default=None,
         foreign_key="transactions.transactions_id",
         unique=True,
-        description="ID транзакции списания очков за получение приза",
+        description="ID транзакции возврата очков при отмене заявки",
     )
     prize_redemption_status: PrizeRedemptionStatus = Field(
         default=PrizeRedemptionStatus.RESERVED,
@@ -66,19 +89,41 @@ class PrizeRedemption(BaseModel, table=True):
         ),
         description="Фактический способ получения приза на момент заявки",
     )
+    redemption_code: str = Field(
+        nullable=False,
+        unique=True,
+        index=True,
+        description="Код заявки для пункта выдачи",
+    )
+    idempotency_key: str = Field(
+        nullable=False,
+        unique=True,
+        index=True,
+        description="Ключ идемпотентности покупки из VK",
+    )
     points_spent: int = Field(
         nullable=False,
-        description="Количество очков, списанное или зарезервированное за получение приза",
+        description="Количество очков, списанное за получение приза",
     )
     comment: str | None = Field(
         default=None,
         sa_column=Column(Text),
-        description="Служебный комментарий по выдаче приза",
+        description="Комментарий пользователя или служебная пометка по выдаче",
     )
     issued_at: datetime | None = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True)),
-        description="Дата и время фактической выдачи приза или отправки промокода",
+        description="Дата и время фактической выдачи приза",
+    )
+    canceled_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True)),
+        description="Дата и время отмены заявки",
+    )
+    cancel_reason: str | None = Field(
+        default=None,
+        sa_column=Column(Text),
+        description="Причина отмены заявки",
     )
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
@@ -94,4 +139,10 @@ class PrizeRedemption(BaseModel, table=True):
 
     user: "User" = Relationship(back_populates="prize_redemptions")
     prize: "Prize" = Relationship(back_populates="prize_redemptions")
-    transaction: Optional["Transaction"] = Relationship(back_populates="prize_redemption")
+    transaction: "Transaction" = Relationship(
+        back_populates="prize_redemption",
+        sa_relationship_kwargs={"foreign_keys": "[PrizeRedemption.transactions_id]"},
+    )
+    refund_transaction: Optional["Transaction"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[PrizeRedemption.refund_transactions_id]"},
+    )

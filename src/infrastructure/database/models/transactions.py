@@ -99,6 +99,9 @@ class Transaction(BaseModel, table=True):
     task: Optional["Task"] = Relationship(back_populates="transactions")
     task_completion: Optional["TaskCompletion"] = Relationship(back_populates="transaction")
     prize: Optional["Prize"] = Relationship(back_populates="transactions")
-    prize_redemption: Optional["PrizeRedemption"] = Relationship(back_populates="transaction")
+    prize_redemption: Optional["PrizeRedemption"] = Relationship(
+        back_populates="transaction",
+        sa_relationship_kwargs={"foreign_keys": "[PrizeRedemption.transactions_id]"},
+    )
     referral_bonus: Optional["Referral"] = Relationship(back_populates="bonus_transaction")
     user_achievement: Optional["UserAchievement"] = Relationship(back_populates="transaction")

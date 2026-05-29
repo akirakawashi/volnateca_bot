@@ -7,6 +7,8 @@ from application.interface.clients import IVKMessageClient
 from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.message_templates import IMessageTemplateRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
+from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
+from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
@@ -15,6 +17,9 @@ from application.services.award_achievement_service import AwardAchievementServi
 from application.services.award_task_service import AwardTaskService
 from application.services.project_completion_achievement_service import ProjectCompletionAchievementService
 from application.services.vk_message_template_service import VKMessageTemplateService
+from application.services.cancel_redemption_service import CancelRedemptionService
+from application.services.fulfill_redemption_service import FulfillRedemptionService
+from application.services.redeem_prize_service import RedeemPrizeService
 from application.services.week_completion_achievement_service import WeekCompletionAchievementService
 from infrastructure.database.repositories.broadcast_recipients import SQLAlchemyBroadcastRecipientReader
 
@@ -97,4 +102,41 @@ class ServicesProvider(Provider):
         return ProjectCompletionAchievementService(
             achievements=achievements,
             award_achievement_service=award_achievement_service,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_redeem_prize_service(
+        self,
+        users: IUserRepository,
+        prizes: IPrizeRepository,
+        prize_redemptions: IPrizeRedemptionRepository,
+        transactions: ITransactionRepository,
+    ) -> RedeemPrizeService:
+        return RedeemPrizeService(
+            users=users,
+            prizes=prizes,
+            prize_redemptions=prize_redemptions,
+            transactions=transactions,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_fulfill_redemption_service(
+        self,
+        prize_redemptions: IPrizeRedemptionRepository,
+    ) -> FulfillRedemptionService:
+        return FulfillRedemptionService(prize_redemptions=prize_redemptions)
+
+    @provide(scope=Scope.REQUEST)
+    def get_cancel_redemption_service(
+        self,
+        users: IUserRepository,
+        prizes: IPrizeRepository,
+        prize_redemptions: IPrizeRedemptionRepository,
+        transactions: ITransactionRepository,
+    ) -> CancelRedemptionService:
+        return CancelRedemptionService(
+            users=users,
+            prizes=prizes,
+            prize_redemptions=prize_redemptions,
+            transactions=transactions,
         )

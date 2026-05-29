@@ -28,8 +28,9 @@ class Prize(BaseModel, table=True):
             "required_level IS NULL OR required_level BETWEEN 1 AND 4",
             name="required_level_between_1_and_4",
         ),
+        CheckConstraint("quantity_total >= 1", name="quantity_total_positive"),
         CheckConstraint(
-            "quantity_total IS NULL OR quantity_claimed <= quantity_total",
+            "quantity_claimed <= quantity_total",
             name="quantity_claimed_lte_quantity_total",
         ),
     )
@@ -74,9 +75,10 @@ class Prize(BaseModel, table=True):
         description="Статус доступности приза для отображения и покупки в магазине",
     )
     cost_points: int = Field(nullable=False, index=True, description="Стоимость получения приза в очках")
-    quantity_total: int | None = Field(
-        default=None,
-        description="Общее количество доступных единиц приза; NULL означает, что остаток не ограничивается системой",
+    quantity_total: int = Field(
+        nullable=False,
+        ge=1,
+        description="Общее количество доступных единиц приза",
     )
     quantity_claimed: int = Field(
         default=0,

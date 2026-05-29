@@ -27,6 +27,13 @@ def parse_store_page(raw_page: object) -> int:
     return page if page is not None else 1
 
 
+def parse_payload_str(raw_value: object) -> str | None:
+    if isinstance(raw_value, str):
+        stripped = raw_value.strip()
+        return stripped if stripped else None
+    return None
+
+
 def parse_positive_int(raw_value: object) -> int | None:
     if isinstance(raw_value, bool):
         return None

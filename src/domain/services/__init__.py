@@ -1,6 +1,7 @@
-from domain.services.wallet import AccrualResult, WalletService
+from domain.services.wallet import AccrualResult, SpendResult, WalletService
 
 __all__ = [
     "AccrualResult",
+    "SpendResult",
     "WalletService",
 ]

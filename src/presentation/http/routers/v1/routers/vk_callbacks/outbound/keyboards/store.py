@@ -22,6 +22,13 @@ def build_store_root_keyboard() -> VKKeyboard:
         "one_time": False,
         "buttons": [
             *_build_store_section_rows(),
+            [
+                payload_button(
+                    label="📦 Мои призы",
+                    color="secondary",
+                    payload={"action": "store_my_redemptions", "page": 1},
+                ),
+            ],
             _build_store_exit_row(label="Главное меню"),
         ],
     }
@@ -128,13 +135,13 @@ def build_store_prize_card_keyboard(card: StorePrizeCardDTO) -> VKKeyboard:
     if prize is None:
         return build_store_root_keyboard()
 
-    return {
-        "one_time": False,
-        "buttons": [
+    buttons: list[list[dict[str, object]]] = []
+    if prize.user_state == StorePrizeUserState.AVAILABLE:
+        buttons.append(
             [
                 payload_button(
                     label="Получить",
-                    color="positive" if prize.user_state == StorePrizeUserState.AVAILABLE else "secondary",
+                    color="positive",
                     payload={
                         "action": "store_claim",
                         "prizes_id": prize.prizes_id,
@@ -143,6 +150,12 @@ def build_store_prize_card_keyboard(card: StorePrizeCardDTO) -> VKKeyboard:
                     },
                 ),
             ],
+        )
+
+    return {
+        "one_time": False,
+        "buttons": [
+            *buttons,
             [
                 payload_button(
                     label="Назад в каталог",
@@ -164,6 +177,106 @@ def build_store_prize_not_found_keyboard() -> VKKeyboard:
 
 def build_store_exit_keyboard() -> VKKeyboard:
     return build_main_menu_keyboard()
+
+
+def build_store_claim_confirm_keyboard(
+    *,
+    prizes_id: int,
+    section: str,
+    page: int,
+    idempotency_key: str,
+) -> VKKeyboard:
+    return {
+        "one_time": False,
+        "buttons": [
+            [
+                payload_button(
+                    label="Подтвердить",
+                    color="positive",
+                    payload={
+                        "action": "store_claim_confirm",
+                        "prizes_id": prizes_id,
+                        "section": section,
+                        "page": page,
+                        "idempotency_key": idempotency_key,
+                    },
+                ),
+            ],
+            [
+                payload_button(
+                    label="Назад",
+                    color="secondary",
+                    payload={
+                        "action": "store_prize",
+                        "prizes_id": prizes_id,
+                        "section": section,
+                        "page": page,
+                    },
+                ),
+            ],
+        ],
+    }
+
+
+def build_store_my_redemptions_keyboard(*, page: int, has_previous: bool, has_next: bool) -> VKKeyboard:
+    buttons: list[list[dict[str, object]]] = []
+    navigation: list[dict[str, object]] = []
+    if has_previous:
+        navigation.append(
+            payload_button(
+                label="← Назад",
+                color="secondary",
+                payload={"action": "store_my_redemptions", "page": page - 1},
+            ),
+        )
+    if has_next:
+        navigation.append(
+            payload_button(
+                label="Вперёд →",
+                color="secondary",
+                payload={"action": "store_my_redemptions", "page": page + 1},
+            ),
+        )
+    if navigation:
+        buttons.append(navigation)
+    buttons.append(
+        [
+            payload_button(
+                label="В магазин",
+                color="primary",
+                payload={"action": "store_root"},
+            ),
+        ],
+    )
+    buttons.append(_build_store_exit_row(label="Главное меню"))
+    return {"one_time": False, "buttons": buttons}
+
+
+def build_store_redeem_result_keyboard(
+    *,
+    section: str,
+    page: int,
+) -> VKKeyboard:
+    return {
+        "one_time": False,
+        "buttons": [
+            [
+                payload_button(
+                    label="📦 Мои призы",
+                    color="secondary",
+                    payload={"action": "store_my_redemptions", "page": 1},
+                ),
+            ],
+            [
+                payload_button(
+                    label="В каталог",
+                    color="primary",
+                    payload={"action": "store_catalog", "section": section, "page": page},
+                ),
+            ],
+            _build_store_exit_row(label="Главное меню"),
+        ],
+    }
 
 
 def _build_store_catalog_navigation_row(catalog: StoreCatalogDTO) -> list[dict[str, object]]:

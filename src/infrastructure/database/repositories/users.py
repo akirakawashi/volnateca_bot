@@ -132,6 +132,18 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         )
         await self._session.flush()
 
+    async def get_balance_snapshot_by_users_id_for_update(
+        self,
+        users_id: int,
+    ) -> UserBalanceSnapshot | None:
+        result = await self._session.execute(
+            select(User).where(col(User.users_id) == users_id).with_for_update(),
+        )
+        user = result.scalar_one_or_none()
+        if user is None:
+            return None
+        return self._to_balance_snapshot(user=user)
+
     async def get_balance_snapshot_for_update(
         self,
         vk_user_id: int,
@@ -144,6 +156,10 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
         user = result.scalar_one_or_none()
         if user is None:
             return None
+        return self._to_balance_snapshot(user=user)
+
+    @staticmethod
+    def _to_balance_snapshot(*, user: User) -> UserBalanceSnapshot:
         if user.users_id is None:
             raise RuntimeError("Первичный ключ пользователя не был сгенерирован")
 
@@ -152,6 +168,8 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             vk_user_id=user.vk_user_id,
             balance_points=user.balance_points,
             earned_points_total=user.earned_points_total,
+            spent_points_total=user.spent_points_total,
+            current_level=user.current_level,
         )
 
     async def apply_balance_change(
@@ -172,6 +190,36 @@ class UserRepository(SQLAlchemyRepository, IUserRepository):
             ),
         )
         await self._session.flush()
+
+    async def apply_spend(
+        self,
+        *,
+        users_id: int,
+        balance_points: int,
+        spent_points_total: int,
+    ) -> None:
+        await self._session.execute(
+            update(User)
+            .where(col(User.users_id) == users_id)
+            .values(
+                balance_points=balance_points,
+                spent_points_total=spent_points_total,
+            ),
+        )
+        await self._session.flush()
+
+    async def apply_refund(
+        self,
+        *,
+        users_id: int,
+        balance_points: int,
+        spent_points_total: int,
+    ) -> None:
+        await self.apply_spend(
+            users_id=users_id,
+            balance_points=balance_points,
+            spent_points_total=spent_points_total,
+        )
 
     @staticmethod
     def _to_registration_dto(

@@ -3,12 +3,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class AccrualResult:
-    """Результат начисления очков пользователю.
-
-    Содержит баланс до операции, после операции и накопленный итог.
-    Используется оркестратором (AwardTaskService) для применения изменений
-    к пользователю и записи транзакции в журнал.
-    """
+    """Результат начисления очков пользователю."""
 
     amount: int
     balance_before: int
@@ -16,14 +11,18 @@ class AccrualResult:
     earned_points_total_after: int
 
 
-class WalletService:
-    """Чистая доменная логика движения внутренней валюты пользователя.
+@dataclass(frozen=True, kw_only=True, slots=True)
+class SpendResult:
+    """Результат списания очков за приз."""
 
-    Сервис не знает про БД, ORM и инфраструктуру: на вход — примитивы текущего
-    состояния пользователя и сумма операции, на выход — состояние после
-    применения. Запись в БД остаётся ответственностью репозиториев и
-    оркестратора (AwardTaskService).
-    """
+    amount: int
+    balance_before: int
+    balance_after: int
+    spent_points_total_after: int
+
+
+class WalletService:
+    """Чистая доменная логика движения внутренней валюты пользователя."""
 
     @staticmethod
     def accrue(
@@ -44,4 +43,48 @@ class WalletService:
             balance_before=balance_before,
             balance_after=balance_before + amount,
             earned_points_total_after=earned_points_total_before + amount,
+        )
+
+    @staticmethod
+    def spend(
+        *,
+        balance_before: int,
+        spent_points_total_before: int,
+        amount: int,
+    ) -> SpendResult:
+        if amount <= 0:
+            raise ValueError("Сумма списания должна быть положительной")
+        if balance_before < 0:
+            raise ValueError("Баланс до списания не может быть отрицательным")
+        if spent_points_total_before < 0:
+            raise ValueError("Суммарно потраченные баллы не могут быть отрицательными")
+        if balance_before < amount:
+            raise ValueError("Недостаточно баллов для списания")
+
+        return SpendResult(
+            amount=amount,
+            balance_before=balance_before,
+            balance_after=balance_before - amount,
+            spent_points_total_after=spent_points_total_before + amount,
+        )
+
+    @staticmethod
+    def refund_spend(
+        *,
+        balance_before: int,
+        spent_points_total_before: int,
+        amount: int,
+    ) -> SpendResult:
+        if amount <= 0:
+            raise ValueError("Сумма возврата должна быть положительной")
+        if balance_before < 0:
+            raise ValueError("Баланс до возврата не может быть отрицательным")
+        if spent_points_total_before < amount:
+            raise ValueError("Нельзя вернуть больше, чем было потрачено")
+
+        return SpendResult(
+            amount=amount,
+            balance_before=balance_before,
+            balance_after=balance_before + amount,
+            spent_points_total_after=spent_points_total_before - amount,
         )
