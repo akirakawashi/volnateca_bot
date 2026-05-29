@@ -1,4 +1,4 @@
-from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages._template import VKMessageText
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.template import VKMessageText
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.achievements import (
     build_level_up_message,
     build_monthly_top_reward_message,

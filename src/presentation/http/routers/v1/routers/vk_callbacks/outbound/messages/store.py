@@ -5,9 +5,9 @@ from application.common.dto.store import (
     StorePrizeView,
 )
 from domain.enums.prize import PrizeType
-from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages._template import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.template import (
     VKMessageText,
-    _template_message,
+    build_template_message,
 )
 
 
@@ -39,7 +39,7 @@ def build_store_catalog_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
 
 
 def build_store_catalog_navigation_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
-    return _template_message(
+    return build_template_message(
         "store_catalog_navigation",
         section_label=catalog.section.label,
         page=catalog.pagination.page,
@@ -48,7 +48,7 @@ def build_store_catalog_navigation_message(*, catalog: StoreCatalogDTO) -> VKMes
 
 
 def build_store_catalog_carousel_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
-    return _template_message(
+    return build_template_message(
         "store_catalog_carousel",
         section_label=catalog.section.label,
         total_items=catalog.pagination.total_items,

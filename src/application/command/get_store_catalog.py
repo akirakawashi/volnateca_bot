@@ -11,6 +11,7 @@ from application.common.dto.store import (
     StorePrizeView,
     StoreSection,
 )
+from application.common.helpers import normalize_page
 from application.interface.repositories.prizes import IPrizeRepository
 from domain.enums.prize import PrizeStatus
 
@@ -40,7 +41,7 @@ class GetStoreCatalogHandler(Interactor[GetStoreCatalogCommand, StoreCatalogDTO]
         prize_types = command_data.section.prize_types
         total_items = await self.prize_repository.count_store_prizes(prize_types=prize_types)
         total_pages = max(1, (total_items + STORE_PAGE_SIZE - 1) // STORE_PAGE_SIZE)
-        page = _normalize_page(page=command_data.page, total_pages=total_pages)
+        page = normalize_page(page=command_data.page, total_pages=total_pages)
         page_items: tuple[StorePrizeSnapshot, ...] = ()
         if total_items > 0:
             start = (page - 1) * STORE_PAGE_SIZE
@@ -142,14 +143,6 @@ def _resolve_store_prize_user_state(
     if balance_points < prize.cost_points:
         return StorePrizeUserState.INSUFFICIENT_BALANCE
     return StorePrizeUserState.AVAILABLE
-
-
-def _normalize_page(*, page: int, total_pages: int) -> int:
-    if page < 1:
-        return 1
-    if page > total_pages:
-        return total_pages
-    return page
 
 
 __all__ = [

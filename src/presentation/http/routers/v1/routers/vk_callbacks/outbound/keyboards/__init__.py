@@ -1,4 +1,4 @@
-from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards._buttons import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards.buttons import (
     VKKeyboard,
     VKTemplate,
 )

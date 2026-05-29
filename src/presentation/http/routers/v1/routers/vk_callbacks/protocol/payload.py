@@ -5,7 +5,7 @@ from pydantic import BaseModel, ValidationError
 
 from application.common.dto.vk import VKPollDTO, VKWallPostDTO
 from presentation.http.dto.request import VKCallbackSchema
-from presentation.http.routers.v1.routers.vk_callbacks.protocol._extractors import (
+from presentation.http.routers.v1.routers.vk_callbacks.protocol.extractors import (
     extract_comment_user_id,
     extract_commented_post_external_ids,
     extract_first_name,

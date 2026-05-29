@@ -10,14 +10,14 @@ class VKMessageText:
     template_context: dict[str, object] = field(default_factory=dict)
 
 
-def _build_greeting(*, first_name: str | None) -> str:
+def build_greeting(*, first_name: str | None) -> str:
     clean_first_name = first_name.strip() if first_name is not None else ""
     if clean_first_name:
         return f"Привет, {clean_first_name}!"
     return "Привет!"
 
 
-def _template_message(code: str, **context: object) -> VKMessageText:
+def build_template_message(code: str, **context: object) -> VKMessageText:
     definition = get_message_template_definition(code)
     if definition is None:
         raise RuntimeError(f"Неизвестный шаблон сообщения: {code}")

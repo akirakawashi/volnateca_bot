@@ -1,13 +1,13 @@
 from application.common.dto.task import TaskPaginationDTO, VKUserAvailableTaskDTO
 from domain.enums.task import TaskType
-from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards._buttons import (
+from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards.buttons import (
     VKKeyboard,
     VKTemplate,
-    _payload_button,
-    _truncate_carousel_text,
+    payload_button,
+    truncate_carousel_text,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards.registration import (
-    _build_main_menu_rows,
+    build_main_menu_rows,
 )
 from settings.vk.task_images import TaskTypeImagesSettings
 from utils.vk_attachments import to_vk_carousel_photo_id
@@ -20,7 +20,7 @@ def build_tasks_navigation_keyboard(pagination: TaskPaginationDTO | None = None)
     if navigation_row:
         buttons.append(navigation_row)
 
-    buttons.extend(_build_main_menu_rows())
+    buttons.extend(build_main_menu_rows())
     return {"one_time": False, "buttons": buttons}
 
 
@@ -34,7 +34,7 @@ def build_task_info_keyboard(
     if task is not None and task.task_type == TaskType.CUSTOM:
         buttons.append(
             [
-                _payload_button(
+                payload_button(
                     label="Получить промокод",
                     color="positive",
                     payload={"action": "custom_promo_start", "tasks_id": task.tasks_id},
@@ -44,7 +44,7 @@ def build_task_info_keyboard(
 
     buttons.append(
         [
-            _payload_button(
+            payload_button(
                 label="К списку заданий",
                 color="primary",
                 payload={"action": "tasks_page", "page": page},
@@ -56,7 +56,7 @@ def build_task_info_keyboard(
     if navigation_row:
         buttons.append(navigation_row)
 
-    buttons.extend(_build_main_menu_rows())
+    buttons.extend(build_main_menu_rows())
     return {"one_time": False, "buttons": buttons}
 
 
@@ -65,7 +65,7 @@ def build_task_promo_code_wait_keyboard() -> VKKeyboard:
         "one_time": False,
         "buttons": [
             [
-                _payload_button(
+                payload_button(
                     label="Выйти",
                     color="secondary",
                     payload={"action": "custom_promo_exit"},
@@ -82,7 +82,7 @@ def _build_tasks_navigation_row(pagination: TaskPaginationDTO | None) -> list[di
     buttons: list[dict[str, object]] = []
     if pagination.has_previous:
         buttons.append(
-            _payload_button(
+            payload_button(
                 label="← Назад",
                 color="secondary",
                 payload={"action": "tasks_page", "page": pagination.page - 1},
@@ -90,7 +90,7 @@ def _build_tasks_navigation_row(pagination: TaskPaginationDTO | None) -> list[di
         )
     if pagination.has_next:
         buttons.append(
-            _payload_button(
+            payload_button(
                 label="Вперёд →",
                 color="secondary",
                 payload={"action": "tasks_page", "page": pagination.page + 1},
@@ -125,12 +125,12 @@ def build_tasks_carousel_template(
         )
         elements.append(
             {
-                "title": _truncate_carousel_text(task.task_name, max_length=80),
-                "description": _truncate_carousel_text(f"+{task.points} ✦", max_length=80),
+                "title": truncate_carousel_text(task.task_name, max_length=80),
+                "description": truncate_carousel_text(f"+{task.points} ✦", max_length=80),
                 "photo_id": photo_id,
                 "action": {"type": "open_photo"},
                 "buttons": [
-                    _payload_button(
+                    payload_button(
                         label="Получить" if task.task_type == TaskType.CUSTOM else "Подробнее",
                         color="positive" if task.task_type == TaskType.CUSTOM else "primary",
                         payload=button_payload,
