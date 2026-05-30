@@ -1,12 +1,9 @@
-from sqlalchemy import func, select
-from sqlmodel import col
-
 from application.admin.dto.task_promo_code import (
     CreateTaskPromoCodeTaskCommand,
     CreatedTaskPromoCodeTaskDTO,
 )
 from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
-from application.common.dto.task_promo_code import TaskPromoCodeStatsDTO, normalize_task_promo_code
+from application.common.dto.task_promo_code import normalize_task_promo_code
 from domain.enums.task import TaskPromoCodeStatus, TaskType
 from infrastructure.database.models.task_promo_codes import TaskPromoCode
 from infrastructure.database.models.tasks import Task
@@ -51,28 +48,4 @@ class TaskPromoCodeAdminRepository(SQLAlchemyRepository, ITaskPromoCodeAdminRepo
             code=task.code,
             task_name=task.task_name,
             promo_codes_total=len(codes),
-        )
-
-    async def get_stats(
-        self,
-        *,
-        tasks_id: int,
-    ) -> TaskPromoCodeStatsDTO:
-        result = await self._session.execute(
-            select(
-                func.count(col(TaskPromoCode.task_promo_codes_id)),
-                func.count(col(TaskPromoCode.task_promo_codes_id)).filter(
-                    col(TaskPromoCode.promo_code_status) == TaskPromoCodeStatus.AVAILABLE,
-                ),
-                func.count(col(TaskPromoCode.task_promo_codes_id)).filter(
-                    col(TaskPromoCode.promo_code_status) == TaskPromoCodeStatus.USED,
-                ),
-            ).where(col(TaskPromoCode.tasks_id) == tasks_id),
-        )
-        total_count, available_count, used_count = result.one()
-        return TaskPromoCodeStatsDTO(
-            tasks_id=tasks_id,
-            total_count=int(total_count),
-            available_count=int(available_count),
-            used_count=int(used_count),
         )

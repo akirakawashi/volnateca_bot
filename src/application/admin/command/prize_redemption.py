@@ -60,7 +60,7 @@ class ListPrizeRedemptionsHandler(
             limit=ADMIN_REDEMPTIONS_PAGE_SIZE,
             offset=offset,
         )
-        return tuple(_to_admin_dto(record) for record in records)
+        return tuple(to_prize_redemption_admin_dto(record) for record in records)
 
 
 class GetPrizeRedemptionHandler(
@@ -78,7 +78,7 @@ class GetPrizeRedemptionHandler(
         )
         if record is None:
             return None
-        return _to_admin_dto(record)
+        return to_prize_redemption_admin_dto(record)
 
 
 class FulfillPrizeRedemptionHandler(
@@ -127,7 +127,7 @@ class CancelPrizeRedemptionHandler(
         return outcome
 
 
-def _to_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedemptionAdminDTO:
+def to_prize_redemption_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedemptionAdminDTO:
     return PrizeRedemptionAdminDTO(
         prize_redemptions_id=record.prize_redemptions_id,
         users_id=record.users_id,
@@ -150,6 +150,7 @@ def _to_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedemptionAdminDTO:
 
 __all__ = [
     "ADMIN_REDEMPTIONS_PAGE_SIZE",
+    "to_prize_redemption_admin_dto",
     "CancelPrizeRedemptionCommand",
     "CancelPrizeRedemptionHandler",
     "FulfillPrizeRedemptionCommand",

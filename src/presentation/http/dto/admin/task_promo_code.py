@@ -7,7 +7,7 @@ from application.admin.dto.task_promo_code import (
     CreateTaskPromoCodeTaskCommand,
     CreatedTaskPromoCodeTaskDTO,
 )
-from application.common.dto.task_promo_code import TaskPromoCodeStatsDTO, normalize_task_promo_code
+from application.common.dto.task_promo_code import normalize_task_promo_code
 from domain.enums.task import TaskRepeatPolicy
 
 
@@ -82,20 +82,4 @@ class CreatedTaskPromoCodeTaskResponseSchema(BaseModel):
             code=dto.code,
             task_name=dto.task_name,
             promo_codes_total=dto.promo_codes_total,
-        )
-
-
-class TaskPromoCodeStatsResponseSchema(BaseModel):
-    tasks_id: int
-    total_count: int
-    available_count: int
-    used_count: int
-
-    @classmethod
-    def from_dto(cls, dto: TaskPromoCodeStatsDTO) -> "TaskPromoCodeStatsResponseSchema":
-        return cls(
-            tasks_id=dto.tasks_id,
-            total_count=dto.total_count,
-            available_count=dto.available_count,
-            used_count=dto.used_count,
         )

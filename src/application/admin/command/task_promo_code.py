@@ -1,12 +1,9 @@
-from dataclasses import dataclass
-
 from application.admin.dto.task_promo_code import (
     CreateTaskPromoCodeTaskCommand,
     CreatedTaskPromoCodeTaskDTO,
 )
 from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
 from application.base_interactor import Interactor
-from application.common.dto.task_promo_code import TaskPromoCodeStatsDTO
 from application.interface.uow import IUnitOfWork
 
 
@@ -28,24 +25,3 @@ class CreateTaskPromoCodeTaskHandler(
         result = await self.repository.create_task_with_codes(command=command_data)
         await self.uow.commit()
         return result
-
-
-@dataclass(slots=True, frozen=True, kw_only=True)
-class GetTaskPromoCodeStatsCommand:
-    tasks_id: int
-
-
-class GetTaskPromoCodeStatsHandler(
-    Interactor[GetTaskPromoCodeStatsCommand, TaskPromoCodeStatsDTO],
-):
-    def __init__(
-        self,
-        repository: ITaskPromoCodeAdminRepository,
-    ) -> None:
-        self.repository = repository
-
-    async def __call__(
-        self,
-        command_data: GetTaskPromoCodeStatsCommand,
-    ) -> TaskPromoCodeStatsDTO:
-        return await self.repository.get_stats(tasks_id=command_data.tasks_id)

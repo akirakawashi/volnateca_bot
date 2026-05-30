@@ -4,8 +4,7 @@ from fastapi import APIRouter, status
 
 from application.admin.command.truncate_db import TruncateDBCommand, TruncateDBHandler
 
-# TODO: удалить db_admin_router (truncate) перед релизом.
-# Это служебный dev-only endpoint для локальных сценариев и ручной отладки.
+# TODO DEV: удалить весь файл db.py перед релизом — truncate только для локальной отладки.
 db_admin_router = APIRouter(route_class=DishkaRoute)
 
 
@@ -17,6 +16,5 @@ db_admin_router = APIRouter(route_class=DishkaRoute)
 async def truncate_db(
     handler: FromDishka[TruncateDBHandler],
 ) -> None:
-    # Намеренно без runtime-охраны: endpoint не является продуктовым API и
-    # используется только в локальной разработке для dev-сценариев.
+    # TODO DEV: endpoint без runtime-охраны — удалить вместе с db_admin_router перед релизом.
     await handler(TruncateDBCommand())

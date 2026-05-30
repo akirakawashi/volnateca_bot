@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from application.common.dto.task_completion import TaskCompletionRecord
+from application.common.dto.task_completion import TaskCompletionListRecord, TaskCompletionRecord
 from domain.enums.task import TaskCompletionStatus
 
 
@@ -52,6 +52,16 @@ class ITaskCompletionRepository(ABC):
         rejected_reason: str | None,
         checked_at: datetime,
     ) -> TaskCompletionRecord:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_by_users_id(
+        self,
+        *,
+        users_id: int,
+        limit: int,
+        offset: int,
+    ) -> tuple[TaskCompletionListRecord, ...]:
         raise NotImplementedError
 
     @abstractmethod

@@ -2,17 +2,35 @@ from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.admin.command.broadcast import GetBroadcastStatusHandler, StartBroadcastHandler
-# TODO: удалить SeedDevScenarioHandler и get_seed_dev_scenario_handler перед релизом.
+
+# TODO DEV: удалить импорты SeedDevScenarioHandler, SeedStorePrizesHandler, TruncateDBHandler перед релизом.
 from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 from application.admin.command.seed_store_prizes import SeedStorePrizesHandler
 from application.admin.command.create_prize import CreatePrizeHandler
+from application.admin.command.update_prize import UpdatePrizeHandler
 from application.admin.command.prize_redemption import (
     CancelPrizeRedemptionHandler,
     FulfillPrizeRedemptionHandler,
     GetPrizeRedemptionHandler,
     ListPrizeRedemptionsHandler,
 )
+from application.admin.command.user import (
+    GetUserProfileHandler,
+    GetUserReferralsHandler,
+    ListUserPrizeRedemptionsHandler,
+    ListUserTaskCompletionsHandler,
+    ListUserTransactionsHandler,
+    SearchUsersHandler,
+    UserExistsHandler,
+)
+from application.admin.interface.repositories.stats import IStatsAdminRepository
+from application.admin.interface.repositories.user import IUserAdminRepository
 from application.admin.command.list_prizes import ListPrizesHandler
+from application.admin.command.stats import (
+    GetDailyAccrualPointsStatsHandler,
+    GetDailyActivityStatsHandler,
+    GetDailyNewUsersStatsHandler,
+)
 from application.admin.command.message_templates import (
     DeleteMessageTemplateHandler,
     ListMessageTemplatesHandler,
@@ -28,11 +46,8 @@ from application.command.complete_vk_repost_task import CompleteVKRepostTaskHand
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.admin.command.create_quiz import CreateQuizHandler
 from application.admin.command.post_to_wall import PostToWallHandler
-from application.admin.command.truncate_db import TruncateDBHandler
-from application.admin.command.task_promo_code import (
-    CreateTaskPromoCodeTaskHandler,
-    GetTaskPromoCodeStatsHandler,
-)
+from application.admin.command.truncate_db import TruncateDBHandler  # TODO DEV: удалить перед релизом.
+from application.admin.command.task_promo_code import CreateTaskPromoCodeTaskHandler
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
@@ -44,7 +59,9 @@ from application.command.register_vk_user import RegisterVKUserHandler
 from application.command.register_vk_user_and_check_subscription import (
     RegisterVKUserAndCheckSubscriptionHandler,
 )
-from application.command.register_vk_user_with_referral_context import RegisterVKUserWithReferralContextHandler
+from application.command.register_vk_user_with_referral_context import (
+    RegisterVKUserWithReferralContextHandler,
+)
 from application.command.task_promo_code import (
     ActivateTaskPromoCodeHandler,
     CancelTaskPromoCodeHandler,
@@ -57,7 +74,7 @@ from application.interface.repositories.achievements import IAchievementReposito
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
-from application.admin.interface.db_manager import IDBManager
+from application.admin.interface.db_manager import IDBManager  # TODO DEV: удалить перед релизом.
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
 from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
@@ -437,6 +454,17 @@ class InteractorProvider(Provider):
         )
 
     @provide(scope=Scope.REQUEST)
+    def get_update_prize_handler(
+        self,
+        prize_admin_repository: IPrizeAdminRepository,
+        uow: IUnitOfWork,
+    ) -> UpdatePrizeHandler:
+        return UpdatePrizeHandler(
+            prize_admin_repository=prize_admin_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
     def get_list_prize_redemptions_handler(
         self,
         prize_redemption_repository: IPrizeRedemptionRepository,
@@ -477,6 +505,94 @@ class InteractorProvider(Provider):
         )
 
     @provide(scope=Scope.REQUEST)
+    def get_daily_activity_stats_handler(
+        self,
+        stats_admin_repository: IStatsAdminRepository,
+        app_settings: AppSettings,
+    ) -> GetDailyActivityStatsHandler:
+        return GetDailyActivityStatsHandler(
+            stats_repository=stats_admin_repository,
+            project_timezone=app_settings.project_timezone,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_daily_new_users_stats_handler(
+        self,
+        stats_admin_repository: IStatsAdminRepository,
+        app_settings: AppSettings,
+    ) -> GetDailyNewUsersStatsHandler:
+        return GetDailyNewUsersStatsHandler(
+            stats_repository=stats_admin_repository,
+            project_timezone=app_settings.project_timezone,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_daily_accrual_points_stats_handler(
+        self,
+        stats_admin_repository: IStatsAdminRepository,
+        app_settings: AppSettings,
+    ) -> GetDailyAccrualPointsStatsHandler:
+        return GetDailyAccrualPointsStatsHandler(
+            stats_repository=stats_admin_repository,
+            project_timezone=app_settings.project_timezone,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_search_users_handler(
+        self,
+        user_admin_repository: IUserAdminRepository,
+    ) -> SearchUsersHandler:
+        return SearchUsersHandler(user_admin_repository=user_admin_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_get_user_profile_handler(
+        self,
+        user_admin_repository: IUserAdminRepository,
+    ) -> GetUserProfileHandler:
+        return GetUserProfileHandler(user_admin_repository=user_admin_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_user_exists_handler(
+        self,
+        user_admin_repository: IUserAdminRepository,
+    ) -> UserExistsHandler:
+        return UserExistsHandler(user_admin_repository=user_admin_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_list_user_prize_redemptions_handler(
+        self,
+        prize_redemption_repository: IPrizeRedemptionRepository,
+    ) -> ListUserPrizeRedemptionsHandler:
+        return ListUserPrizeRedemptionsHandler(
+            prize_redemption_repository=prize_redemption_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_list_user_task_completions_handler(
+        self,
+        task_completion_repository: ITaskCompletionRepository,
+    ) -> ListUserTaskCompletionsHandler:
+        return ListUserTaskCompletionsHandler(
+            task_completion_repository=task_completion_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_list_user_transactions_handler(
+        self,
+        transaction_repository: ITransactionRepository,
+    ) -> ListUserTransactionsHandler:
+        return ListUserTransactionsHandler(
+            transaction_repository=transaction_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_get_user_referrals_handler(
+        self,
+        user_admin_repository: IUserAdminRepository,
+    ) -> GetUserReferralsHandler:
+        return GetUserReferralsHandler(user_admin_repository=user_admin_repository)
+
+    @provide(scope=Scope.REQUEST)
     def get_create_task_promo_code_task_handler(
         self,
         task_promo_code_admin_repository: ITaskPromoCodeAdminRepository,
@@ -486,13 +602,6 @@ class InteractorProvider(Provider):
             repository=task_promo_code_admin_repository,
             uow=uow,
         )
-
-    @provide(scope=Scope.REQUEST)
-    def get_task_promo_code_stats_handler(
-        self,
-        task_promo_code_admin_repository: ITaskPromoCodeAdminRepository,
-    ) -> GetTaskPromoCodeStatsHandler:
-        return GetTaskPromoCodeStatsHandler(repository=task_promo_code_admin_repository)
 
     @provide(scope=Scope.REQUEST)
     def get_post_to_wall_handler(
@@ -509,6 +618,7 @@ class InteractorProvider(Provider):
             vk_settings=vk_settings,
         )
 
+    # TODO DEV: удалить get_truncate_db_handler перед релизом.
     @provide(scope=Scope.REQUEST)
     def get_truncate_db_handler(
         self,
@@ -516,6 +626,7 @@ class InteractorProvider(Provider):
     ) -> TruncateDBHandler:
         return TruncateDBHandler(db_manager=db_manager)
 
+    # TODO DEV: удалить get_seed_dev_scenario_handler перед релизом.
     @provide(scope=Scope.REQUEST)
     def get_seed_dev_scenario_handler(
         self,
@@ -526,6 +637,7 @@ class InteractorProvider(Provider):
 
         return SeedDevScenarioHandler(session=session, vk_settings=vk_settings)
 
+    # TODO DEV: удалить get_seed_store_prizes_handler перед релизом.
     @provide(scope=Scope.REQUEST)
     def get_seed_store_prizes_handler(
         self,

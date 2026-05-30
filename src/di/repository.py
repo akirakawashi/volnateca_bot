@@ -6,8 +6,10 @@ from application.interface.repositories.message_templates import IMessageTemplat
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
-from application.admin.interface.db_manager import IDBManager
+from application.admin.interface.db_manager import IDBManager  # TODO DEV: удалить перед релизом.
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
+from application.admin.interface.repositories.stats import IStatsAdminRepository
+from application.admin.interface.repositories.user import IUserAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
 from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
 from application.interface.repositories.referral_intents import IReferralIntentRepository
@@ -23,8 +25,10 @@ from infrastructure.database.repositories.message_templates import MessageTempla
 from infrastructure.database.repositories.prize_redemptions import PrizeRedemptionRepository
 from infrastructure.database.repositories.prizes import PrizeRepository
 from infrastructure.database.repositories.quiz import QuizRepository
-from infrastructure.database.db_manager import DBManager
+from infrastructure.database.db_manager import DBManager  # TODO DEV: удалить перед релизом.
 from infrastructure.database.repositories.admin.prize import PrizeAdminRepository
+from infrastructure.database.repositories.admin.stats import StatsAdminRepository
+from infrastructure.database.repositories.admin.user import UserAdminRepository
 from infrastructure.database.repositories.admin.quiz import QuizAdminRepository
 from infrastructure.database.repositories.admin.task_promo_code import TaskPromoCodeAdminRepository
 from infrastructure.database.repositories.referral_intents import ReferralIntentRepository
@@ -143,6 +147,20 @@ class RepositoriesProvider(Provider):
     ) -> PrizeAdminRepository:
         return PrizeAdminRepository(session=session)
 
+    @provide(scope=Scope.REQUEST, provides=IUserAdminRepository)
+    def get_user_admin_repository(
+        self,
+        session: AsyncSession,
+    ) -> UserAdminRepository:
+        return UserAdminRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IStatsAdminRepository)
+    def get_stats_admin_repository(
+        self,
+        session: AsyncSession,
+    ) -> StatsAdminRepository:
+        return StatsAdminRepository(session=session)
+
     @provide(scope=Scope.REQUEST, provides=ITaskPromoCodeAdminRepository)
     def get_task_promo_code_admin_repository(
         self,
@@ -150,6 +168,7 @@ class RepositoriesProvider(Provider):
     ) -> TaskPromoCodeAdminRepository:
         return TaskPromoCodeAdminRepository(session=session)
 
+    # TODO DEV: удалить get_db_manager (IDBManager) перед релизом — только для truncate.
     @provide(scope=Scope.REQUEST, provides=IDBManager)
     def get_db_manager(
         self,

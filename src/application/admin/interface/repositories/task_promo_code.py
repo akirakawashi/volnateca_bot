@@ -4,7 +4,6 @@ from application.admin.dto.task_promo_code import (
     CreateTaskPromoCodeTaskCommand,
     CreatedTaskPromoCodeTaskDTO,
 )
-from application.common.dto.task_promo_code import TaskPromoCodeStatsDTO
 
 
 class ITaskPromoCodeAdminRepository(ABC):
@@ -13,12 +12,4 @@ class ITaskPromoCodeAdminRepository(ABC):
         self,
         command: CreateTaskPromoCodeTaskCommand,
     ) -> CreatedTaskPromoCodeTaskDTO:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_stats(
-        self,
-        *,
-        tasks_id: int,
-    ) -> TaskPromoCodeStatsDTO:
         raise NotImplementedError

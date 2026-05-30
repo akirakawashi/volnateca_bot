@@ -10,7 +10,7 @@ from presentation.http.dto.admin.dev import (
     SeedStorePrizesResponse,
 )
 
-# TODO: удалить dev_admin_router перед релизом — только для локальной отладки.
+# TODO DEV: удалить весь файл dev.py перед релизом — только для локальной отладки.
 dev_admin_router = APIRouter(route_class=DishkaRoute)
 
 
@@ -24,6 +24,7 @@ async def seed_dev_scenario(
     data: SeedDevScenarioRequest,
     handler: FromDishka[SeedDevScenarioHandler],
 ) -> SeedDevScenarioResponse:
+    # TODO DEV: удалить endpoint /dev/seed перед релизом.
     result = await handler(
         SeedDevScenarioCommand(scenario=data.scenario, users_id=data.users_id),
     )
@@ -39,5 +40,6 @@ async def seed_dev_scenario(
 async def seed_store_prizes(
     handler: FromDishka[SeedStorePrizesHandler],
 ) -> SeedStorePrizesResponse:
+    # TODO DEV: удалить endpoint /dev/seed-store-prizes перед релизом.
     result = await handler(SeedStorePrizesCommand())
     return SeedStorePrizesResponse(messages=list(result.messages))

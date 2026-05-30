@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlmodel import col
 
-from application.common.dto.transaction import TransactionRecord
+from application.common.dto.transaction import TransactionListRecord, TransactionRecord
 from application.interface.repositories.transactions import ITransactionRepository, MonthlyTopUserRecord
 from domain.enums.transaction import TransactionSource, TransactionType
 from infrastructure.database.models.achievements import Achievement
@@ -51,6 +51,41 @@ class TransactionRepository(SQLAlchemyRepository, ITransactionRepository):
             balance_before=transaction.balance_before,
             balance_after=transaction.balance_after,
         )
+
+    @staticmethod
+    def _to_list_record(*, transaction: Transaction) -> TransactionListRecord:
+        if transaction.transactions_id is None:
+            raise RuntimeError("Первичный ключ транзакции не был сгенерирован")
+
+        return TransactionListRecord(
+            transactions_id=transaction.transactions_id,
+            users_id=transaction.users_id,
+            tasks_id=transaction.tasks_id,
+            prizes_id=transaction.prizes_id,
+            transaction_type=transaction.transaction_type,
+            transaction_source=transaction.transaction_source,
+            amount=transaction.amount,
+            balance_before=transaction.balance_before,
+            balance_after=transaction.balance_after,
+            description=transaction.description,
+            created_at=transaction.created_at,
+        )
+
+    async def list_by_users_id(
+        self,
+        *,
+        users_id: int,
+        limit: int,
+        offset: int,
+    ) -> tuple[TransactionListRecord, ...]:
+        result = await self._session.execute(
+            select(Transaction)
+            .where(col(Transaction.users_id) == users_id)
+            .order_by(col(Transaction.created_at).desc(), col(Transaction.transactions_id).desc())
+            .limit(max(1, limit))
+            .offset(max(0, offset)),
+        )
+        return tuple(self._to_list_record(transaction=row) for row in result.scalars().all())
 
     async def list_top_accrual_users_for_period(
         self,

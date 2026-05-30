@@ -1,4 +1,6 @@
 """
+TODO DEV: удалить dev_scripts/ перед релизом — только для локальной отладки.
+
 Seed one dev scenario for manual checks with a real VK account.
 
 Flow:

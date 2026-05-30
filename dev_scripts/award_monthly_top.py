@@ -1,4 +1,6 @@
 """
+TODO DEV: удалить dev_scripts/ перед релизом — только для локальной отладки.
+
 Award monthly_top_10 achievement for a selected month.
 
 Run from the project root:

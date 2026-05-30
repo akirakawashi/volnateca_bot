@@ -1,3 +1,5 @@
+# TODO DEV: удалить IDBManager перед релизом — используется только для truncate.
+
 from abc import ABC, abstractmethod
 
 

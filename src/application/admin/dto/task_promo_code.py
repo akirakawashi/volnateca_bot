@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from application.common.dto.task_promo_code import TaskPromoCodeStatsDTO
 from domain.enums.task import TaskRepeatPolicy
 
 
@@ -29,5 +28,4 @@ class CreatedTaskPromoCodeTaskDTO:
 __all__ = [
     "CreateTaskPromoCodeTaskCommand",
     "CreatedTaskPromoCodeTaskDTO",
-    "TaskPromoCodeStatsDTO",
 ]
