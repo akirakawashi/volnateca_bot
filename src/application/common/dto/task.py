@@ -3,8 +3,6 @@ from enum import Enum
 
 from domain.enums.task import TaskRepeatPolicy, TaskType
 
-TASKS_PAGE_SIZE = 6
-
 
 class TaskCompletionResultStatus(str, Enum):
     COMPLETED = "completed"

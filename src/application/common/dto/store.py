@@ -4,7 +4,6 @@ from enum import Enum
 from domain.enums.prize import PrizeStatus, PrizeType
 
 
-STORE_PAGE_SIZE = 3
 STORE_ALLOWED_PRIZE_TYPES: tuple[PrizeType, ...] = (
     PrizeType.MERCH,
     PrizeType.PARTNER,
@@ -112,7 +111,6 @@ def list_store_sections() -> tuple[StoreSection, ...]:
 
 __all__ = [
     "STORE_ALLOWED_PRIZE_TYPES",
-    "STORE_PAGE_SIZE",
     "StoreCatalogDTO",
     "StorePaginationDTO",
     "StorePrizeCardDTO",

@@ -84,6 +84,18 @@ TASK_DESCRIPTION_MAX_LENGTH = 500
 MENYAYKA_SALE_URL = "https://volnamobile.ru/sale/"
 
 
+# ===== Bot pagination =====
+
+# Сколько заданий показывается на одной странице карусели заданий.
+TASKS_PAGE_SIZE = 6
+
+# Сколько призов показывается на одной странице карусели магазина.
+STORE_PAGE_SIZE = 3
+
+# Сколько заявок на приз показывается на одной странице раздела «Мои призы».
+USER_REDEMPTIONS_PAGE_SIZE = 10
+
+
 # ===== Completion achievements =====
 
 # Код достижения за закрытие всех заданий одной недели.
@@ -136,8 +148,11 @@ __all__ = [
     "REFERRAL_MILESTONE_ACHIEVEMENT_KEY",
     "REFERRAL_MILESTONES",
     "REGISTRATION_BONUS_POINTS",
+    "STORE_PAGE_SIZE",
     "TASK_DESCRIPTION_MAX_LENGTH",
+    "TASKS_PAGE_SIZE",
     "TaskRejectedReason",
+    "USER_REDEMPTIONS_PAGE_SIZE",
     "VK_SUBSCRIPTION_COMPLETION_KEY",
     "VK_SUBSCRIPTION_REJECTED_REASON",
     "VK_SUBSCRIPTION_TASK_POINTS",
