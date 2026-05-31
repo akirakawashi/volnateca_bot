@@ -5,13 +5,14 @@ from uuid import uuid4
 
 from loguru import logger
 
+from application.admin.admin_rules import (
+    ADMIN_BROADCAST_BATCH_SIZE,
+    ADMIN_BROADCAST_SEND_CONCURRENCY,
+)
 from application.admin.dto.broadcast import BroadcastSnapshotDTO, BroadcastStatus
 from application.admin.interface.broadcast_recipients import IBroadcastRecipientReader
 from application.common.dto.user import ActiveVKUserDTO
 from application.interface.clients import IVKMessageClient
-
-DEFAULT_BROADCAST_BATCH_SIZE = 500
-DEFAULT_BROADCAST_SEND_CONCURRENCY = 10
 
 
 class BroadcastAlreadyRunningError(RuntimeError):
@@ -28,8 +29,8 @@ class BroadcastManager:
         recipient_reader: IBroadcastRecipientReader,
         message_client: IVKMessageClient,
         *,
-        batch_size: int = DEFAULT_BROADCAST_BATCH_SIZE,
-        send_concurrency: int = DEFAULT_BROADCAST_SEND_CONCURRENCY,
+        batch_size: int = ADMIN_BROADCAST_BATCH_SIZE,
+        send_concurrency: int = ADMIN_BROADCAST_SEND_CONCURRENCY,
     ) -> None:
         if batch_size < 1:
             raise ValueError("batch_size must be positive")

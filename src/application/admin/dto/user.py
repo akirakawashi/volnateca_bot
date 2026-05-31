@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from domain.enums.prize import PrizeRedemptionStatus
 from domain.enums.task import TaskCompletionStatus
 from domain.enums.transaction import TransactionSource, TransactionType
 

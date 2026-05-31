@@ -5,9 +5,8 @@ from application.interface.clients import IVKWallClient
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
 from domain.enums.task import TaskRepeatPolicy
+from domain.task_rules import TASK_DESCRIPTION_MAX_LENGTH
 from settings.vk import VKSettings
-
-_MAX_DESCRIPTION_LEN = 500
 
 
 class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
@@ -37,7 +36,9 @@ class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
         vk_post = VKWallPostDTO(owner_id=-group_id, post_id=post_id)
         external_id = vk_post.external_id
 
-        description = (f"Создано из поста {external_id}.\n\n{command_data.message}")[:_MAX_DESCRIPTION_LEN]
+        description = (f"Создано из поста {external_id}.\n\n{command_data.message}")[
+            :TASK_DESCRIPTION_MAX_LENGTH
+        ]
 
         like_result = await self.task_repository.create_like_task_if_not_exists(
             code=f"vk_like_wall_{group_id}_{post_id}",

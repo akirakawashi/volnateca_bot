@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from application.admin.admin_rules import ADMIN_USER_SEARCH_LIMIT
 from application.admin.command.user import (
     GetUserProfileCommand,
     GetUserReferralsCommand,
@@ -26,7 +27,7 @@ from presentation.http.dto.admin.prize_redemption import PrizeRedemptionResponse
 
 class SearchUsersQuerySchema(BaseModel):
     q: str = Field(min_length=1)
-    limit: int = Field(default=20, ge=1, le=20)
+    limit: int = Field(default=ADMIN_USER_SEARCH_LIMIT, ge=1, le=ADMIN_USER_SEARCH_LIMIT)
 
     def to_command(self) -> SearchUsersCommand:
         return SearchUsersCommand(query=self.q.strip(), limit=self.limit)

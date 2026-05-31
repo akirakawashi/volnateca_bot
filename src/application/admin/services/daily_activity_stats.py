@@ -1,14 +1,11 @@
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from application.admin.admin_rules import (
+    ADMIN_DAILY_STATS_DEFAULT_RANGE_DAYS,
+    ADMIN_DAILY_STATS_MAX_RANGE_DAYS,
+)
 from application.admin.dto.stats import DailyActivityStatsDTO, DailyStatPointDTO
-
-DEFAULT_DAILY_STATS_RANGE_DAYS = 30
-MAX_DAILY_STATS_RANGE_DAYS = 90
-
-# Backward-compatible aliases for activity stats.
-DEFAULT_ACTIVITY_RANGE_DAYS = DEFAULT_DAILY_STATS_RANGE_DAYS
-MAX_ACTIVITY_RANGE_DAYS = MAX_DAILY_STATS_RANGE_DAYS
 
 
 def resolve_daily_stats_date_range(
@@ -16,8 +13,8 @@ def resolve_daily_stats_date_range(
     from_date: date | None,
     to_date: date | None,
     project_timezone: ZoneInfo,
-    default_days: int = DEFAULT_DAILY_STATS_RANGE_DAYS,
-    max_days: int = MAX_DAILY_STATS_RANGE_DAYS,
+    default_days: int = ADMIN_DAILY_STATS_DEFAULT_RANGE_DAYS,
+    max_days: int = ADMIN_DAILY_STATS_MAX_RANGE_DAYS,
 ) -> tuple[date, date]:
     today = datetime.now(tz=project_timezone).date()
 
@@ -97,10 +94,6 @@ def build_daily_activity_stats_dto(
 
 
 __all__ = [
-    "DEFAULT_ACTIVITY_RANGE_DAYS",
-    "DEFAULT_DAILY_STATS_RANGE_DAYS",
-    "MAX_ACTIVITY_RANGE_DAYS",
-    "MAX_DAILY_STATS_RANGE_DAYS",
     "build_daily_activity_points",
     "build_daily_activity_stats_dto",
     "build_daily_stat_points",

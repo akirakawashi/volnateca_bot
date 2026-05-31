@@ -7,9 +7,9 @@ from application.admin.dto.stats import (
     DailyActivityStatsDTO,
     DailyNewUsersStatsDTO,
 )
+from application.admin.admin_rules import ADMIN_DAILY_STATS_MAX_RANGE_DAYS
 from application.admin.interface.repositories.stats import IStatsAdminRepository
 from application.admin.services.daily_activity_stats import (
-    MAX_DAILY_STATS_RANGE_DAYS,
     build_daily_activity_stats_dto,
     build_daily_stat_points,
     resolve_daily_stats_date_range,
@@ -45,7 +45,7 @@ def _resolve_stats_date_range(
     project_timezone: ZoneInfo,
 ) -> tuple[date, date]:
     if command_data.days is not None:
-        capped_days = max(1, min(command_data.days, MAX_DAILY_STATS_RANGE_DAYS))
+        capped_days = max(1, min(command_data.days, ADMIN_DAILY_STATS_MAX_RANGE_DAYS))
         today = datetime.now(tz=project_timezone).date()
         from_date = today - timedelta(days=capped_days - 1)
         to_date = today

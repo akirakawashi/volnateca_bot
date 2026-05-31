@@ -2,16 +2,10 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from application.admin.admin_rules import ADMIN_ALLOWED_PRIZE_TYPES, ADMIN_ALLOWED_RECEIVE_TYPES
 from application.admin.dto.prize import CreatePrizeCommand, PrizeAdminDTO, UpdatePrizeCommand
 from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
 from utils.vk_attachments import normalize_vk_photo_attachment
-
-ALLOWED_ADMIN_PRIZE_TYPES = (
-    PrizeType.MERCH,
-    PrizeType.PARTNER,
-    PrizeType.SUPER_PRIZE,
-)
-ALLOWED_ADMIN_RECEIVE_TYPES = (PrizeReceiveType.PICKUP,)
 
 
 class CreatePrizeRequestSchema(BaseModel):
@@ -55,14 +49,14 @@ class CreatePrizeRequestSchema(BaseModel):
     @field_validator("prize_type")
     @classmethod
     def validate_prize_type(cls, value: PrizeType) -> PrizeType:
-        if value not in ALLOWED_ADMIN_PRIZE_TYPES:
+        if value not in ADMIN_ALLOWED_PRIZE_TYPES:
             raise ValueError("Поддерживаются только merch, partner и super_prize")
         return value
 
     @field_validator("receive_type")
     @classmethod
     def validate_receive_type(cls, value: PrizeReceiveType) -> PrizeReceiveType:
-        if value not in ALLOWED_ADMIN_RECEIVE_TYPES:
+        if value not in ADMIN_ALLOWED_RECEIVE_TYPES:
             raise ValueError("Поддерживается только receive_type pickup")
         return value
 

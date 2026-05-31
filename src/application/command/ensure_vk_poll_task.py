@@ -11,8 +11,8 @@ from domain.project_rules import (
     POLL_TASK_NAME,
     POLL_TASK_POINTS,
 )
+from domain.task_rules import TASK_DESCRIPTION_MAX_LENGTH
 
-_MAX_DESCRIPTION_LEN = 500
 _VOLNATECA_HASHTAG_PATTERN = re.compile(POLL_TASK_HASHTAG_PATTERN, re.IGNORECASE)
 
 
@@ -59,4 +59,4 @@ class EnsureVKPollTaskHandler(Interactor[EnsureVKPollTaskCommand, None]):
             parts.append(f"Вопрос опроса: {poll_question}")
         if post_text:
             parts.append(f"Текст поста: {post_text}")
-        return "\n\n".join(parts)[:_MAX_DESCRIPTION_LEN]
+        return "\n\n".join(parts)[:TASK_DESCRIPTION_MAX_LENGTH]

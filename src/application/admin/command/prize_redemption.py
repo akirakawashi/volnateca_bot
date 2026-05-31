@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from application.admin.admin_rules import ADMIN_REDEMPTIONS_PAGE_SIZE
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
 from application.base_interactor import Interactor
 from application.common.dto.prize_redemption import PrizeRedemptionRecord
@@ -14,8 +15,6 @@ from application.services.fulfill_redemption_service import (
     FulfillRedemptionService,
 )
 from domain.enums.prize import PrizeRedemptionStatus
-
-ADMIN_REDEMPTIONS_PAGE_SIZE = 50
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -149,7 +148,6 @@ def to_prize_redemption_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedempt
 
 
 __all__ = [
-    "ADMIN_REDEMPTIONS_PAGE_SIZE",
     "to_prize_redemption_admin_dto",
     "CancelPrizeRedemptionCommand",
     "CancelPrizeRedemptionHandler",

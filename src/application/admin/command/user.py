@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 
+from application.admin.admin_rules import ADMIN_USER_LIST_PAGE_SIZE, ADMIN_USER_SEARCH_LIMIT
 from application.admin.command.prize_redemption import to_prize_redemption_admin_dto
-
-ADMIN_USER_LIST_PAGE_SIZE = 50
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
 from application.admin.dto.user import (
     UserProfileAdminDTO,
@@ -21,7 +20,7 @@ from application.interface.repositories.transactions import ITransactionReposito
 @dataclass(slots=True, frozen=True, kw_only=True)
 class SearchUsersCommand:
     query: str
-    limit: int = 20
+    limit: int = ADMIN_USER_SEARCH_LIMIT
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -59,7 +58,7 @@ class SearchUsersHandler(Interactor[SearchUsersCommand, tuple[UserSearchHitDTO, 
     async def __call__(self, command_data: SearchUsersCommand) -> tuple[UserSearchHitDTO, ...]:
         return await self._users.search(
             query=command_data.query,
-            limit=max(1, min(command_data.limit, 20)),
+            limit=max(1, min(command_data.limit, ADMIN_USER_SEARCH_LIMIT)),
         )
 
 
@@ -176,7 +175,6 @@ class GetUserReferralsHandler(Interactor[GetUserReferralsCommand, UserReferralsA
 
 
 __all__ = [
-    "ADMIN_USER_LIST_PAGE_SIZE",
     "GetUserProfileCommand",
     "GetUserProfileHandler",
     "GetUserReferralsCommand",
