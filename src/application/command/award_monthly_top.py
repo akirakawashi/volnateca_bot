@@ -12,8 +12,7 @@ from application.services.award_achievement_service import (
     AwardAchievementOutcomeStatus,
     AwardAchievementService,
 )
-
-MONTHLY_TOP_ACHIEVEMENT_CODE = "monthly_top_10"
+from domain.project_rules import MONTHLY_TOP_ACHIEVEMENT_CODE, MONTHLY_TOP_DEFAULT_LIMIT
 
 
 class MonthlyTopAwardStatus(str, Enum):
@@ -25,7 +24,7 @@ class MonthlyTopAwardStatus(str, Enum):
 @dataclass(slots=True, frozen=True, kw_only=True)
 class AwardMonthlyTopCommand:
     month: str
-    limit: int = 10
+    limit: int = MONTHLY_TOP_DEFAULT_LIMIT
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -158,6 +157,7 @@ def map_award_status(status: AwardAchievementOutcomeStatus) -> MonthlyTopAwardSt
 
 __all__ = [
     "MONTHLY_TOP_ACHIEVEMENT_CODE",
+    "MONTHLY_TOP_DEFAULT_LIMIT",
     "AwardMonthlyTopCommand",
     "AwardMonthlyTopDTO",
     "AwardMonthlyTopHandler",

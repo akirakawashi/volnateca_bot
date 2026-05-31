@@ -6,11 +6,14 @@ from application.common.dto.vk import VKPollDTO
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
 from domain.enums.task import TaskRepeatPolicy
+from domain.project_rules import (
+    POLL_TASK_HASHTAG_PATTERN,
+    POLL_TASK_NAME,
+    POLL_TASK_POINTS,
+)
 
 _MAX_DESCRIPTION_LEN = 500
-_POLL_POINTS = 20
-_TASK_NAME = "Проголосовать в опросе Волны"
-_VOLNATECA_HASHTAG_PATTERN = re.compile(r"(?<!\w)#volnateca\b", re.IGNORECASE)
+_VOLNATECA_HASHTAG_PATTERN = re.compile(POLL_TASK_HASHTAG_PATTERN, re.IGNORECASE)
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -41,10 +44,10 @@ class EnsureVKPollTaskHandler(Interactor[EnsureVKPollTaskCommand, None]):
         )
         await self.task_repository.get_or_create_poll_task(
             code=f"vk_poll_{command_data.poll.owner_id}_{command_data.poll.poll_id}",
-            task_name=_TASK_NAME,
+            task_name=POLL_TASK_NAME,
             description=description,
             external_id=command_data.poll.external_id,
-            points=_POLL_POINTS,
+            points=POLL_TASK_POINTS,
             repeat_policy=TaskRepeatPolicy.ONCE,
         )
         await self.uow.commit()

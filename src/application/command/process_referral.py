@@ -13,17 +13,13 @@ from application.services.award_achievement_service import (
     AwardAchievementService,
 )
 from domain.enums.transaction import TransactionSource, TransactionType
+from domain.project_rules import (
+    REFERRAL_BONUS_POINTS,
+    REFERRAL_MILESTONE_ACHIEVEMENT_KEY,
+    REFERRAL_MILESTONES,
+)
 from domain.services.level import get_level
 from domain.services.wallet import WalletService
-
-REFERRAL_BONUS_POINTS = 30
-
-# Пороговые достижения: количество рефералов → код достижения в таблице achievements
-REFERRAL_MILESTONES: dict[int, str] = {
-    3: "referral_milestone_3",
-    5: "referral_milestone_5",
-    10: "referral_milestone_10",
-}
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -150,7 +146,7 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
                         achievement_name=achievement.achievement_name,
                         points=achievement.points,
                     ),
-                    achievement_key="once",
+                    achievement_key=REFERRAL_MILESTONE_ACHIEVEMENT_KEY,
                 )
                 if achievement_outcome.status == AwardAchievementOutcomeStatus.COMPLETED:
                     milestone_reached = referral_count
