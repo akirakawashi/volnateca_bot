@@ -1,5 +1,5 @@
 from application.common.dto.task import TaskPaginationDTO, VKUserAvailableTaskDTO
-from domain.partner_rules import MENYAYKA_SALE_URL
+from domain.project_rules import MENYAYKA_SALE_URL
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.template import (
     VKMessageText,
     build_template_message,

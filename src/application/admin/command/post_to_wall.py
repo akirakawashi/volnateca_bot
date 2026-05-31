@@ -5,7 +5,7 @@ from application.interface.clients import IVKWallClient
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
 from domain.enums.task import TaskRepeatPolicy
-from domain.task_rules import TASK_DESCRIPTION_MAX_LENGTH
+from domain.project_rules import TASK_DESCRIPTION_MAX_LENGTH
 from settings.vk import VKSettings
 
 
