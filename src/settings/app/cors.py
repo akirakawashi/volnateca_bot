@@ -9,7 +9,7 @@ DEFAULT_CORS_HEADERS = ("Authorization", "Content-Type", "X-Admin-Token")
 class CorsSettings(Settings):
     model_config = SettingsConfigDict(env_prefix="CORS_")
 
-    ALLOW_CREDENTIALS: bool = False
+    ALLOW_CREDENTIALS: bool = True
     ORIGINS: str = ""
 
     @property
