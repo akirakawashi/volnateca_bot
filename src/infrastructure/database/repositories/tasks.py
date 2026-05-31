@@ -43,47 +43,23 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         repeat_policy: TaskRepeatPolicy,
         event_id: str | None,
     ) -> VKRepostTaskCreationDTO:
-        existing_task = await self._get_task_by_code_or_external_id(
+        task, created = await self._create_task_if_not_exists(
             code=code,
-            external_id=external_id,
+            task_name=task_name,
+            description=description,
             task_type=TaskType.VK_REPOST,
+            points=points,
+            week_number=week_number,
+            external_id=external_id,
+            repeat_policy=repeat_policy,
         )
-        if existing_task is not None:
-            return self._to_repost_task_creation_dto(
-                status=VKRepostTaskCreationStatus.ALREADY_EXISTS,
-                task=existing_task,
-                event_id=event_id,
-            )
-
-        try:
-            async with self._session.begin_nested():
-                task = self._build_task(
-                    code=code,
-                    task_name=task_name,
-                    description=description,
-                    task_type=TaskType.VK_REPOST,
-                    points=points,
-                    week_number=week_number,
-                    external_id=external_id,
-                    repeat_policy=repeat_policy,
-                )
-                self._session.add(task)
-                await self._session.flush()
-        except IntegrityError:
-            existing_task = await self._get_task_by_code_or_external_id(
-                code=code,
-                external_id=external_id,
-                task_type=TaskType.VK_REPOST,
-            )
-            if existing_task is None:
-                raise
-            return self._to_repost_task_creation_dto(
-                status=VKRepostTaskCreationStatus.ALREADY_EXISTS,
-                task=existing_task,
-                event_id=event_id,
-            )
+        status = (
+            VKRepostTaskCreationStatus.CREATED
+            if created
+            else VKRepostTaskCreationStatus.ALREADY_EXISTS
+        )
         return self._to_repost_task_creation_dto(
-            status=VKRepostTaskCreationStatus.CREATED,
+            status=status,
             task=task,
             event_id=event_id,
         )
@@ -109,37 +85,16 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         points: int,
         repeat_policy: TaskRepeatPolicy,
     ) -> TaskSummary:
-        existing_task = await self._get_task_by_code_or_external_id(
+        task, _ = await self._create_task_if_not_exists(
             code=code,
-            external_id=external_id,
+            task_name=task_name,
+            description=description,
             task_type=TaskType.VK_SUBSCRIBE,
+            points=points,
+            week_number=None,
+            external_id=external_id,
+            repeat_policy=repeat_policy,
         )
-        if existing_task is not None:
-            return self._to_task_summary(task=existing_task)
-
-        try:
-            async with self._session.begin_nested():
-                task = self._build_task(
-                    code=code,
-                    task_name=task_name,
-                    description=description,
-                    task_type=TaskType.VK_SUBSCRIBE,
-                    points=points,
-                    week_number=None,
-                    external_id=external_id,
-                    repeat_policy=repeat_policy,
-                )
-                self._session.add(task)
-                await self._session.flush()
-        except IntegrityError:
-            existing_task = await self._get_task_by_code_or_external_id(
-                code=code,
-                external_id=external_id,
-                task_type=TaskType.VK_SUBSCRIBE,
-            )
-            if existing_task is None:
-                raise
-            return self._to_task_summary(task=existing_task)
         return self._to_task_summary(task=task)
 
     async def create_like_task_if_not_exists(
@@ -153,47 +108,23 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         repeat_policy: TaskRepeatPolicy,
         event_id: str | None,
     ) -> VKLikeTaskCreationDTO:
-        existing_task = await self._get_task_by_code_or_external_id(
+        task, created = await self._create_task_if_not_exists(
             code=code,
-            external_id=external_id,
+            task_name=task_name,
+            description=description,
             task_type=TaskType.VK_LIKE,
+            points=points,
+            week_number=week_number,
+            external_id=external_id,
+            repeat_policy=repeat_policy,
         )
-        if existing_task is not None:
-            return self._to_like_task_creation_dto(
-                status=VKLikeTaskCreationStatus.ALREADY_EXISTS,
-                task=existing_task,
-                event_id=event_id,
-            )
-
-        try:
-            async with self._session.begin_nested():
-                task = self._build_task(
-                    code=code,
-                    task_name=task_name,
-                    description=description,
-                    task_type=TaskType.VK_LIKE,
-                    points=points,
-                    week_number=week_number,
-                    external_id=external_id,
-                    repeat_policy=repeat_policy,
-                )
-                self._session.add(task)
-                await self._session.flush()
-        except IntegrityError:
-            existing_task = await self._get_task_by_code_or_external_id(
-                code=code,
-                external_id=external_id,
-                task_type=TaskType.VK_LIKE,
-            )
-            if existing_task is None:
-                raise
-            return self._to_like_task_creation_dto(
-                status=VKLikeTaskCreationStatus.ALREADY_EXISTS,
-                task=existing_task,
-                event_id=event_id,
-            )
+        status = (
+            VKLikeTaskCreationStatus.CREATED
+            if created
+            else VKLikeTaskCreationStatus.ALREADY_EXISTS
+        )
         return self._to_like_task_creation_dto(
-            status=VKLikeTaskCreationStatus.CREATED,
+            status=status,
             task=task,
             event_id=event_id,
         )
@@ -221,47 +152,23 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         repeat_policy: TaskRepeatPolicy,
         event_id: str | None,
     ) -> VKCommentTaskCreationDTO:
-        existing_task = await self._get_task_by_code_or_external_id(
+        task, created = await self._create_task_if_not_exists(
             code=code,
-            external_id=external_id,
+            task_name=task_name,
+            description=description,
             task_type=TaskType.VK_COMMENT,
+            points=points,
+            week_number=week_number,
+            external_id=external_id,
+            repeat_policy=repeat_policy,
         )
-        if existing_task is not None:
-            return self._to_comment_task_creation_dto(
-                status=VKCommentTaskCreationStatus.ALREADY_EXISTS,
-                task=existing_task,
-                event_id=event_id,
-            )
-
-        try:
-            async with self._session.begin_nested():
-                task = self._build_task(
-                    code=code,
-                    task_name=task_name,
-                    description=description,
-                    task_type=TaskType.VK_COMMENT,
-                    points=points,
-                    week_number=week_number,
-                    external_id=external_id,
-                    repeat_policy=repeat_policy,
-                )
-                self._session.add(task)
-                await self._session.flush()
-        except IntegrityError:
-            existing_task = await self._get_task_by_code_or_external_id(
-                code=code,
-                external_id=external_id,
-                task_type=TaskType.VK_COMMENT,
-            )
-            if existing_task is None:
-                raise
-            return self._to_comment_task_creation_dto(
-                status=VKCommentTaskCreationStatus.ALREADY_EXISTS,
-                task=existing_task,
-                event_id=event_id,
-            )
+        status = (
+            VKCommentTaskCreationStatus.CREATED
+            if created
+            else VKCommentTaskCreationStatus.ALREADY_EXISTS
+        )
         return self._to_comment_task_creation_dto(
-            status=VKCommentTaskCreationStatus.CREATED,
+            status=status,
             task=task,
             event_id=event_id,
         )
@@ -287,37 +194,16 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         points: int,
         repeat_policy: TaskRepeatPolicy,
     ) -> TaskSummary:
-        existing_task = await self._get_task_by_code_or_external_id(
+        task, _ = await self._create_task_if_not_exists(
             code=code,
-            external_id=external_id,
+            task_name=task_name,
+            description=description,
             task_type=TaskType.VK_POLL,
+            points=points,
+            week_number=None,
+            external_id=external_id,
+            repeat_policy=repeat_policy,
         )
-        if existing_task is not None:
-            return self._to_task_summary(task=existing_task)
-
-        try:
-            async with self._session.begin_nested():
-                task = self._build_task(
-                    code=code,
-                    task_name=task_name,
-                    description=description,
-                    task_type=TaskType.VK_POLL,
-                    points=points,
-                    week_number=None,
-                    external_id=external_id,
-                    repeat_policy=repeat_policy,
-                )
-                self._session.add(task)
-                await self._session.flush()
-        except IntegrityError:
-            existing_task = await self._get_task_by_code_or_external_id(
-                code=code,
-                external_id=external_id,
-                task_type=TaskType.VK_POLL,
-            )
-            if existing_task is None:
-                raise
-            return self._to_task_summary(task=existing_task)
         return self._to_task_summary(task=task)
 
     async def get_active_poll_task_by_external_ids(
@@ -540,6 +426,52 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             ),
         )
         return result.scalars().first()
+
+    async def _create_task_if_not_exists(
+        self,
+        *,
+        code: str,
+        task_name: str,
+        description: str,
+        task_type: TaskType,
+        points: int,
+        week_number: int | None,
+        external_id: str,
+        repeat_policy: TaskRepeatPolicy,
+    ) -> tuple[Task, bool]:
+        existing_task = await self._get_task_by_code_or_external_id(
+            code=code,
+            external_id=external_id,
+            task_type=task_type,
+        )
+        if existing_task is not None:
+            return existing_task, False
+
+        try:
+            async with self._session.begin_nested():
+                task = self._build_task(
+                    code=code,
+                    task_name=task_name,
+                    description=description,
+                    task_type=task_type,
+                    points=points,
+                    week_number=week_number,
+                    external_id=external_id,
+                    repeat_policy=repeat_policy,
+                )
+                self._session.add(task)
+                await self._session.flush()
+        except IntegrityError:
+            existing_task = await self._get_task_by_code_or_external_id(
+                code=code,
+                external_id=external_id,
+                task_type=task_type,
+            )
+            if existing_task is None:
+                raise
+            return existing_task, False
+
+        return task, True
 
     async def _get_active_task_by_external_ids(
         self,
