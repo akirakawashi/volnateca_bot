@@ -5,6 +5,8 @@ from fastapi import APIRouter, HTTPException, status
 from application.admin.command.prize_redemption import (
     CancelPrizeRedemptionHandler,
     FulfillPrizeRedemptionHandler,
+    GetPrizeRedemptionByCodeCommand,
+    GetPrizeRedemptionByCodeHandler,
     GetPrizeRedemptionCommand,
     GetPrizeRedemptionHandler,
     ListPrizeRedemptionsHandler,
@@ -43,6 +45,22 @@ async def list_prize_redemptions(
         ).to_command(),
     )
     return PrizeRedemptionsPageResponseSchema.from_page_dto(result)
+
+
+@prize_redemptions_admin_router.get(
+    path="/prize-redemptions/by-code/{redemption_code}",
+    name="Заявка на приз по коду выдачи",
+    response_model=PrizeRedemptionResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def get_prize_redemption_by_code(
+    redemption_code: str,
+    handler: FromDishka[GetPrizeRedemptionByCodeHandler],
+) -> PrizeRedemptionResponseSchema:
+    result = await handler(GetPrizeRedemptionByCodeCommand(redemption_code=redemption_code))
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Заявка не найдена")
+    return PrizeRedemptionResponseSchema.from_dto(result)
 
 
 @prize_redemptions_admin_router.get(

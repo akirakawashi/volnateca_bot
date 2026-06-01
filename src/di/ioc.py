@@ -11,6 +11,7 @@ from application.admin.command.update_prize import UpdatePrizeHandler
 from application.admin.command.prize_redemption import (
     CancelPrizeRedemptionHandler,
     FulfillPrizeRedemptionHandler,
+    GetPrizeRedemptionByCodeHandler,
     GetPrizeRedemptionHandler,
     ListPrizeRedemptionsHandler,
 )
@@ -481,6 +482,15 @@ class InteractorProvider(Provider):
         prize_redemption_repository: IPrizeRedemptionRepository,
     ) -> GetPrizeRedemptionHandler:
         return GetPrizeRedemptionHandler(
+            prize_redemption_repository=prize_redemption_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_get_prize_redemption_by_code_handler(
+        self,
+        prize_redemption_repository: IPrizeRedemptionRepository,
+    ) -> GetPrizeRedemptionByCodeHandler:
+        return GetPrizeRedemptionByCodeHandler(
             prize_redemption_repository=prize_redemption_repository,
         )
 

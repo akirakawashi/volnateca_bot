@@ -31,6 +31,11 @@ class GetPrizeRedemptionCommand:
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
+class GetPrizeRedemptionByCodeCommand:
+    redemption_code: str
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
 class FulfillPrizeRedemptionCommand:
     prize_redemptions_id: int
     comment: str | None = None
@@ -80,6 +85,24 @@ class GetPrizeRedemptionHandler(
     ) -> PrizeRedemptionAdminDTO | None:
         record = await self._prize_redemptions.get_by_id(
             prize_redemptions_id=command_data.prize_redemptions_id,
+        )
+        if record is None:
+            return None
+        return to_prize_redemption_admin_dto(record)
+
+
+class GetPrizeRedemptionByCodeHandler(
+    Interactor[GetPrizeRedemptionByCodeCommand, PrizeRedemptionAdminDTO | None],
+):
+    def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
+        self._prize_redemptions = prize_redemption_repository
+
+    async def __call__(
+        self,
+        command_data: GetPrizeRedemptionByCodeCommand,
+    ) -> PrizeRedemptionAdminDTO | None:
+        record = await self._prize_redemptions.get_by_redemption_code(
+            redemption_code=command_data.redemption_code,
         )
         if record is None:
             return None
@@ -159,6 +182,8 @@ __all__ = [
     "CancelPrizeRedemptionHandler",
     "FulfillPrizeRedemptionCommand",
     "FulfillPrizeRedemptionHandler",
+    "GetPrizeRedemptionByCodeCommand",
+    "GetPrizeRedemptionByCodeHandler",
     "GetPrizeRedemptionCommand",
     "GetPrizeRedemptionHandler",
     "ListPrizeRedemptionsCommand",

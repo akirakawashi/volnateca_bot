@@ -7,7 +7,7 @@ from sqlmodel import col
 
 from application.common.dto.prize_redemption import CreatePrizeRedemptionParams, PrizeRedemptionRecord
 from application.common.exceptions import PrizeRedemptionIdempotencyConflict
-from application.common.redemption_code import generate_redemption_code
+from application.common.redemption_code import generate_redemption_code, normalize_redemption_code
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from domain.enums.prize import PrizeRedemptionStatus
 from infrastructure.database.models.prize_redemptions import PrizeRedemption
@@ -43,6 +43,30 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         return await self._get_record(
             prize_redemptions_id=prize_redemptions_id,
             for_update=False,
+        )
+
+    async def get_by_redemption_code(
+        self,
+        *,
+        redemption_code: str,
+    ) -> PrizeRedemptionRecord | None:
+        normalized_code = normalize_redemption_code(redemption_code)
+        if not normalized_code:
+            return None
+
+        result = await self._session.execute(
+            select(PrizeRedemption).where(col(PrizeRedemption.redemption_code) == normalized_code),
+        )
+        redemption = result.scalar_one_or_none()
+        if redemption is None:
+            return None
+
+        prize_name = await self._get_prize_name(prizes_id=redemption.prizes_id)
+        user = await self._session.get(User, redemption.users_id)
+        return self._to_record(
+            redemption=redemption,
+            prize_name=prize_name,
+            vk_user_id=user.vk_user_id if user is not None else None,
         )
 
     async def get_for_update(
