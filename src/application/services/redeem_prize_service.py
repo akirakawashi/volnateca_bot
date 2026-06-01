@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from application.common.dto.prize_redemption import CreatePrizeRedemptionParams, PrizeLockedSnapshot
+from application.common.dto.prize_redemption import (
+    CreatePrizeRedemptionParams,
+    PrizeLockedSnapshot,
+    PrizeRedemptionRecord,
+)
 from application.common.dto.store import STORE_ALLOWED_PRIZE_TYPES
 from application.common.redemption_code import generate_redemption_code
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
@@ -61,21 +65,12 @@ class RedeemPrizeService:
         idempotency_key: str,
         user_comment: str | None = None,
     ) -> RedeemPrizeOutcome:
-        existing = await self._prize_redemptions.get_by_idempotency_key(
+        replay = await self._idempotent_replay_if_exists(
+            vk_user_id=vk_user_id,
             idempotency_key=idempotency_key,
         )
-        if existing is not None:
-            return RedeemPrizeOutcome(
-                status=RedeemPrizeOutcomeStatus.IDEMPOTENT_REPLAY,
-                vk_user_id=vk_user_id,
-                users_id=existing.users_id,
-                prizes_id=existing.prizes_id,
-                prize_name=existing.prize_name,
-                prize_redemptions_id=existing.prize_redemptions_id,
-                redemption_code=existing.redemption_code,
-                points_spent=existing.points_spent,
-                transactions_id=existing.transactions_id,
-            )
+        if replay is not None:
+            return replay
 
         snapshot = await self._users.get_balance_snapshot_for_update(vk_user_id=vk_user_id)
         if snapshot is None:
@@ -84,6 +79,13 @@ class RedeemPrizeService:
                 vk_user_id=vk_user_id,
                 prizes_id=prizes_id,
             )
+
+        replay = await self._idempotent_replay_if_exists(
+            vk_user_id=vk_user_id,
+            idempotency_key=idempotency_key,
+        )
+        if replay is not None:
+            return replay
 
         prize = await self._prizes.get_for_update(prizes_id=prizes_id)
         if prize is None:
@@ -180,6 +182,40 @@ class RedeemPrizeService:
             points_spent=spend.amount,
             balance_points=spend.balance_after,
             transactions_id=transaction.transactions_id,
+        )
+
+    async def _idempotent_replay_if_exists(
+        self,
+        *,
+        vk_user_id: int,
+        idempotency_key: str,
+    ) -> RedeemPrizeOutcome | None:
+        existing = await self._prize_redemptions.get_by_idempotency_key(
+            idempotency_key=idempotency_key,
+        )
+        if existing is None:
+            return None
+        return self.idempotent_replay_outcome(
+            vk_user_id=vk_user_id,
+            existing=existing,
+        )
+
+    @staticmethod
+    def idempotent_replay_outcome(
+        *,
+        vk_user_id: int,
+        existing: PrizeRedemptionRecord,
+    ) -> RedeemPrizeOutcome:
+        return RedeemPrizeOutcome(
+            status=RedeemPrizeOutcomeStatus.IDEMPOTENT_REPLAY,
+            vk_user_id=vk_user_id,
+            users_id=existing.users_id,
+            prizes_id=existing.prizes_id,
+            prize_name=existing.prize_name,
+            prize_redemptions_id=existing.prize_redemptions_id,
+            redemption_code=existing.redemption_code,
+            points_spent=existing.points_spent,
+            transactions_id=existing.transactions_id,
         )
 
     @staticmethod

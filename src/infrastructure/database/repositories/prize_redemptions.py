@@ -1,16 +1,21 @@
 from datetime import datetime
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from sqlmodel import col
 
 from application.common.dto.prize_redemption import CreatePrizeRedemptionParams, PrizeRedemptionRecord
+from application.common.exceptions import PrizeRedemptionIdempotencyConflict
+from application.common.redemption_code import generate_redemption_code
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from domain.enums.prize import PrizeRedemptionStatus
 from infrastructure.database.models.prize_redemptions import PrizeRedemption
 from infrastructure.database.models.prizes import Prize
 from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
+
+_MAX_REDEMPTION_CODE_INSERT_ATTEMPTS = 3
 
 
 class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository):
@@ -54,19 +59,41 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         self,
         params: CreatePrizeRedemptionParams,
     ) -> PrizeRedemptionRecord:
-        redemption = PrizeRedemption(
-            users_id=params.users_id,
-            prizes_id=params.prizes_id,
-            transactions_id=params.transactions_id,
-            receive_type=params.receive_type,
-            redemption_code=params.redemption_code,
-            idempotency_key=params.idempotency_key,
-            points_spent=params.points_spent,
-            comment=params.comment,
-            prize_redemption_status=PrizeRedemptionStatus.RESERVED,
-        )
-        self._session.add(redemption)
-        await self._session.flush()
+        redemption_code = params.redemption_code
+        redemption: PrizeRedemption | None = None
+
+        for attempt in range(_MAX_REDEMPTION_CODE_INSERT_ATTEMPTS):
+            try:
+                async with self._session.begin_nested():
+                    redemption = PrizeRedemption(
+                        users_id=params.users_id,
+                        prizes_id=params.prizes_id,
+                        transactions_id=params.transactions_id,
+                        receive_type=params.receive_type,
+                        redemption_code=redemption_code,
+                        idempotency_key=params.idempotency_key,
+                        points_spent=params.points_spent,
+                        comment=params.comment,
+                        prize_redemption_status=PrizeRedemptionStatus.RESERVED,
+                    )
+                    self._session.add(redemption)
+                    await self._session.flush()
+            except IntegrityError:
+                existing = await self.get_by_idempotency_key(
+                    idempotency_key=params.idempotency_key,
+                )
+                if existing is not None:
+                    raise PrizeRedemptionIdempotencyConflict(existing=existing) from None
+                if attempt + 1 >= _MAX_REDEMPTION_CODE_INSERT_ATTEMPTS:
+                    raise
+                redemption_code = generate_redemption_code()
+                continue
+            else:
+                break
+
+        if redemption is None:
+            raise RuntimeError("Не удалось создать заявку на приз")
+
         prize_name = await self._get_prize_name(prizes_id=params.prizes_id)
         return self._to_record(redemption=redemption, prize_name=prize_name)
 
