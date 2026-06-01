@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from enum import Enum
 
 from application.base_interactor import Interactor
-from application.common.dto.task import TaskCompletionResult
+from application.common.dto.task import TaskCompletionResult, TaskCompletionResultStatus
 from application.common.dto.task_promo_code import normalize_task_promo_code
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.task_promo_code_waits import ITaskPromoCodeWaitRepository
@@ -193,11 +193,9 @@ class ActivateTaskPromoCodeHandler(
             )
 
         normalized_code = normalize_task_promo_code(command_data.promo_code)
-        code = await self.promo_code_repository.activate_available_code(
+        code = await self.promo_code_repository.get_available_code_for_update(
             tasks_id=task.tasks_id,
             promo_code=normalized_code,
-            users_id=user.users_id,
-            activated_at=datetime.now(tz=UTC),
         )
         if code is None:
             await self.wait_repository.cancel_waiting(
@@ -225,6 +223,27 @@ class ActivateTaskPromoCodeHandler(
             event_id=command_data.event_id,
             evidence_external_id=code.promo_code,
         )
+        completion = build_task_completion_result(outcome=outcome)
+        if completion.status != TaskCompletionResultStatus.COMPLETED:
+            await self.wait_repository.complete_waiting(
+                task_promo_code_waits_id=wait.task_promo_code_waits_id,
+            )
+            await self.uow.commit()
+            return TaskPromoCodeFlowDTO(
+                status=TaskPromoCodeFlowStatus(completion.status.value),
+                vk_user_id=command_data.vk_user_id,
+                users_id=user.users_id,
+                tasks_id=task.tasks_id,
+                task_name=task.task_name,
+                points=task.points,
+                completion=completion,
+            )
+
+        await self.promo_code_repository.mark_code_used(
+            task_promo_codes_id=code.task_promo_codes_id,
+            users_id=user.users_id,
+            activated_at=datetime.now(tz=UTC),
+        )
         await self.wait_repository.complete_waiting(
             task_promo_code_waits_id=wait.task_promo_code_waits_id,
         )
@@ -233,7 +252,6 @@ class ActivateTaskPromoCodeHandler(
             await self.task_repository.deactivate_task(tasks_id=task.tasks_id)
         await self.uow.commit()
 
-        completion = build_task_completion_result(outcome=outcome)
         return TaskPromoCodeFlowDTO(
             status=TaskPromoCodeFlowStatus(completion.status.value),
             vk_user_id=command_data.vk_user_id,

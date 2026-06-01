@@ -8,6 +8,7 @@ from application.common.dto.task import (
 from application.interface.clients import IVKUserClient
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.tasks import ITaskRepository
+from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
 from application.services.award_task_service import (
     AwardTaskService,
@@ -36,6 +37,7 @@ class CompleteVKSubscriptionTaskHandler(
 
     def __init__(
         self,
+        user_repository: IUserRepository,
         task_repository: ITaskRepository,
         task_completion_repository: ITaskCompletionRepository,
         award_service: AwardTaskService,
@@ -44,6 +46,7 @@ class CompleteVKSubscriptionTaskHandler(
         required_subscription_group_id: int,
         subscription_task_rules: VKSubscriptionTaskRules | None = None,
     ) -> None:
+        self.user_repository = user_repository
         self.task_repository = task_repository
         self.task_completion_repository = task_completion_repository
         self.award_service = award_service
@@ -56,16 +59,21 @@ class CompleteVKSubscriptionTaskHandler(
         self,
         command_data: CompleteVKSubscriptionTaskCommand,
     ) -> TaskCompletionResult:
-        task = await self.task_repository.get_or_create_subscription_task(
-            code=self._build_task_code(group_id=self.required_subscription_group_id),
-            task_name="Подписаться на группу Волны",
-            description="Бонус за подписку на группу Волны ВКонтакте.",
-            external_id=self._build_task_external_id(group_id=self.required_subscription_group_id),
-            points=self.subscription_task_rules.points,
-            repeat_policy=TaskRepeatPolicy.ONCE,
+        user = await self.user_repository.get_by_vk_user_id(vk_user_id=command_data.vk_user_id)
+        if user is None:
+            return TaskCompletionResult(
+                status=TaskCompletionResultStatus.USER_NOT_REGISTERED,
+                vk_user_id=command_data.vk_user_id,
+            )
+
+        task_code = self._build_task_code(group_id=self.required_subscription_group_id)
+        task_external_id = self._build_task_external_id(group_id=self.required_subscription_group_id)
+        task = await self.task_repository.get_subscription_task(
+            code=task_code,
+            external_id=task_external_id,
         )
 
-        if await self.task_completion_repository.is_completed_by_vk_user(
+        if task is not None and await self.task_completion_repository.is_completed_by_vk_user(
             vk_user_id=command_data.vk_user_id,
             tasks_id=task.tasks_id,
             completion_key=self.subscription_task_rules.completion_key,
@@ -84,6 +92,16 @@ class CompleteVKSubscriptionTaskHandler(
             return TaskCompletionResult(
                 status=TaskCompletionResultStatus.EXTERNAL_API_UNAVAILABLE,
                 vk_user_id=command_data.vk_user_id,
+            )
+
+        if task is None:
+            task = await self.task_repository.get_or_create_subscription_task(
+                code=task_code,
+                task_name="Подписаться на группу Волны",
+                description="Бонус за подписку на группу Волны ВКонтакте.",
+                external_id=task_external_id,
+                points=self.subscription_task_rules.points,
+                repeat_policy=TaskRepeatPolicy.ONCE,
             )
 
         spec = TaskAwardSpec(

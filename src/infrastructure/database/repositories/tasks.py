@@ -97,6 +97,20 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         )
         return self._to_task_summary(task=task)
 
+    async def get_subscription_task(
+        self,
+        code: str,
+        external_id: str,
+    ) -> TaskSummary | None:
+        task = await self._get_task_by_code_or_external_id(
+            code=code,
+            external_id=external_id,
+            task_type=TaskType.VK_SUBSCRIBE,
+        )
+        if task is None:
+            return None
+        return self._to_task_summary(task=task)
+
     async def create_like_task_if_not_exists(
         self,
         code: str,

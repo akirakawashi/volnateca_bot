@@ -199,6 +199,7 @@ class InteractorProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_complete_vk_subscription_task_handler(
         self,
+        user_repository: IUserRepository,
         task_repository: ITaskRepository,
         task_completion_repository: ITaskCompletionRepository,
         award_service: AwardTaskService,
@@ -207,6 +208,7 @@ class InteractorProvider(Provider):
         vk_settings: VKSettings,
     ) -> CompleteVKSubscriptionTaskHandler:
         return CompleteVKSubscriptionTaskHandler(
+            user_repository=user_repository,
             task_repository=task_repository,
             task_completion_repository=task_completion_repository,
             award_service=award_service,
