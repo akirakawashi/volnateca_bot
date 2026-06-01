@@ -4,6 +4,7 @@ from enum import Enum
 from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
+from application.interface.uow import IUnitOfWork
 from domain.enums.transaction import TransactionSource, TransactionType
 from domain.services.level import get_level
 from domain.services.wallet import WalletService
@@ -42,6 +43,10 @@ class AwardAchievementOutcome:
     level_up: int | None = None
 
 
+class _AchievementDuplicateAfterAccrual(Exception):
+    """Служебный сигнал для отката savepoint при позднем дубликате."""
+
+
 class AwardAchievementService:
     """Единое место для выдачи достижений и бонусных правил.
 
@@ -55,10 +60,12 @@ class AwardAchievementService:
         users: IUserRepository,
         achievements: IAchievementRepository,
         transactions: ITransactionRepository,
+        uow: IUnitOfWork,
     ) -> None:
         self._users = users
         self._achievements = achievements
         self._transactions = transactions
+        self._uow = uow
 
     async def award(
         self,
@@ -92,57 +99,69 @@ class AwardAchievementService:
                 balance_points=snapshot.balance_points,
             )
 
-        accrual = WalletService.accrue(
-            balance_before=snapshot.balance_points,
-            earned_points_total_before=snapshot.earned_points_total,
-            amount=achievement.points,
-        )
+        try:
+            async with self._uow.begin_nested():
+                accrual = WalletService.accrue(
+                    balance_before=snapshot.balance_points,
+                    earned_points_total_before=snapshot.earned_points_total,
+                    amount=achievement.points,
+                )
 
-        level_before = get_level(snapshot.earned_points_total)
-        level_after = get_level(accrual.earned_points_total_after)
-        level_up = level_after if level_after > level_before else None
+                level_before = get_level(snapshot.earned_points_total)
+                level_after = get_level(accrual.earned_points_total_after)
+                level_up = level_after if level_after > level_before else None
 
-        await self._users.apply_balance_change(
-            users_id=snapshot.users_id,
-            balance_points=accrual.balance_after,
-            earned_points_total=accrual.earned_points_total_after,
-            current_level=level_after,
-        )
+                await self._users.apply_balance_change(
+                    users_id=snapshot.users_id,
+                    balance_points=accrual.balance_after,
+                    earned_points_total=accrual.earned_points_total_after,
+                    current_level=level_after,
+                )
 
-        transaction = await self._transactions.create(
-            users_id=snapshot.users_id,
-            tasks_id=None,
-            prizes_id=None,
-            transaction_type=TransactionType.ACCRUAL,
-            transaction_source=TransactionSource.ACHIEVEMENT,
-            amount=accrual.amount,
-            balance_before=accrual.balance_before,
-            balance_after=accrual.balance_after,
-            description=f"Достижение: {achievement.achievement_name}",
-        )
+                transaction = await self._transactions.create(
+                    users_id=snapshot.users_id,
+                    tasks_id=None,
+                    prizes_id=None,
+                    transaction_type=TransactionType.ACCRUAL,
+                    transaction_source=TransactionSource.ACHIEVEMENT,
+                    amount=accrual.amount,
+                    balance_before=accrual.balance_before,
+                    balance_after=accrual.balance_after,
+                    description=f"Достижение: {achievement.achievement_name}",
+                )
 
-        awarded = await self._achievements.award_if_not_exists(
-            users_id=snapshot.users_id,
-            achievements_id=achievement.achievements_id,
-            transactions_id=transaction.transactions_id,
-            achievement_key=achievement_key,
-            points=achievement.points,
-        )
-        if not awarded:
-            raise RuntimeError("Достижение стало дубликатом после начисления")
+                awarded = await self._achievements.award_if_not_exists(
+                    users_id=snapshot.users_id,
+                    achievements_id=achievement.achievements_id,
+                    transactions_id=transaction.transactions_id,
+                    achievement_key=achievement_key,
+                    points=achievement.points,
+                )
+                if not awarded:
+                    raise _AchievementDuplicateAfterAccrual()
 
-        return AwardAchievementOutcome(
-            status=AwardAchievementOutcomeStatus.COMPLETED,
-            vk_user_id=vk_user_id,
-            users_id=snapshot.users_id,
-            achievements_id=achievement.achievements_id,
-            achievement_name=achievement.achievement_name,
-            transactions_id=transaction.transactions_id,
-            achievement_key=achievement_key,
-            points_awarded=accrual.amount,
-            balance_points=accrual.balance_after,
-            level_up=level_up,
-        )
+                return AwardAchievementOutcome(
+                    status=AwardAchievementOutcomeStatus.COMPLETED,
+                    vk_user_id=vk_user_id,
+                    users_id=snapshot.users_id,
+                    achievements_id=achievement.achievements_id,
+                    achievement_name=achievement.achievement_name,
+                    transactions_id=transaction.transactions_id,
+                    achievement_key=achievement_key,
+                    points_awarded=accrual.amount,
+                    balance_points=accrual.balance_after,
+                    level_up=level_up,
+                )
+        except _AchievementDuplicateAfterAccrual:
+            return AwardAchievementOutcome(
+                status=AwardAchievementOutcomeStatus.ALREADY_AWARDED,
+                vk_user_id=vk_user_id,
+                users_id=snapshot.users_id,
+                achievements_id=achievement.achievements_id,
+                achievement_name=achievement.achievement_name,
+                achievement_key=achievement_key,
+                balance_points=snapshot.balance_points,
+            )
 
 
 __all__ = [

@@ -1,9 +1,16 @@
 from abc import abstractmethod
+from contextlib import AbstractAsyncContextManager
 from typing import Protocol
 
 
 class IUnitOfWork(Protocol):
     """Минимальный контракт атомарного завершения application-сценария."""
+
+    @abstractmethod
+    def begin_nested(self) -> AbstractAsyncContextManager[object]:
+        """Открывает savepoint внутри текущей транзакции."""
+
+        raise NotImplementedError
 
     @abstractmethod
     async def commit(self) -> None:

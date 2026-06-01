@@ -49,16 +49,18 @@ async def main() -> None:
             user_repository = UserRepository(session=session)
             achievement_repository = AchievementRepository(session=session)
             transaction_repository = TransactionRepository(session=session)
+            uow = SQLAlchemyBaseUoW(session=session)
             award_achievement_service = AwardAchievementService(
                 users=user_repository,
                 achievements=achievement_repository,
                 transactions=transaction_repository,
+                uow=uow,
             )
             handler = AwardMonthlyTopHandler(
                 transaction_repository=transaction_repository,
                 achievement_repository=achievement_repository,
                 award_achievement_service=award_achievement_service,
-                uow=SQLAlchemyBaseUoW(session=session),
+                uow=uow,
                 project_timezone=cfg.app.project_timezone,
             )
             result = await handler(
