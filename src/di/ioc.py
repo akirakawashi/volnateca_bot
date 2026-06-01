@@ -13,6 +13,7 @@ from application.admin.command.prize_redemption import (
     FulfillPrizeRedemptionHandler,
     GetPrizeRedemptionByCodeHandler,
     GetPrizeRedemptionHandler,
+    GetPrizeRedemptionQueueCountHandler,
     ListPrizeRedemptionsHandler,
 )
 from application.admin.command.user import (
@@ -491,6 +492,15 @@ class InteractorProvider(Provider):
         prize_redemption_repository: IPrizeRedemptionRepository,
     ) -> GetPrizeRedemptionByCodeHandler:
         return GetPrizeRedemptionByCodeHandler(
+            prize_redemption_repository=prize_redemption_repository,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_get_prize_redemption_queue_count_handler(
+        self,
+        prize_redemption_repository: IPrizeRedemptionRepository,
+    ) -> GetPrizeRedemptionQueueCountHandler:
+        return GetPrizeRedemptionQueueCountHandler(
             prize_redemption_repository=prize_redemption_repository,
         )
 

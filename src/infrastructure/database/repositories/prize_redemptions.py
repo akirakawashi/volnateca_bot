@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from sqlmodel import col
@@ -172,6 +172,21 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
             )
             for redemption, prize_name, vk_user_id in result.all()
         )
+
+    async def count_for_fulfillment(
+        self,
+        *,
+        status: PrizeRedemptionStatus | None,
+        prizes_id: int | None,
+    ) -> int:
+        query = select(func.count()).select_from(PrizeRedemption)
+        if status is not None:
+            query = query.where(col(PrizeRedemption.prize_redemption_status) == status)
+        if prizes_id is not None:
+            query = query.where(col(PrizeRedemption.prizes_id) == prizes_id)
+
+        result = await self._session.execute(query)
+        return int(result.scalar_one())
 
     async def mark_issued(
         self,

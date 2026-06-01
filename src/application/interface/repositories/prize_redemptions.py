@@ -67,6 +67,15 @@ class IPrizeRedemptionRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def count_for_fulfillment(
+        self,
+        *,
+        status: PrizeRedemptionStatus | None,
+        prizes_id: int | None,
+    ) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
     async def mark_issued(
         self,
         *,

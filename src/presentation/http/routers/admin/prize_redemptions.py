@@ -9,6 +9,8 @@ from application.admin.command.prize_redemption import (
     GetPrizeRedemptionByCodeHandler,
     GetPrizeRedemptionCommand,
     GetPrizeRedemptionHandler,
+    GetPrizeRedemptionQueueCountCommand,
+    GetPrizeRedemptionQueueCountHandler,
     ListPrizeRedemptionsHandler,
 )
 from application.services.cancel_redemption_service import CancelRedemptionOutcomeStatus
@@ -18,6 +20,7 @@ from presentation.http.dto.admin.prize_redemption import (
     CancelPrizeRedemptionRequestSchema,
     FulfillPrizeRedemptionRequestSchema,
     ListPrizeRedemptionsQuerySchema,
+    PrizeRedemptionQueueCountResponseSchema,
     PrizeRedemptionResponseSchema,
     PrizeRedemptionsPageResponseSchema,
 )
@@ -45,6 +48,19 @@ async def list_prize_redemptions(
         ).to_command(),
     )
     return PrizeRedemptionsPageResponseSchema.from_page_dto(result)
+
+
+@prize_redemptions_admin_router.get(
+    path="/prize-redemptions/queue-count",
+    name="Количество заявок в очереди выдачи",
+    response_model=PrizeRedemptionQueueCountResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def get_prize_redemption_queue_count(
+    handler: FromDishka[GetPrizeRedemptionQueueCountHandler],
+) -> PrizeRedemptionQueueCountResponseSchema:
+    count = await handler(GetPrizeRedemptionQueueCountCommand())
+    return PrizeRedemptionQueueCountResponseSchema(count=count)
 
 
 @prize_redemptions_admin_router.get(

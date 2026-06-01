@@ -47,6 +47,10 @@ class FulfillPrizeRedemptionRequestSchema(BaseModel):
         )
 
 
+class PrizeRedemptionQueueCountResponseSchema(BaseModel):
+    count: int = Field(ge=0)
+
+
 class PrizeRedemptionResponseSchema(BaseModel):
     prize_redemptions_id: int
     users_id: int
@@ -107,6 +111,7 @@ __all__ = [
     "CancelPrizeRedemptionRequestSchema",
     "FulfillPrizeRedemptionRequestSchema",
     "ListPrizeRedemptionsQuerySchema",
+    "PrizeRedemptionQueueCountResponseSchema",
     "PrizeRedemptionResponseSchema",
     "PrizeRedemptionsPageResponseSchema",
 ]

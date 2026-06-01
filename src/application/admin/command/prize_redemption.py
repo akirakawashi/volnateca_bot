@@ -26,6 +26,11 @@ class ListPrizeRedemptionsCommand:
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
+class GetPrizeRedemptionQueueCountCommand:
+    pass
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
 class GetPrizeRedemptionCommand:
     prize_redemptions_id: int
 
@@ -70,6 +75,22 @@ class ListPrizeRedemptionsHandler(
             page=page,
             page_size=ADMIN_REDEMPTIONS_PAGE_SIZE,
             fetched=items,
+        )
+
+
+class GetPrizeRedemptionQueueCountHandler(
+    Interactor[GetPrizeRedemptionQueueCountCommand, int],
+):
+    def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
+        self._prize_redemptions = prize_redemption_repository
+
+    async def __call__(
+        self,
+        _command_data: GetPrizeRedemptionQueueCountCommand,
+    ) -> int:
+        return await self._prize_redemptions.count_for_fulfillment(
+            status=PrizeRedemptionStatus.RESERVED,
+            prizes_id=None,
         )
 
 
@@ -186,6 +207,8 @@ __all__ = [
     "GetPrizeRedemptionByCodeHandler",
     "GetPrizeRedemptionCommand",
     "GetPrizeRedemptionHandler",
+    "GetPrizeRedemptionQueueCountCommand",
+    "GetPrizeRedemptionQueueCountHandler",
     "ListPrizeRedemptionsCommand",
     "ListPrizeRedemptionsHandler",
 ]
