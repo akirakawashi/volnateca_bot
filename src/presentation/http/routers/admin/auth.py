@@ -1,6 +1,6 @@
 import secrets
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Header, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from presentation.http.admin_session import (
@@ -36,22 +36,6 @@ def verify_admin_login_password(
         raise unauthorized
 
 
-def verify_admin_token(
-    admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
-) -> None:
-    forbidden = HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Некорректный X-Admin-Token",
-    )
-
-    if admin_token is None:
-        raise forbidden
-
-    token_ok = secrets.compare_digest(admin_token, settings.ADMIN_TOKEN)
-    if not token_ok:
-        raise forbidden
-
-
 def verify_admin_session(
     admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE_NAME),
 ) -> None:
@@ -76,7 +60,7 @@ def verify_admin_session(
     name="Войти в админ-панель",
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
-    dependencies=[Depends(verify_admin_login_password), Depends(verify_admin_token)],
+    dependencies=[Depends(verify_admin_login_password)],
 )
 async def login_admin() -> Response:
     response = Response(status_code=status.HTTP_204_NO_CONTENT)
