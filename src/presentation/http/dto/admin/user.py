@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from application.admin.admin_rules import ADMIN_USER_SEARCH_LIMIT
+from application.admin.admin_rules import ADMIN_MAX_PAGE, ADMIN_USER_SEARCH_LIMIT
 from application.admin.command.user import (
     GetUserProfileCommand,
     GetUserReferralsCommand,
@@ -222,7 +222,7 @@ class UserTransactionsPageResponseSchema(AdminListPageResponseSchema):
 
 
 class UserListPageQuerySchema(BaseModel):
-    page: int = Field(default=1, ge=1)
+    page: int = Field(default=1, ge=1, le=ADMIN_MAX_PAGE)
 
     def to_redemptions_command(self, *, users_id: int) -> ListUserPrizeRedemptionsCommand:
         return ListUserPrizeRedemptionsCommand(users_id=users_id, page=self.page)

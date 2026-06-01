@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from application.admin.admin_rules import ADMIN_MAX_PAGE
 from application.admin.command.prize_redemption import (
     CancelPrizeRedemptionCommand,
     FulfillPrizeRedemptionCommand,
@@ -16,7 +17,7 @@ from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus
 class ListPrizeRedemptionsQuerySchema(BaseModel):
     status: PrizeRedemptionStatus | None = None
     prizes_id: int | None = Field(default=None, ge=1)
-    page: int = Field(default=1, ge=1)
+    page: int = Field(default=1, ge=1, le=ADMIN_MAX_PAGE)
 
     def to_command(self) -> ListPrizeRedemptionsCommand:
         return ListPrizeRedemptionsCommand(

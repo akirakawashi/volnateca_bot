@@ -29,6 +29,9 @@ ADMIN_REDEMPTIONS_PAGE_SIZE = 50
 # Размер страницы списков в карточке пользователя: заявки, задания, транзакции.
 ADMIN_USER_LIST_PAGE_SIZE = 50
 
+# Максимальная страница для offset-пагинации в админке.
+ADMIN_MAX_PAGE = 1000
+
 # Максимум результатов поиска пользователей в админке.
 ADMIN_USER_SEARCH_LIMIT = 20
 
@@ -40,6 +43,7 @@ __all__ = [
     "ADMIN_BROADCAST_SEND_CONCURRENCY",
     "ADMIN_DAILY_STATS_DEFAULT_RANGE_DAYS",
     "ADMIN_DAILY_STATS_MAX_RANGE_DAYS",
+    "ADMIN_MAX_PAGE",
     "ADMIN_REDEMPTIONS_PAGE_SIZE",
     "ADMIN_USER_LIST_PAGE_SIZE",
     "ADMIN_USER_SEARCH_LIMIT",

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from application.admin.admin_rules import ADMIN_USER_LIST_PAGE_SIZE, ADMIN_USER_SEARCH_LIMIT
+from application.admin.admin_rules import ADMIN_MAX_PAGE, ADMIN_USER_LIST_PAGE_SIZE, ADMIN_USER_SEARCH_LIMIT
 from application.admin.dto.pagination import AdminListPageDTO, build_admin_list_page
 from application.admin.command.prize_redemption import to_prize_redemption_admin_dto
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
@@ -89,7 +89,7 @@ class ListUserPrizeRedemptionsHandler(
         self,
         command_data: ListUserPrizeRedemptionsCommand,
     ) -> AdminListPageDTO[PrizeRedemptionAdminDTO]:
-        page = max(1, command_data.page)
+        page = max(1, min(command_data.page, ADMIN_MAX_PAGE))
         offset = (page - 1) * ADMIN_USER_LIST_PAGE_SIZE
         records = await self._prize_redemptions.list_by_user(
             users_id=command_data.users_id,
@@ -114,7 +114,7 @@ class ListUserTaskCompletionsHandler(
         self,
         command_data: ListUserTaskCompletionsCommand,
     ) -> AdminListPageDTO[UserTaskCompletionAdminDTO]:
-        page = max(1, command_data.page)
+        page = max(1, min(command_data.page, ADMIN_MAX_PAGE))
         offset = (page - 1) * ADMIN_USER_LIST_PAGE_SIZE
         records = await self._task_completions.list_by_users_id(
             users_id=command_data.users_id,
@@ -152,7 +152,7 @@ class ListUserTransactionsHandler(
         self,
         command_data: ListUserTransactionsCommand,
     ) -> AdminListPageDTO[UserTransactionAdminDTO]:
-        page = max(1, command_data.page)
+        page = max(1, min(command_data.page, ADMIN_MAX_PAGE))
         offset = (page - 1) * ADMIN_USER_LIST_PAGE_SIZE
         records = await self._transactions.list_by_users_id(
             users_id=command_data.users_id,

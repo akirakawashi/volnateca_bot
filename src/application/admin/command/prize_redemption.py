@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from application.admin.admin_rules import ADMIN_REDEMPTIONS_PAGE_SIZE
+from application.admin.admin_rules import ADMIN_MAX_PAGE, ADMIN_REDEMPTIONS_PAGE_SIZE
 from application.admin.dto.pagination import AdminListPageDTO, build_admin_list_page
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
 from application.base_interactor import Interactor
@@ -52,7 +52,7 @@ class ListPrizeRedemptionsHandler(
         self,
         command_data: ListPrizeRedemptionsCommand,
     ) -> AdminListPageDTO[PrizeRedemptionAdminDTO]:
-        page = max(1, command_data.page)
+        page = max(1, min(command_data.page, ADMIN_MAX_PAGE))
         offset = (page - 1) * ADMIN_REDEMPTIONS_PAGE_SIZE
         records = await self._prize_redemptions.list_for_fulfillment(
             status=command_data.status,
