@@ -7,6 +7,7 @@ from sqlmodel import col
 from application.admin.command.prize import CreatePrizeCommand, UpdatePrizeCommand
 from application.admin.dto.prize import PrizeAdminDTO
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
+from domain.enums.prize import PrizeStatus
 from domain.services.prize_status_sync import apply_sold_out_status_from_quantities
 from infrastructure.database.models.prizes import Prize
 from infrastructure.database.repositories.base import SQLAlchemyRepository
@@ -93,6 +94,11 @@ class PrizeAdminRepository(SQLAlchemyRepository, IPrizeAdminRepository):
             if command.is_active is None:
                 raise ValueError("is_active обязателен")
             prize.is_active = command.is_active
+
+        if prize.status == PrizeStatus.AVAILABLE and prize.quantity_claimed >= prize.quantity_total:
+            raise ValueError(
+                "Нельзя сделать приз доступным: увеличьте количество больше уже занятого",
+            )
 
         apply_sold_out_status_from_quantities(prize=prize)
         await self._session.flush()
