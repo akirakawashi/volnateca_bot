@@ -1,7 +1,5 @@
-from application.admin.dto.task_promo_code import (
-    CreateTaskPromoCodeTaskCommand,
-    CreatedTaskPromoCodeTaskDTO,
-)
+from application.admin.command.task_promo_code import CreateTaskPromoCodeTaskCommand
+from application.admin.dto.task_promo_code import CreatedTaskPromoCodeTaskDTO
 from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
 from application.common.dto.task_promo_code import normalize_task_promo_code
 from domain.enums.task import TaskPromoCodeStatus, TaskType

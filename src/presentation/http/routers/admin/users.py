@@ -11,15 +11,15 @@ from application.admin.command.user import (
     SearchUsersHandler,
     UserExistsHandler,
 )
-from presentation.http.dto.admin.prize_redemption import PrizeRedemptionResponseSchema
+from presentation.http.dto.admin.prize_redemption import PrizeRedemptionsPageResponseSchema
 from presentation.http.dto.admin.user import (
     SearchUsersQuerySchema,
     UserListPageQuerySchema,
     UserProfileResponseSchema,
     UserReferralsResponseSchema,
     UserSearchHitResponseSchema,
-    UserTaskCompletionResponseSchema,
-    UserTransactionResponseSchema,
+    UserTaskCompletionsPageResponseSchema,
+    UserTransactionsPageResponseSchema,
     get_user_profile_command,
     get_user_referrals_command,
 )
@@ -70,7 +70,7 @@ async def get_user_profile(
 @users_admin_router.get(
     path="/users/{users_id}/prize-redemptions",
     name="Заявки на призы пользователя",
-    response_model=list[PrizeRedemptionResponseSchema],
+    response_model=PrizeRedemptionsPageResponseSchema,
     status_code=status.HTTP_200_OK,
 )
 async def list_user_prize_redemptions(
@@ -78,18 +78,18 @@ async def list_user_prize_redemptions(
     exists_handler: FromDishka[UserExistsHandler],
     list_handler: FromDishka[ListUserPrizeRedemptionsHandler],
     page: int = 1,
-) -> list[PrizeRedemptionResponseSchema]:
+) -> PrizeRedemptionsPageResponseSchema:
     await _ensure_user_exists(users_id=users_id, exists_handler=exists_handler)
 
     query = UserListPageQuerySchema(page=page)
-    items = await list_handler(query.to_redemptions_command(users_id=users_id))
-    return [PrizeRedemptionResponseSchema.from_dto(item) for item in items]
+    result = await list_handler(query.to_redemptions_command(users_id=users_id))
+    return PrizeRedemptionsPageResponseSchema.from_page_dto(result)
 
 
 @users_admin_router.get(
     path="/users/{users_id}/task-completions",
     name="Выполнения заданий пользователя",
-    response_model=list[UserTaskCompletionResponseSchema],
+    response_model=UserTaskCompletionsPageResponseSchema,
     status_code=status.HTTP_200_OK,
 )
 async def list_user_task_completions(
@@ -97,18 +97,18 @@ async def list_user_task_completions(
     exists_handler: FromDishka[UserExistsHandler],
     list_handler: FromDishka[ListUserTaskCompletionsHandler],
     page: int = 1,
-) -> list[UserTaskCompletionResponseSchema]:
+) -> UserTaskCompletionsPageResponseSchema:
     await _ensure_user_exists(users_id=users_id, exists_handler=exists_handler)
 
     query = UserListPageQuerySchema(page=page)
-    items = await list_handler(query.to_task_completions_command(users_id=users_id))
-    return [UserTaskCompletionResponseSchema.from_dto(item) for item in items]
+    result = await list_handler(query.to_task_completions_command(users_id=users_id))
+    return UserTaskCompletionsPageResponseSchema.from_page_dto(result)
 
 
 @users_admin_router.get(
     path="/users/{users_id}/transactions",
     name="Транзакции пользователя",
-    response_model=list[UserTransactionResponseSchema],
+    response_model=UserTransactionsPageResponseSchema,
     status_code=status.HTTP_200_OK,
 )
 async def list_user_transactions(
@@ -116,12 +116,12 @@ async def list_user_transactions(
     exists_handler: FromDishka[UserExistsHandler],
     list_handler: FromDishka[ListUserTransactionsHandler],
     page: int = 1,
-) -> list[UserTransactionResponseSchema]:
+) -> UserTransactionsPageResponseSchema:
     await _ensure_user_exists(users_id=users_id, exists_handler=exists_handler)
 
     query = UserListPageQuerySchema(page=page)
-    items = await list_handler(query.to_transactions_command(users_id=users_id))
-    return [UserTransactionResponseSchema.from_dto(item) for item in items]
+    result = await list_handler(query.to_transactions_command(users_id=users_id))
+    return UserTransactionsPageResponseSchema.from_page_dto(result)
 
 
 @users_admin_router.get(

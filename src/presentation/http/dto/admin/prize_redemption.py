@@ -7,7 +7,9 @@ from application.admin.command.prize_redemption import (
     FulfillPrizeRedemptionCommand,
     ListPrizeRedemptionsCommand,
 )
+from application.admin.dto.pagination import AdminListPageDTO
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
+from presentation.http.dto.admin.pagination import AdminListPageResponseSchema
 from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus
 
 
@@ -84,9 +86,26 @@ class PrizeRedemptionResponseSchema(BaseModel):
         )
 
 
+class PrizeRedemptionsPageResponseSchema(AdminListPageResponseSchema):
+    items: list[PrizeRedemptionResponseSchema]
+
+    @classmethod
+    def from_page_dto(
+        cls,
+        page: AdminListPageDTO[PrizeRedemptionAdminDTO],
+    ) -> "PrizeRedemptionsPageResponseSchema":
+        return cls(
+            page=page.page,
+            page_size=page.page_size,
+            has_more=page.has_more,
+            items=[PrizeRedemptionResponseSchema.from_dto(item) for item in page.items],
+        )
+
+
 __all__ = [
     "CancelPrizeRedemptionRequestSchema",
     "FulfillPrizeRedemptionRequestSchema",
     "ListPrizeRedemptionsQuerySchema",
     "PrizeRedemptionResponseSchema",
+    "PrizeRedemptionsPageResponseSchema",
 ]

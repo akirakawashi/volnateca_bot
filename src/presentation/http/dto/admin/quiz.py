@@ -3,12 +3,12 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from application.admin.dto.quiz import (
+from application.admin.command.quiz import (
     CreateQuizCommand,
     CreateQuizOptionDTO,
     CreateQuizQuestionDTO,
-    CreatedQuizDTO,
 )
+from application.admin.dto.quiz import CreatedQuizDTO
 from utils.vk_attachments import normalize_vk_photo_attachment
 
 

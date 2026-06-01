@@ -1,5 +1,7 @@
+from dataclasses import dataclass
+
+from application.admin.dto.wall_post import PostedToWallDTO
 from application.base_interactor import Interactor
-from application.admin.dto.wall_post import PostToWallCommand, PostedToWallDTO
 from application.common.dto.vk import VKWallPostDTO
 from application.interface.clients import IVKWallClient
 from application.interface.repositories.tasks import ITaskRepository
@@ -7,6 +9,16 @@ from application.interface.uow import IUnitOfWork
 from domain.enums.task import TaskRepeatPolicy
 from domain.project_rules import TASK_DESCRIPTION_MAX_LENGTH
 from settings.vk import VKSettings
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class PostToWallCommand:
+    message: str
+    like_points: int
+    repost_points: int
+    comment_points: int  # 0 — задание на комментарий не создаётся
+    week_number: int | None
+    attachments: tuple[str, ...] | None = None
 
 
 class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
@@ -105,3 +117,9 @@ class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
         if cmd.week_number is not None:
             return f"Оставить комментарий к посту недели {cmd.week_number}"
         return "Оставить комментарий к посту"
+
+
+__all__ = [
+    "PostToWallCommand",
+    "PostToWallHandler",
+]

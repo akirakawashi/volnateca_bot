@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from application.admin.command.create_prize import CreatePrizeHandler
 from application.admin.command.list_prizes import ListPrizesHandler
 from application.admin.command.update_prize import UpdatePrizeHandler
-from application.admin.dto.prize import ListPrizesCommand
+from application.admin.command.prize import ListPrizesCommand
 from presentation.http.dto.admin.prize import (
     CreatePrizeRequestSchema,
     PrizeResponseSchema,

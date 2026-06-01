@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 
-from application.admin.dto.wall_post import PostToWallCommand, PostedToWallDTO
+from application.admin.command.post_to_wall import PostToWallCommand
+from application.admin.dto.wall_post import PostedToWallDTO
 from utils.vk_attachments import extract_vk_attachment
 
 

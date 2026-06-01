@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from application.admin.admin_rules import ADMIN_USER_LIST_PAGE_SIZE, ADMIN_USER_SEARCH_LIMIT
+from application.admin.dto.pagination import AdminListPageDTO, build_admin_list_page
 from application.admin.command.prize_redemption import to_prize_redemption_admin_dto
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
 from application.admin.dto.user import (
@@ -79,7 +80,7 @@ class UserExistsHandler(Interactor[GetUserProfileCommand, bool]):
 
 
 class ListUserPrizeRedemptionsHandler(
-    Interactor[ListUserPrizeRedemptionsCommand, tuple[PrizeRedemptionAdminDTO, ...]],
+    Interactor[ListUserPrizeRedemptionsCommand, AdminListPageDTO[PrizeRedemptionAdminDTO]],
 ):
     def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
         self._prize_redemptions = prize_redemption_repository
@@ -87,19 +88,24 @@ class ListUserPrizeRedemptionsHandler(
     async def __call__(
         self,
         command_data: ListUserPrizeRedemptionsCommand,
-    ) -> tuple[PrizeRedemptionAdminDTO, ...]:
+    ) -> AdminListPageDTO[PrizeRedemptionAdminDTO]:
         page = max(1, command_data.page)
         offset = (page - 1) * ADMIN_USER_LIST_PAGE_SIZE
         records = await self._prize_redemptions.list_by_user(
             users_id=command_data.users_id,
-            limit=ADMIN_USER_LIST_PAGE_SIZE,
+            limit=ADMIN_USER_LIST_PAGE_SIZE + 1,
             offset=offset,
         )
-        return tuple(to_prize_redemption_admin_dto(record) for record in records)
+        items = tuple(to_prize_redemption_admin_dto(record) for record in records)
+        return build_admin_list_page(
+            page=page,
+            page_size=ADMIN_USER_LIST_PAGE_SIZE,
+            fetched=items,
+        )
 
 
 class ListUserTaskCompletionsHandler(
-    Interactor[ListUserTaskCompletionsCommand, tuple[UserTaskCompletionAdminDTO, ...]],
+    Interactor[ListUserTaskCompletionsCommand, AdminListPageDTO[UserTaskCompletionAdminDTO]],
 ):
     def __init__(self, task_completion_repository: ITaskCompletionRepository) -> None:
         self._task_completions = task_completion_repository
@@ -107,15 +113,15 @@ class ListUserTaskCompletionsHandler(
     async def __call__(
         self,
         command_data: ListUserTaskCompletionsCommand,
-    ) -> tuple[UserTaskCompletionAdminDTO, ...]:
+    ) -> AdminListPageDTO[UserTaskCompletionAdminDTO]:
         page = max(1, command_data.page)
         offset = (page - 1) * ADMIN_USER_LIST_PAGE_SIZE
         records = await self._task_completions.list_by_users_id(
             users_id=command_data.users_id,
-            limit=ADMIN_USER_LIST_PAGE_SIZE,
+            limit=ADMIN_USER_LIST_PAGE_SIZE + 1,
             offset=offset,
         )
-        return tuple(
+        items = tuple(
             UserTaskCompletionAdminDTO(
                 task_completions_id=record.task_completions_id,
                 tasks_id=record.tasks_id,
@@ -129,10 +135,15 @@ class ListUserTaskCompletionsHandler(
             )
             for record in records
         )
+        return build_admin_list_page(
+            page=page,
+            page_size=ADMIN_USER_LIST_PAGE_SIZE,
+            fetched=items,
+        )
 
 
 class ListUserTransactionsHandler(
-    Interactor[ListUserTransactionsCommand, tuple[UserTransactionAdminDTO, ...]],
+    Interactor[ListUserTransactionsCommand, AdminListPageDTO[UserTransactionAdminDTO]],
 ):
     def __init__(self, transaction_repository: ITransactionRepository) -> None:
         self._transactions = transaction_repository
@@ -140,15 +151,15 @@ class ListUserTransactionsHandler(
     async def __call__(
         self,
         command_data: ListUserTransactionsCommand,
-    ) -> tuple[UserTransactionAdminDTO, ...]:
+    ) -> AdminListPageDTO[UserTransactionAdminDTO]:
         page = max(1, command_data.page)
         offset = (page - 1) * ADMIN_USER_LIST_PAGE_SIZE
         records = await self._transactions.list_by_users_id(
             users_id=command_data.users_id,
-            limit=ADMIN_USER_LIST_PAGE_SIZE,
+            limit=ADMIN_USER_LIST_PAGE_SIZE + 1,
             offset=offset,
         )
-        return tuple(
+        items = tuple(
             UserTransactionAdminDTO(
                 transactions_id=record.transactions_id,
                 users_id=record.users_id,
@@ -163,6 +174,11 @@ class ListUserTransactionsHandler(
                 created_at=record.created_at,
             )
             for record in records
+        )
+        return build_admin_list_page(
+            page=page,
+            page_size=ADMIN_USER_LIST_PAGE_SIZE,
+            fetched=items,
         )
 
 

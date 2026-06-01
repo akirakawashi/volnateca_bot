@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from application.admin.admin_rules import ADMIN_REDEMPTIONS_PAGE_SIZE
+from application.admin.dto.pagination import AdminListPageDTO, build_admin_list_page
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
 from application.base_interactor import Interactor
 from application.common.dto.prize_redemption import PrizeRedemptionRecord
@@ -42,7 +43,7 @@ class CancelPrizeRedemptionCommand:
 
 
 class ListPrizeRedemptionsHandler(
-    Interactor[ListPrizeRedemptionsCommand, tuple[PrizeRedemptionAdminDTO, ...]],
+    Interactor[ListPrizeRedemptionsCommand, AdminListPageDTO[PrizeRedemptionAdminDTO]],
 ):
     def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
         self._prize_redemptions = prize_redemption_repository
@@ -50,16 +51,21 @@ class ListPrizeRedemptionsHandler(
     async def __call__(
         self,
         command_data: ListPrizeRedemptionsCommand,
-    ) -> tuple[PrizeRedemptionAdminDTO, ...]:
+    ) -> AdminListPageDTO[PrizeRedemptionAdminDTO]:
         page = max(1, command_data.page)
         offset = (page - 1) * ADMIN_REDEMPTIONS_PAGE_SIZE
         records = await self._prize_redemptions.list_for_fulfillment(
             status=command_data.status,
             prizes_id=command_data.prizes_id,
-            limit=ADMIN_REDEMPTIONS_PAGE_SIZE,
+            limit=ADMIN_REDEMPTIONS_PAGE_SIZE + 1,
             offset=offset,
         )
-        return tuple(to_prize_redemption_admin_dto(record) for record in records)
+        items = tuple(to_prize_redemption_admin_dto(record) for record in records)
+        return build_admin_list_page(
+            page=page,
+            page_size=ADMIN_REDEMPTIONS_PAGE_SIZE,
+            fetched=items,
+        )
 
 
 class GetPrizeRedemptionHandler(

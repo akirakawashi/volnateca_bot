@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from application.admin.dto.quiz import CreateQuizCommand, CreatedQuizDTO
+from application.admin.command.quiz import CreateQuizCommand
+from application.admin.dto.quiz import CreatedQuizDTO
 
 
 class IQuizAdminRepository(ABC):

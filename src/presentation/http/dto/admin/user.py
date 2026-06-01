@@ -11,7 +11,7 @@ from application.admin.command.user import (
     ListUserTransactionsCommand,
     SearchUsersCommand,
 )
-from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
+from application.admin.dto.pagination import AdminListPageDTO
 from application.admin.dto.user import (
     UserProfileAdminDTO,
     UserReferralRowDTO,
@@ -22,7 +22,7 @@ from application.admin.dto.user import (
 )
 from domain.enums.task import TaskCompletionStatus
 from domain.enums.transaction import TransactionSource, TransactionType
-from presentation.http.dto.admin.prize_redemption import PrizeRedemptionResponseSchema
+from presentation.http.dto.admin.pagination import AdminListPageResponseSchema
 
 
 class SearchUsersQuerySchema(BaseModel):
@@ -189,12 +189,36 @@ class UserTransactionResponseSchema(BaseModel):
         )
 
 
-class UserPrizeRedemptionsListSchema(BaseModel):
-    items: list[PrizeRedemptionResponseSchema]
+class UserTaskCompletionsPageResponseSchema(AdminListPageResponseSchema):
+    items: list[UserTaskCompletionResponseSchema]
 
     @classmethod
-    def from_dtos(cls, dtos: tuple[PrizeRedemptionAdminDTO, ...]) -> "UserPrizeRedemptionsListSchema":
-        return cls(items=[PrizeRedemptionResponseSchema.from_dto(dto) for dto in dtos])
+    def from_page_dto(
+        cls,
+        page: AdminListPageDTO[UserTaskCompletionAdminDTO],
+    ) -> "UserTaskCompletionsPageResponseSchema":
+        return cls(
+            page=page.page,
+            page_size=page.page_size,
+            has_more=page.has_more,
+            items=[UserTaskCompletionResponseSchema.from_dto(item) for item in page.items],
+        )
+
+
+class UserTransactionsPageResponseSchema(AdminListPageResponseSchema):
+    items: list[UserTransactionResponseSchema]
+
+    @classmethod
+    def from_page_dto(
+        cls,
+        page: AdminListPageDTO[UserTransactionAdminDTO],
+    ) -> "UserTransactionsPageResponseSchema":
+        return cls(
+            page=page.page,
+            page_size=page.page_size,
+            has_more=page.has_more,
+            items=[UserTransactionResponseSchema.from_dto(item) for item in page.items],
+        )
 
 
 class UserListPageQuerySchema(BaseModel):
@@ -221,12 +245,13 @@ def get_user_referrals_command(*, users_id: int) -> GetUserReferralsCommand:
 __all__ = [
     "SearchUsersQuerySchema",
     "UserListPageQuerySchema",
-    "UserPrizeRedemptionsListSchema",
     "UserProfileResponseSchema",
     "UserReferralsResponseSchema",
     "UserSearchHitResponseSchema",
     "UserTaskCompletionResponseSchema",
+    "UserTaskCompletionsPageResponseSchema",
     "UserTransactionResponseSchema",
+    "UserTransactionsPageResponseSchema",
     "get_user_profile_command",
     "get_user_referrals_command",
 ]

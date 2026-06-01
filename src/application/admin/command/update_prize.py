@@ -1,4 +1,5 @@
-from application.admin.dto.prize import PrizeAdminDTO, UpdatePrizeCommand
+from application.admin.command.prize import UpdatePrizeCommand
+from application.admin.dto.prize import PrizeAdminDTO
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.base_interactor import Interactor
 from application.interface.uow import IUnitOfWork

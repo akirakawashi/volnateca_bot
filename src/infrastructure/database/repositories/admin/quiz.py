@@ -1,5 +1,5 @@
+from application.admin.command.quiz import CreateQuizCommand
 from application.admin.dto.quiz import (
-    CreateQuizCommand,
     CreatedQuizDTO,
     CreatedQuizOptionDTO,
     CreatedQuizQuestionDTO,

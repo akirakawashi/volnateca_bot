@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from application.admin.dto.prize import CreatePrizeCommand, PrizeAdminDTO, UpdatePrizeCommand
+from application.admin.command.prize import CreatePrizeCommand, UpdatePrizeCommand
+from application.admin.dto.prize import PrizeAdminDTO
 
 
 class IPrizeAdminRepository(ABC):

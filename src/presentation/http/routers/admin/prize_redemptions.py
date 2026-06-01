@@ -17,6 +17,7 @@ from presentation.http.dto.admin.prize_redemption import (
     FulfillPrizeRedemptionRequestSchema,
     ListPrizeRedemptionsQuerySchema,
     PrizeRedemptionResponseSchema,
+    PrizeRedemptionsPageResponseSchema,
 )
 
 prize_redemptions_admin_router = APIRouter(route_class=DishkaRoute)
@@ -25,7 +26,7 @@ prize_redemptions_admin_router = APIRouter(route_class=DishkaRoute)
 @prize_redemptions_admin_router.get(
     path="/prize-redemptions",
     name="Список заявок на призы",
-    response_model=list[PrizeRedemptionResponseSchema],
+    response_model=PrizeRedemptionsPageResponseSchema,
     status_code=status.HTTP_200_OK,
 )
 async def list_prize_redemptions(
@@ -33,7 +34,7 @@ async def list_prize_redemptions(
     status: PrizeRedemptionStatus | None = None,
     prizes_id: int | None = None,
     page: int = 1,
-) -> list[PrizeRedemptionResponseSchema]:
+) -> PrizeRedemptionsPageResponseSchema:
     result = await handler(
         ListPrizeRedemptionsQuerySchema(
             status=status,
@@ -41,7 +42,7 @@ async def list_prize_redemptions(
             page=page,
         ).to_command(),
     )
-    return [PrizeRedemptionResponseSchema.from_dto(item) for item in result]
+    return PrizeRedemptionsPageResponseSchema.from_page_dto(result)
 
 
 @prize_redemptions_admin_router.get(

@@ -3,7 +3,8 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from application.admin.admin_rules import ADMIN_ALLOWED_PRIZE_TYPES, ADMIN_ALLOWED_RECEIVE_TYPES
-from application.admin.dto.prize import CreatePrizeCommand, PrizeAdminDTO, UpdatePrizeCommand
+from application.admin.command.prize import CreatePrizeCommand, UpdatePrizeCommand
+from application.admin.dto.prize import PrizeAdminDTO
 from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
 from utils.vk_attachments import normalize_vk_photo_attachment
 

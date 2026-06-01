@@ -4,7 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
-from application.admin.dto.prize import CreatePrizeCommand, PrizeAdminDTO, UpdatePrizeCommand
+from application.admin.command.prize import CreatePrizeCommand, UpdatePrizeCommand
+from application.admin.dto.prize import PrizeAdminDTO
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from domain.services.prize_status_sync import apply_sold_out_status_from_quantities
 from infrastructure.database.models.prizes import Prize
