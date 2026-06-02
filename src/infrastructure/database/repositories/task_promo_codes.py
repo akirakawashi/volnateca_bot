@@ -67,45 +67,6 @@ class TaskPromoCodeRepository(SQLAlchemyRepository, ITaskPromoCodeRepository):
         await self._session.flush()
         return self._to_record(code=code)
 
-    async def activate_available_code(
-        self,
-        *,
-        tasks_id: int,
-        promo_code: str,
-        users_id: int,
-        activated_at: datetime,
-    ) -> TaskPromoCodeRecord | None:
-        code = await self.get_available_code_for_update(
-            tasks_id=tasks_id,
-            promo_code=promo_code,
-        )
-        if code is None:
-            return None
-        return await self.mark_code_used(
-            task_promo_codes_id=code.task_promo_codes_id,
-            users_id=users_id,
-            activated_at=activated_at,
-        )
-
-    async def bulk_create_available_codes(
-        self,
-        *,
-        tasks_id: int,
-        promo_codes: tuple[str, ...],
-    ) -> tuple[TaskPromoCodeRecord, ...]:
-        codes = [
-            TaskPromoCode(
-                tasks_id=tasks_id,
-                promo_code=normalize_task_promo_code(promo_code),
-                promo_code_status=TaskPromoCodeStatus.AVAILABLE,
-            )
-            for promo_code in promo_codes
-            if normalize_task_promo_code(promo_code)
-        ]
-        self._session.add_all(codes)
-        await self._session.flush()
-        return tuple(self._to_record(code=code) for code in codes)
-
     async def get_stats(
         self,
         *,

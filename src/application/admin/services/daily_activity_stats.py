@@ -34,19 +34,6 @@ def resolve_daily_stats_date_range(
     return resolved_from, resolved_to
 
 
-def resolve_activity_date_range(
-    *,
-    from_date: date | None,
-    to_date: date | None,
-    project_timezone: ZoneInfo,
-) -> tuple[date, date]:
-    return resolve_daily_stats_date_range(
-        from_date=from_date,
-        to_date=to_date,
-        project_timezone=project_timezone,
-    )
-
-
 def build_daily_stat_points(
     *,
     from_date: date,
@@ -59,19 +46,6 @@ def build_daily_stat_points(
         points.append(DailyStatPointDTO(day=current, value=values_by_day.get(current, 0)))
         current += timedelta(days=1)
     return tuple(points)
-
-
-def build_daily_activity_points(
-    *,
-    from_date: date,
-    to_date: date,
-    values_by_day: dict[date, int],
-) -> tuple[DailyStatPointDTO, ...]:
-    return build_daily_stat_points(
-        from_date=from_date,
-        to_date=to_date,
-        values_by_day=values_by_day,
-    )
 
 
 def build_daily_activity_stats_dto(
@@ -94,9 +68,7 @@ def build_daily_activity_stats_dto(
 
 
 __all__ = [
-    "build_daily_activity_points",
     "build_daily_activity_stats_dto",
     "build_daily_stat_points",
-    "resolve_activity_date_range",
     "resolve_daily_stats_date_range",
 ]
