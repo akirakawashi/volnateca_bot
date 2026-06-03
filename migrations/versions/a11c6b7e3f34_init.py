@@ -1,8 +1,8 @@
-"""initial migration
+"""init
 
-Revision ID: 9e27ae6f7f21
+Revision ID: a11c6b7e3f34
 Revises: 
-Create Date: 2026-05-27 07:26:25.816078
+Create Date: 2026-06-03 10:35:12.089143
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = '9e27ae6f7f21'
+revision: str = 'a11c6b7e3f34'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -56,7 +56,7 @@ def upgrade() -> None:
     sa.Column('receive_type', sa.Enum('pickup', 'delivery', 'promo_code', 'manager_contact', name='prize_receive_type'), nullable=False),
     sa.Column('status', sa.Enum('available', 'sold_out', 'hidden', name='prize_status'), nullable=False),
     sa.Column('cost_points', sa.Integer(), nullable=False),
-    sa.Column('quantity_total', sa.Integer(), nullable=True),
+    sa.Column('quantity_total', sa.Integer(), nullable=False),
     sa.Column('quantity_claimed', sa.Integer(), nullable=False),
     sa.Column('required_level', sa.Integer(), nullable=True),
     sa.Column('sort_order', sa.Integer(), nullable=False),
@@ -64,8 +64,9 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.CheckConstraint('cost_points > 0', name=op.f('ck_prizes_cost_points_positive')),
+    sa.CheckConstraint('quantity_claimed <= quantity_total', name=op.f('ck_prizes_quantity_claimed_lte_quantity_total')),
     sa.CheckConstraint('quantity_claimed >= 0', name=op.f('ck_prizes_quantity_claimed_non_negative')),
-    sa.CheckConstraint('quantity_total IS NULL OR quantity_claimed <= quantity_total', name=op.f('ck_prizes_quantity_claimed_lte_quantity_total')),
+    sa.CheckConstraint('quantity_total >= 1', name=op.f('ck_prizes_quantity_total_positive')),
     sa.CheckConstraint('required_level IS NULL OR required_level BETWEEN 1 AND 4', name=op.f('ck_prizes_required_level_between_1_and_4')),
     sa.PrimaryKeyConstraint('prizes_id', name=op.f('pk_prizes'))
     )
@@ -77,7 +78,7 @@ def upgrade() -> None:
     sa.Column('code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('task_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('task_type', sa.Enum('vk_subscribe', 'vk_like', 'vk_repost', 'vk_comment', 'vk_poll', 'vk_story_mention', 'quiz', 'custom', name='task_type'), nullable=False),
+    sa.Column('task_type', sa.Enum('vk_subscribe', 'vk_like', 'vk_repost', 'vk_comment', 'vk_poll', 'quiz', 'custom', name='task_type'), nullable=False),
     sa.Column('points', sa.Integer(), nullable=False),
     sa.Column('week_number', sa.Integer(), nullable=True),
     sa.Column('external_id', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -116,6 +117,16 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_users_vk_screen_name'), 'users', ['vk_screen_name'], unique=False)
     op.create_index(op.f('ix_users_vk_user_id'), 'users', ['vk_user_id'], unique=True)
+    op.create_table('vk_referral_intents',
+    sa.Column('vk_referral_intents_id', sa.Integer(), nullable=False),
+    sa.Column('invited_vk_user_id', sa.Integer(), nullable=False),
+    sa.Column('raw_ref', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.PrimaryKeyConstraint('vk_referral_intents_id', name=op.f('pk_vk_referral_intents')),
+    sa.UniqueConstraint('invited_vk_user_id', name='uq_vk_referral_intents_invited_vk_user_id')
+    )
+    op.create_index(op.f('ix_vk_referral_intents_invited_vk_user_id'), 'vk_referral_intents', ['invited_vk_user_id'], unique=False)
     op.create_table('quiz_questions',
     sa.Column('quiz_questions_id', sa.Integer(), nullable=False),
     sa.Column('tasks_id', sa.Integer(), nullable=False),
@@ -129,6 +140,34 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_quiz_questions_is_active'), 'quiz_questions', ['is_active'], unique=False)
     op.create_index(op.f('ix_quiz_questions_tasks_id'), 'quiz_questions', ['tasks_id'], unique=False)
+    op.create_table('task_promo_code_waits',
+    sa.Column('task_promo_code_waits_id', sa.Integer(), nullable=False),
+    sa.Column('users_id', sa.Integer(), nullable=False),
+    sa.Column('tasks_id', sa.Integer(), nullable=False),
+    sa.Column('wait_status', sa.Enum('waiting', 'canceled', 'completed', name='task_promo_code_wait_status'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['tasks_id'], ['tasks.tasks_id'], name=op.f('fk_task_promo_code_waits_tasks_id_tasks')),
+    sa.ForeignKeyConstraint(['users_id'], ['users.users_id'], name=op.f('fk_task_promo_code_waits_users_id_users')),
+    sa.PrimaryKeyConstraint('task_promo_code_waits_id', name=op.f('pk_task_promo_code_waits'))
+    )
+    op.create_index(op.f('ix_task_promo_code_waits_tasks_id'), 'task_promo_code_waits', ['tasks_id'], unique=False)
+    op.create_index(op.f('ix_task_promo_code_waits_users_id'), 'task_promo_code_waits', ['users_id'], unique=False)
+    op.create_index('ix_task_promo_code_waits_users_id_status', 'task_promo_code_waits', ['users_id', 'wait_status'], unique=False)
+    op.create_index(op.f('ix_task_promo_code_waits_wait_status'), 'task_promo_code_waits', ['wait_status'], unique=False)
+    op.create_table('task_promo_codes',
+    sa.Column('task_promo_codes_id', sa.Integer(), nullable=False),
+    sa.Column('tasks_id', sa.Integer(), nullable=False),
+    sa.Column('promo_code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['tasks_id'], ['tasks.tasks_id'], name=op.f('fk_task_promo_codes_tasks_id_tasks')),
+    sa.PrimaryKeyConstraint('task_promo_codes_id', name=op.f('pk_task_promo_codes')),
+    sa.UniqueConstraint('promo_code', name='uq_task_promo_codes_promo_code'),
+    sa.UniqueConstraint('tasks_id', name='uq_task_promo_codes_tasks_id')
+    )
+    op.create_index(op.f('ix_task_promo_codes_promo_code'), 'task_promo_codes', ['promo_code'], unique=False)
+    op.create_index(op.f('ix_task_promo_codes_tasks_id'), 'task_promo_codes', ['tasks_id'], unique=False)
     op.create_table('transactions',
     sa.Column('transactions_id', sa.Integer(), nullable=False),
     sa.Column('users_id', sa.Integer(), nullable=False),
@@ -157,23 +196,35 @@ def upgrade() -> None:
     sa.Column('prize_redemptions_id', sa.Integer(), nullable=False),
     sa.Column('users_id', sa.Integer(), nullable=False),
     sa.Column('prizes_id', sa.Integer(), nullable=False),
-    sa.Column('transactions_id', sa.Integer(), nullable=True),
+    sa.Column('transactions_id', sa.Integer(), nullable=False),
+    sa.Column('refund_transactions_id', sa.Integer(), nullable=True),
     sa.Column('prize_redemption_status', sa.Enum('reserved', 'issued', 'canceled', name='prize_redemption_status'), nullable=False),
     sa.Column('receive_type', sa.Enum('pickup', 'delivery', 'promo_code', 'manager_contact', name='prize_receive_type'), nullable=False),
+    sa.Column('redemption_code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('idempotency_key', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('points_spent', sa.Integer(), nullable=False),
     sa.Column('comment', sa.Text(), nullable=True),
     sa.Column('issued_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('canceled_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('cancel_reason', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.CheckConstraint('points_spent >= 0', name=op.f('ck_prize_redemptions_points_spent_non_negative')),
     sa.ForeignKeyConstraint(['prizes_id'], ['prizes.prizes_id'], name=op.f('fk_prize_redemptions_prizes_id_prizes')),
+    sa.ForeignKeyConstraint(['refund_transactions_id'], ['transactions.transactions_id'], name=op.f('fk_prize_redemptions_refund_transactions_id_transactions')),
     sa.ForeignKeyConstraint(['transactions_id'], ['transactions.transactions_id'], name=op.f('fk_prize_redemptions_transactions_id_transactions')),
     sa.ForeignKeyConstraint(['users_id'], ['users.users_id'], name=op.f('fk_prize_redemptions_users_id_users')),
     sa.PrimaryKeyConstraint('prize_redemptions_id', name=op.f('pk_prize_redemptions')),
+    sa.UniqueConstraint('refund_transactions_id', name=op.f('uq_prize_redemptions_refund_transactions_id')),
     sa.UniqueConstraint('transactions_id', name=op.f('uq_prize_redemptions_transactions_id'))
     )
+    op.create_index(op.f('ix_prize_redemptions_idempotency_key'), 'prize_redemptions', ['idempotency_key'], unique=True)
     op.create_index(op.f('ix_prize_redemptions_prizes_id'), 'prize_redemptions', ['prizes_id'], unique=False)
+    op.create_index('ix_prize_redemptions_prizes_id_status', 'prize_redemptions', ['prizes_id', 'prize_redemption_status'], unique=False)
+    op.create_index(op.f('ix_prize_redemptions_redemption_code'), 'prize_redemptions', ['redemption_code'], unique=True)
+    op.create_index('ix_prize_redemptions_status_created_at', 'prize_redemptions', ['prize_redemption_status', 'created_at'], unique=False)
     op.create_index(op.f('ix_prize_redemptions_users_id'), 'prize_redemptions', ['users_id'], unique=False)
+    op.create_index('ix_prize_redemptions_users_id_status', 'prize_redemptions', ['users_id', 'prize_redemption_status'], unique=False)
     op.create_table('quiz_question_options',
     sa.Column('quiz_question_options_id', sa.Integer(), nullable=False),
     sa.Column('quiz_questions_id', sa.Integer(), nullable=False),
@@ -248,23 +299,6 @@ def upgrade() -> None:
     op.create_index(op.f('ix_user_achievements_achievement_key'), 'user_achievements', ['achievement_key'], unique=False)
     op.create_index(op.f('ix_user_achievements_achievements_id'), 'user_achievements', ['achievements_id'], unique=False)
     op.create_index(op.f('ix_user_achievements_users_id'), 'user_achievements', ['users_id'], unique=False)
-    op.create_table('prize_promo_codes',
-    sa.Column('prize_promo_codes_id', sa.Integer(), nullable=False),
-    sa.Column('prizes_id', sa.Integer(), nullable=False),
-    sa.Column('prize_redemptions_id', sa.Integer(), nullable=True),
-    sa.Column('promo_code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('promo_code_status', sa.Enum('available', 'reserved', 'issued', 'disabled', name='promo_code_status'), nullable=False),
-    sa.Column('issued_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['prize_redemptions_id'], ['prize_redemptions.prize_redemptions_id'], name=op.f('fk_prize_promo_codes_prize_redemptions_id_prize_redemptions')),
-    sa.ForeignKeyConstraint(['prizes_id'], ['prizes.prizes_id'], name=op.f('fk_prize_promo_codes_prizes_id_prizes')),
-    sa.PrimaryKeyConstraint('prize_promo_codes_id', name=op.f('pk_prize_promo_codes')),
-    sa.UniqueConstraint('prize_redemptions_id', name=op.f('uq_prize_promo_codes_prize_redemptions_id'))
-    )
-    op.create_index(op.f('ix_prize_promo_codes_prizes_id'), 'prize_promo_codes', ['prizes_id'], unique=False)
-    op.create_index(op.f('ix_prize_promo_codes_promo_code'), 'prize_promo_codes', ['promo_code'], unique=True)
-    op.create_index(op.f('ix_prize_promo_codes_promo_code_status'), 'prize_promo_codes', ['promo_code_status'], unique=False)
     op.create_table('quiz_answers',
     sa.Column('quiz_answers_id', sa.Integer(), nullable=False),
     sa.Column('users_id', sa.Integer(), nullable=False),
@@ -293,10 +327,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_quiz_answers_quiz_questions_id'), table_name='quiz_answers')
     op.drop_index(op.f('ix_quiz_answers_quiz_question_options_id'), table_name='quiz_answers')
     op.drop_table('quiz_answers')
-    op.drop_index(op.f('ix_prize_promo_codes_promo_code_status'), table_name='prize_promo_codes')
-    op.drop_index(op.f('ix_prize_promo_codes_promo_code'), table_name='prize_promo_codes')
-    op.drop_index(op.f('ix_prize_promo_codes_prizes_id'), table_name='prize_promo_codes')
-    op.drop_table('prize_promo_codes')
     op.drop_index(op.f('ix_user_achievements_users_id'), table_name='user_achievements')
     op.drop_index(op.f('ix_user_achievements_achievements_id'), table_name='user_achievements')
     op.drop_index(op.f('ix_user_achievements_achievement_key'), table_name='user_achievements')
@@ -313,17 +343,32 @@ def downgrade() -> None:
     op.drop_table('referrals')
     op.drop_index(op.f('ix_quiz_question_options_quiz_questions_id'), table_name='quiz_question_options')
     op.drop_table('quiz_question_options')
+    op.drop_index('ix_prize_redemptions_users_id_status', table_name='prize_redemptions')
     op.drop_index(op.f('ix_prize_redemptions_users_id'), table_name='prize_redemptions')
+    op.drop_index('ix_prize_redemptions_status_created_at', table_name='prize_redemptions')
+    op.drop_index(op.f('ix_prize_redemptions_redemption_code'), table_name='prize_redemptions')
+    op.drop_index('ix_prize_redemptions_prizes_id_status', table_name='prize_redemptions')
     op.drop_index(op.f('ix_prize_redemptions_prizes_id'), table_name='prize_redemptions')
+    op.drop_index(op.f('ix_prize_redemptions_idempotency_key'), table_name='prize_redemptions')
     op.drop_table('prize_redemptions')
     op.drop_index(op.f('ix_transactions_users_id'), table_name='transactions')
     op.drop_index('ix_transactions_transaction_type_created_at_users_id', table_name='transactions')
     op.drop_index(op.f('ix_transactions_tasks_id'), table_name='transactions')
     op.drop_index(op.f('ix_transactions_prizes_id'), table_name='transactions')
     op.drop_table('transactions')
+    op.drop_index(op.f('ix_task_promo_codes_tasks_id'), table_name='task_promo_codes')
+    op.drop_index(op.f('ix_task_promo_codes_promo_code'), table_name='task_promo_codes')
+    op.drop_table('task_promo_codes')
+    op.drop_index(op.f('ix_task_promo_code_waits_wait_status'), table_name='task_promo_code_waits')
+    op.drop_index('ix_task_promo_code_waits_users_id_status', table_name='task_promo_code_waits')
+    op.drop_index(op.f('ix_task_promo_code_waits_users_id'), table_name='task_promo_code_waits')
+    op.drop_index(op.f('ix_task_promo_code_waits_tasks_id'), table_name='task_promo_code_waits')
+    op.drop_table('task_promo_code_waits')
     op.drop_index(op.f('ix_quiz_questions_tasks_id'), table_name='quiz_questions')
     op.drop_index(op.f('ix_quiz_questions_is_active'), table_name='quiz_questions')
     op.drop_table('quiz_questions')
+    op.drop_index(op.f('ix_vk_referral_intents_invited_vk_user_id'), table_name='vk_referral_intents')
+    op.drop_table('vk_referral_intents')
     op.drop_index(op.f('ix_users_vk_user_id'), table_name='users')
     op.drop_index(op.f('ix_users_vk_screen_name'), table_name='users')
     op.drop_table('users')

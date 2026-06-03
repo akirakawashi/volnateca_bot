@@ -13,20 +13,3 @@ class ITaskPromoCodeRepository(ABC):
         tasks_id: int,
     ) -> TaskPromoCodeRecord | None:
         raise NotImplementedError
-
-    @abstractmethod
-    async def get_by_task(
-        self,
-        *,
-        tasks_id: int,
-    ) -> TaskPromoCodeRecord | None:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def create_for_task(
-        self,
-        *,
-        tasks_id: int,
-        promo_code: str,
-    ) -> TaskPromoCodeRecord:
-        raise NotImplementedError

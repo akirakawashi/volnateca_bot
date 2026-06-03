@@ -1,10 +1,7 @@
 from sqlalchemy import select
 from sqlmodel import col
 
-from application.common.dto.task_promo_code import (
-    TaskPromoCodeRecord,
-    normalize_task_promo_code,
-)
+from application.common.dto.task_promo_code import TaskPromoCodeRecord
 from application.interface.repositories.task_promo_codes import ITaskPromoCodeRepository
 from infrastructure.database.models.task_promo_codes import TaskPromoCode
 from infrastructure.database.repositories.base import SQLAlchemyRepository
@@ -19,34 +16,6 @@ class TaskPromoCodeRepository(SQLAlchemyRepository, ITaskPromoCodeRepository):
         code = await self._get_by_task(tasks_id=tasks_id, lock=True)
         if code is None:
             return None
-        return self._to_record(code=code)
-
-    async def get_by_task(
-        self,
-        *,
-        tasks_id: int,
-    ) -> TaskPromoCodeRecord | None:
-        code = await self._get_by_task(tasks_id=tasks_id, lock=False)
-        if code is None:
-            return None
-        return self._to_record(code=code)
-
-    async def create_for_task(
-        self,
-        *,
-        tasks_id: int,
-        promo_code: str,
-    ) -> TaskPromoCodeRecord:
-        normalized_code = normalize_task_promo_code(promo_code)
-        if not normalized_code:
-            raise ValueError("Промокод задания не может быть пустым")
-
-        code = TaskPromoCode(
-            tasks_id=tasks_id,
-            promo_code=normalized_code,
-        )
-        self._session.add(code)
-        await self._session.flush()
         return self._to_record(code=code)
 
     async def _get_by_task(

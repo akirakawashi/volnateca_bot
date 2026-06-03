@@ -2,7 +2,7 @@ from application.admin.command.task_promo_code import CreateTaskPromoCodeTaskCom
 from application.admin.dto.task_promo_code import CreatedTaskPromoCodeTaskDTO
 from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
 from application.common.dto.task_promo_code import normalize_task_promo_code
-from domain.enums.task import TaskType
+from domain.enums.task import TaskRepeatPolicy, TaskType
 from infrastructure.database.models.task_promo_codes import TaskPromoCode
 from infrastructure.database.models.tasks import Task
 from infrastructure.database.repositories.base import SQLAlchemyRepository
@@ -23,7 +23,7 @@ class TaskPromoCodeAdminRepository(SQLAlchemyRepository, ITaskPromoCodeAdminRepo
             external_id=None,
             starts_at=command.starts_at,
             ends_at=command.ends_at,
-            repeat_policy=command.repeat_policy,
+            repeat_policy=TaskRepeatPolicy.ONCE,
             is_active=True,
         )
         self._session.add(task)

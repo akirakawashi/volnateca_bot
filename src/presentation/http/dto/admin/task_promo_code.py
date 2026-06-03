@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from application.admin.command.task_promo_code import CreateTaskPromoCodeTaskCommand
 from application.admin.dto.task_promo_code import CreatedTaskPromoCodeTaskDTO
 from application.common.dto.task_promo_code import normalize_task_promo_code
-from domain.enums.task import TaskRepeatPolicy
 
 
 class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
@@ -17,7 +16,6 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
     week_number: int | None = Field(default=None, ge=1, le=12)
     starts_at: datetime | None = None
     ends_at: datetime | None = None
-    repeat_policy: TaskRepeatPolicy = TaskRepeatPolicy.ONCE
     promo_code: str = Field(min_length=1)
 
     @field_validator("code", "task_name", mode="before")
@@ -48,8 +46,6 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
         if self.starts_at is not None and self.ends_at is not None:
             if self.starts_at >= self.ends_at:
                 raise ValueError("starts_at должно быть раньше ends_at")
-        if self.repeat_policy != TaskRepeatPolicy.ONCE:
-            raise ValueError("Промокодное задание можно создать только с repeat_policy=once")
         return self
 
     def to_command(self) -> CreateTaskPromoCodeTaskCommand:
@@ -61,7 +57,6 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
             week_number=self.week_number,
             starts_at=self.starts_at,
             ends_at=self.ends_at,
-            repeat_policy=self.repeat_policy,
             promo_code=self.promo_code,
         )
 

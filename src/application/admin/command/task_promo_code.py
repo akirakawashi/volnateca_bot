@@ -5,7 +5,6 @@ from application.admin.dto.task_promo_code import CreatedTaskPromoCodeTaskDTO
 from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
 from application.base_interactor import Interactor
 from application.interface.uow import IUnitOfWork
-from domain.enums.task import TaskRepeatPolicy
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -17,7 +16,6 @@ class CreateTaskPromoCodeTaskCommand:
     week_number: int | None
     starts_at: datetime | None
     ends_at: datetime | None
-    repeat_policy: TaskRepeatPolicy
     promo_code: str
 
 
@@ -36,8 +34,6 @@ class CreateTaskPromoCodeTaskHandler(
         self,
         command_data: CreateTaskPromoCodeTaskCommand,
     ) -> CreatedTaskPromoCodeTaskDTO:
-        if command_data.repeat_policy != TaskRepeatPolicy.ONCE:
-            raise ValueError("Промокодное задание можно создать только с repeat_policy=once")
         result = await self.repository.create_task_with_code(command=command_data)
         await self.uow.commit()
         return result
