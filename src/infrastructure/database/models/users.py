@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from infrastructure.database.models.referrals import Referral
     from infrastructure.database.models.task_completions import TaskCompletion
     from infrastructure.database.models.task_promo_code_waits import TaskPromoCodeWait
-    from infrastructure.database.models.task_promo_codes import TaskPromoCode
     from infrastructure.database.models.transactions import Transaction
 
 
@@ -98,7 +97,6 @@ class User(BaseModel, table=True):
     user_achievements: list["UserAchievement"] = Relationship(back_populates="user")
     prize_redemptions: list["PrizeRedemption"] = Relationship(back_populates="user")
     task_completions: list["TaskCompletion"] = Relationship(back_populates="user")
-    task_promo_codes: list["TaskPromoCode"] = Relationship(back_populates="user")
     task_promo_code_waits: list["TaskPromoCodeWait"] = Relationship(back_populates="user")
     transactions: list["Transaction"] = Relationship(back_populates="user")
     quiz_answers: list["QuizAnswer"] = Relationship(back_populates="user")

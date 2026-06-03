@@ -5,8 +5,7 @@ from application.common.dto.user import VKUserRegistrationDTO
 from application.interface.clients import IVKUserClient
 from application.interface.repositories.users import IUserRepository
 from application.interface.uow import IUnitOfWork
-
-REGISTRATION_BONUS_POINTS = 15
+from domain.project_rules import REGISTRATION_BONUS_POINTS
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

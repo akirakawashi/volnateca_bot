@@ -1,36 +1,32 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
 
-from application.common.dto.task_promo_code import TaskPromoCodeRecord, TaskPromoCodeStatsDTO
+from application.common.dto.task_promo_code import TaskPromoCodeRecord
 
 
 class ITaskPromoCodeRepository(ABC):
     """Репозиторий кодов, которыми пользователь подтверждает выполнение задания."""
 
     @abstractmethod
-    async def activate_available_code(
+    async def get_by_task_for_update(
         self,
         *,
         tasks_id: int,
-        promo_code: str,
-        users_id: int,
-        activated_at: datetime,
     ) -> TaskPromoCodeRecord | None:
         raise NotImplementedError
 
     @abstractmethod
-    async def bulk_create_available_codes(
+    async def get_by_task(
         self,
         *,
         tasks_id: int,
-        promo_codes: tuple[str, ...],
-    ) -> tuple[TaskPromoCodeRecord, ...]:
+    ) -> TaskPromoCodeRecord | None:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_stats(
+    async def create_for_task(
         self,
         *,
         tasks_id: int,
-    ) -> TaskPromoCodeStatsDTO:
+        promo_code: str,
+    ) -> TaskPromoCodeRecord:
         raise NotImplementedError

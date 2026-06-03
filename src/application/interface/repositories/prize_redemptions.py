@@ -23,6 +23,14 @@ class IPrizeRedemptionRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_by_redemption_code(
+        self,
+        *,
+        redemption_code: str,
+    ) -> PrizeRedemptionRecord | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_for_update(
         self,
         *,
@@ -56,6 +64,15 @@ class IPrizeRedemptionRepository(ABC):
         limit: int,
         offset: int,
     ) -> tuple[PrizeRedemptionRecord, ...]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def count_for_fulfillment(
+        self,
+        *,
+        status: PrizeRedemptionStatus | None,
+        prizes_id: int | None,
+    ) -> int:
         raise NotImplementedError
 
     @abstractmethod

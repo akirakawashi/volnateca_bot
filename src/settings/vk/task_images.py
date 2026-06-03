@@ -12,7 +12,6 @@ class TaskTypeImagesSettings(Settings):
     TASK_IMAGE_VK_REPOST: str | None = "photo-213947338_457239029"
     TASK_IMAGE_VK_COMMENT: str | None = "photo-213947338_457239028"
     TASK_IMAGE_VK_POLL: str | None = "photo-213947338_457239027"
-    TASK_IMAGE_VK_STORY_MENTION: str | None = "photo-213947338_457239022"
     TASK_IMAGE_CUSTOM: str | None = "photo-213947338_457239022"
 
     def get_image(self, task_type: TaskType) -> str | None:
@@ -22,6 +21,5 @@ class TaskTypeImagesSettings(Settings):
             TaskType.VK_REPOST: self.TASK_IMAGE_VK_REPOST,
             TaskType.VK_COMMENT: self.TASK_IMAGE_VK_COMMENT,
             TaskType.VK_POLL: self.TASK_IMAGE_VK_POLL,
-            TaskType.VK_STORY_MENTION: self.TASK_IMAGE_VK_STORY_MENTION,
             TaskType.CUSTOM: self.TASK_IMAGE_CUSTOM,
         }.get(task_type)

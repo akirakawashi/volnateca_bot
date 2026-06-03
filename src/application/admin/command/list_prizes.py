@@ -1,5 +1,6 @@
 from application.base_interactor import Interactor
-from application.admin.dto.prize import ListPrizesCommand, PrizeAdminDTO
+from application.admin.command.prize import ListPrizesCommand
+from application.admin.dto.prize import PrizeAdminDTO
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 
 

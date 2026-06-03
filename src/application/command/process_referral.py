@@ -13,17 +13,13 @@ from application.services.award_achievement_service import (
     AwardAchievementService,
 )
 from domain.enums.transaction import TransactionSource, TransactionType
+from domain.project_rules import (
+    REFERRAL_BONUS_POINTS,
+    REFERRAL_MILESTONE_ACHIEVEMENT_KEY,
+    REFERRAL_MILESTONES,
+)
 from domain.services.level import get_level
 from domain.services.wallet import WalletService
-
-REFERRAL_BONUS_POINTS = 30
-
-# Пороговые достижения: количество рефералов → код достижения в таблице achievements
-REFERRAL_MILESTONES: dict[int, str] = {
-    3: "referral_milestone_3",
-    5: "referral_milestone_5",
-    10: "referral_milestone_10",
-}
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -74,6 +70,15 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
                 inviter_users_id=inviter.users_id,
             )
 
+        # Блокируем строку баланса инвайтера до создания referral-записи:
+        # связь и бонус должны коммититься как одна атомарная операция.
+        snapshot = await self.user_repository.get_balance_snapshot_by_users_id_for_update(
+            users_id=inviter.users_id,
+        )
+        if snapshot is None:
+            await self.uow.rollback()
+            raise RuntimeError("Инвайтер исчез до блокировки баланса для реферального бонуса")
+
         # Создаём реферальную связь (идемпотентно)
         referrals_id, created = await self.referral_repository.create_if_not_exists(
             inviter_users_id=inviter.users_id,
@@ -84,22 +89,6 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
             return self._no_op(
                 inviter_vk_user_id=command_data.inviter_vk_user_id,
                 inviter_users_id=inviter.users_id,
-            )
-
-        # Блокируем строку баланса инвайтера на время транзакции
-        snapshot = await self.user_repository.get_balance_snapshot_for_update(
-            vk_user_id=command_data.inviter_vk_user_id,
-        )
-        if snapshot is None:
-            await self.uow.commit()
-            return ProcessReferralDTO(
-                created=True,
-                inviter_vk_user_id=command_data.inviter_vk_user_id,
-                inviter_users_id=inviter.users_id,
-                bonus_points=0,
-                inviter_balance_points=None,
-                milestone_reached=None,
-                milestone_bonus_points=None,
             )
 
         # Начисляем реферальный бонус
@@ -150,7 +139,7 @@ class ProcessReferralHandler(Interactor[ProcessReferralCommand, ProcessReferralD
                         achievement_name=achievement.achievement_name,
                         points=achievement.points,
                     ),
-                    achievement_key="once",
+                    achievement_key=REFERRAL_MILESTONE_ACHIEVEMENT_KEY,
                 )
                 if achievement_outcome.status == AwardAchievementOutcomeStatus.COMPLETED:
                     milestone_reached = referral_count

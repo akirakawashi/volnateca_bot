@@ -4,7 +4,8 @@ from sqlmodel import col
 from application.common.dto.prize_redemption import PrizeLockedSnapshot
 from application.common.dto.store import STORE_ALLOWED_PRIZE_TYPES, StorePrizeSnapshot
 from application.interface.repositories.prizes import IPrizeRepository
-from domain.enums.prize import PrizeReceiveType, PrizeStatus, PrizeType
+from domain.enums.prize import PrizeStatus, PrizeType
+from domain.services.prize_status_sync import apply_sold_out_status_from_quantities
 from infrastructure.database.models.prizes import Prize
 from infrastructure.database.repositories.base import SQLAlchemyRepository
 
@@ -124,10 +125,7 @@ class PrizeRepository(SQLAlchemyRepository, IPrizeRepository):
         prize = result.scalar_one_or_none()
         if prize is None:
             return
-        if prize.quantity_claimed >= prize.quantity_total:
-            prize.status = PrizeStatus.SOLD_OUT
-        elif prize.status == PrizeStatus.SOLD_OUT:
-            prize.status = PrizeStatus.AVAILABLE
+        apply_sold_out_status_from_quantities(prize=prize)
         await self._session.flush()
 
     @staticmethod

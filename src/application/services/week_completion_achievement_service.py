@@ -6,8 +6,7 @@ from application.services.award_achievement_service import (
     AwardAchievementOutcomeStatus,
     AwardAchievementService,
 )
-
-WEEK_COMPLETION_ACHIEVEMENT_CODE = "week_completion"
+from domain.project_rules import WEEK_COMPLETION_ACHIEVEMENT_CODE, build_week_completion_key
 
 
 class WeekCompletionAchievementService:
@@ -52,11 +51,6 @@ class WeekCompletionAchievementService:
             achievement_key=build_week_completion_key(week_number=week_number),
         )
         return outcome if outcome.status == AwardAchievementOutcomeStatus.COMPLETED else None
-
-
-def build_week_completion_key(*, week_number: int) -> str:
-    return f"week_{week_number:02d}"
-
 
 __all__ = [
     "WEEK_COMPLETION_ACHIEVEMENT_CODE",

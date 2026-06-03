@@ -13,6 +13,7 @@ from application.interface.repositories.tasks import ITaskRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
 from application.interface.services import IVKMessageTemplateService
+from application.interface.uow import IUnitOfWork
 from application.services.award_achievement_service import AwardAchievementService
 from application.services.award_task_service import AwardTaskService
 from application.services.project_completion_achievement_service import ProjectCompletionAchievementService
@@ -56,11 +57,13 @@ class ServicesProvider(Provider):
         users: IUserRepository,
         achievements: IAchievementRepository,
         transactions: ITransactionRepository,
+        uow: IUnitOfWork,
     ) -> AwardAchievementService:
         return AwardAchievementService(
             users=users,
             achievements=achievements,
             transactions=transactions,
+            uow=uow,
         )
 
     @provide(scope=Scope.REQUEST)

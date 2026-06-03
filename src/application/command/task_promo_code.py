@@ -193,16 +193,21 @@ class ActivateTaskPromoCodeHandler(
             )
 
         normalized_code = normalize_task_promo_code(command_data.promo_code)
-        code = await self.promo_code_repository.activate_available_code(
-            tasks_id=task.tasks_id,
-            promo_code=normalized_code,
-            users_id=user.users_id,
-            activated_at=datetime.now(tz=UTC),
-        )
+        code = await self.promo_code_repository.get_by_task_for_update(tasks_id=task.tasks_id)
         if code is None:
             await self.wait_repository.cancel_waiting(
                 task_promo_code_waits_id=wait.task_promo_code_waits_id,
             )
+            await self.uow.commit()
+            return TaskPromoCodeFlowDTO(
+                status=TaskPromoCodeFlowStatus.TASK_NOT_FOUND,
+                vk_user_id=command_data.vk_user_id,
+                users_id=user.users_id,
+                tasks_id=task.tasks_id,
+                task_name=task.task_name,
+                points=task.points,
+            )
+        if code.promo_code != normalized_code:
             await self.uow.commit()
             return TaskPromoCodeFlowDTO(
                 status=TaskPromoCodeFlowStatus.INVALID_CODE,
@@ -225,15 +230,12 @@ class ActivateTaskPromoCodeHandler(
             event_id=command_data.event_id,
             evidence_external_id=code.promo_code,
         )
+        completion = build_task_completion_result(outcome=outcome)
         await self.wait_repository.complete_waiting(
             task_promo_code_waits_id=wait.task_promo_code_waits_id,
         )
-        stats = await self.promo_code_repository.get_stats(tasks_id=task.tasks_id)
-        if stats.available_count == 0:
-            await self.task_repository.deactivate_task(tasks_id=task.tasks_id)
         await self.uow.commit()
 
-        completion = build_task_completion_result(outcome=outcome)
         return TaskPromoCodeFlowDTO(
             status=TaskPromoCodeFlowStatus(completion.status.value),
             vk_user_id=command_data.vk_user_id,

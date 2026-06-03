@@ -9,7 +9,6 @@ class TaskType(str, Enum):
     VK_REPOST = "vk_repost"  # Репост поста ВКонтакте
     VK_COMMENT = "vk_comment"  # Комментарий под постом ВКонтакте
     VK_POLL = "vk_poll"  # Участие в опросе ВКонтакте
-    VK_STORY_MENTION = "vk_story_mention"  # Упоминание в истории ВКонтакте
     QUIZ = "quiz"
     CUSTOM = "custom"  # Нестандартное задание
 
@@ -31,13 +30,6 @@ class TaskCompletionStatus(str, Enum):
     CANCELED = "canceled"  # Выполнение отменено администратором или системой
 
 
-class TaskPromoCodeStatus(str, Enum):
-    """Статус промокода, который подтверждает выполнение задания."""
-
-    AVAILABLE = "available"  # Код можно активировать в боте
-    USED = "used"  # Код уже активирован пользователем
-
-
 class TaskPromoCodeWaitStatus(str, Enum):
     """Состояние диалога, в котором бот ждёт промокод для задания."""
 
@@ -48,7 +40,6 @@ class TaskPromoCodeWaitStatus(str, Enum):
 
 __all__ = [
     "TaskCompletionStatus",
-    "TaskPromoCodeStatus",
     "TaskPromoCodeWaitStatus",
     "TaskRepeatPolicy",
     "TaskType",

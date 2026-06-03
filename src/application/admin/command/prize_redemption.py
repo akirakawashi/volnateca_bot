@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from application.admin.admin_rules import ADMIN_MAX_PAGE, ADMIN_REDEMPTIONS_PAGE_SIZE
+from application.admin.dto.pagination import AdminListPageDTO, build_admin_list_page
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
 from application.base_interactor import Interactor
 from application.common.dto.prize_redemption import PrizeRedemptionRecord
@@ -15,8 +17,6 @@ from application.services.fulfill_redemption_service import (
 )
 from domain.enums.prize import PrizeRedemptionStatus
 
-ADMIN_REDEMPTIONS_PAGE_SIZE = 50
-
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class ListPrizeRedemptionsCommand:
@@ -26,8 +26,18 @@ class ListPrizeRedemptionsCommand:
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
+class GetPrizeRedemptionQueueCountCommand:
+    pass
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
 class GetPrizeRedemptionCommand:
     prize_redemptions_id: int
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class GetPrizeRedemptionByCodeCommand:
+    redemption_code: str
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -43,7 +53,7 @@ class CancelPrizeRedemptionCommand:
 
 
 class ListPrizeRedemptionsHandler(
-    Interactor[ListPrizeRedemptionsCommand, tuple[PrizeRedemptionAdminDTO, ...]],
+    Interactor[ListPrizeRedemptionsCommand, AdminListPageDTO[PrizeRedemptionAdminDTO]],
 ):
     def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
         self._prize_redemptions = prize_redemption_repository
@@ -51,16 +61,37 @@ class ListPrizeRedemptionsHandler(
     async def __call__(
         self,
         command_data: ListPrizeRedemptionsCommand,
-    ) -> tuple[PrizeRedemptionAdminDTO, ...]:
-        page = max(1, command_data.page)
+    ) -> AdminListPageDTO[PrizeRedemptionAdminDTO]:
+        page = max(1, min(command_data.page, ADMIN_MAX_PAGE))
         offset = (page - 1) * ADMIN_REDEMPTIONS_PAGE_SIZE
         records = await self._prize_redemptions.list_for_fulfillment(
             status=command_data.status,
             prizes_id=command_data.prizes_id,
-            limit=ADMIN_REDEMPTIONS_PAGE_SIZE,
+            limit=ADMIN_REDEMPTIONS_PAGE_SIZE + 1,
             offset=offset,
         )
-        return tuple(_to_admin_dto(record) for record in records)
+        items = tuple(to_prize_redemption_admin_dto(record) for record in records)
+        return build_admin_list_page(
+            page=page,
+            page_size=ADMIN_REDEMPTIONS_PAGE_SIZE,
+            fetched=items,
+        )
+
+
+class GetPrizeRedemptionQueueCountHandler(
+    Interactor[GetPrizeRedemptionQueueCountCommand, int],
+):
+    def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
+        self._prize_redemptions = prize_redemption_repository
+
+    async def __call__(
+        self,
+        _command_data: GetPrizeRedemptionQueueCountCommand,
+    ) -> int:
+        return await self._prize_redemptions.count_for_fulfillment(
+            status=PrizeRedemptionStatus.RESERVED,
+            prizes_id=None,
+        )
 
 
 class GetPrizeRedemptionHandler(
@@ -78,7 +109,25 @@ class GetPrizeRedemptionHandler(
         )
         if record is None:
             return None
-        return _to_admin_dto(record)
+        return to_prize_redemption_admin_dto(record)
+
+
+class GetPrizeRedemptionByCodeHandler(
+    Interactor[GetPrizeRedemptionByCodeCommand, PrizeRedemptionAdminDTO | None],
+):
+    def __init__(self, prize_redemption_repository: IPrizeRedemptionRepository) -> None:
+        self._prize_redemptions = prize_redemption_repository
+
+    async def __call__(
+        self,
+        command_data: GetPrizeRedemptionByCodeCommand,
+    ) -> PrizeRedemptionAdminDTO | None:
+        record = await self._prize_redemptions.get_by_redemption_code(
+            redemption_code=command_data.redemption_code,
+        )
+        if record is None:
+            return None
+        return to_prize_redemption_admin_dto(record)
 
 
 class FulfillPrizeRedemptionHandler(
@@ -127,7 +176,7 @@ class CancelPrizeRedemptionHandler(
         return outcome
 
 
-def _to_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedemptionAdminDTO:
+def to_prize_redemption_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedemptionAdminDTO:
     return PrizeRedemptionAdminDTO(
         prize_redemptions_id=record.prize_redemptions_id,
         users_id=record.users_id,
@@ -149,13 +198,17 @@ def _to_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedemptionAdminDTO:
 
 
 __all__ = [
-    "ADMIN_REDEMPTIONS_PAGE_SIZE",
+    "to_prize_redemption_admin_dto",
     "CancelPrizeRedemptionCommand",
     "CancelPrizeRedemptionHandler",
     "FulfillPrizeRedemptionCommand",
     "FulfillPrizeRedemptionHandler",
+    "GetPrizeRedemptionByCodeCommand",
+    "GetPrizeRedemptionByCodeHandler",
     "GetPrizeRedemptionCommand",
     "GetPrizeRedemptionHandler",
+    "GetPrizeRedemptionQueueCountCommand",
+    "GetPrizeRedemptionQueueCountHandler",
     "ListPrizeRedemptionsCommand",
     "ListPrizeRedemptionsHandler",
 ]

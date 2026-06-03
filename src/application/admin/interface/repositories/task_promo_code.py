@@ -1,24 +1,18 @@
-from abc import ABC, abstractmethod
+from __future__ import annotations
 
-from application.admin.dto.task_promo_code import (
-    CreateTaskPromoCodeTaskCommand,
-    CreatedTaskPromoCodeTaskDTO,
-)
-from application.common.dto.task_promo_code import TaskPromoCodeStatsDTO
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
+
+from application.admin.dto.task_promo_code import CreatedTaskPromoCodeTaskDTO
+
+if TYPE_CHECKING:
+    from application.admin.command.task_promo_code import CreateTaskPromoCodeTaskCommand
 
 
 class ITaskPromoCodeAdminRepository(ABC):
     @abstractmethod
-    async def create_task_with_codes(
+    async def create_task_with_code(
         self,
         command: CreateTaskPromoCodeTaskCommand,
     ) -> CreatedTaskPromoCodeTaskDTO:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_stats(
-        self,
-        *,
-        tasks_id: int,
-    ) -> TaskPromoCodeStatsDTO:
         raise NotImplementedError

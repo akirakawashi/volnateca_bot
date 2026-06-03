@@ -1,3 +1,5 @@
+# TODO DEV: удалить весь файл seed_store_prizes.py перед релизом — только для локальной отладки.
+
 from dataclasses import dataclass
 
 from sqlalchemy import select

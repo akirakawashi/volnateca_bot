@@ -3,8 +3,7 @@ from dataclasses import dataclass
 from application.base_interactor import Interactor
 from application.common.dto.prize_redemption import PrizeRedemptionRecord
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
-
-USER_REDEMPTIONS_PAGE_SIZE = 10
+from domain.project_rules import USER_REDEMPTIONS_PAGE_SIZE
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -46,5 +45,4 @@ __all__ = [
     "ListUserRedemptionsCommand",
     "ListUserRedemptionsDTO",
     "ListUserRedemptionsHandler",
-    "USER_REDEMPTIONS_PAGE_SIZE",
 ]

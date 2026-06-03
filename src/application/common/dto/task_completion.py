@@ -19,3 +19,19 @@ class TaskCompletionRecord:
     evidence_external_id: str | None
     rejected_reason: str | None
     checked_at: datetime | None
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class TaskCompletionListRecord:
+    """Запись выполнения задания с названием задания для списков."""
+
+    task_completions_id: int
+    users_id: int
+    tasks_id: int
+    task_name: str
+    completion_key: str
+    transactions_id: int | None
+    task_completion_status: TaskCompletionStatus
+    points_awarded: int
+    rejected_reason: str | None
+    checked_at: datetime | None

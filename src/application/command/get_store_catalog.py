@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from application.base_interactor import Interactor
 from application.common.dto.store import (
-    STORE_PAGE_SIZE,
     StoreCatalogDTO,
     StorePaginationDTO,
     StorePrizeCardDTO,
@@ -14,6 +13,7 @@ from application.common.dto.store import (
 from application.common.helpers import normalize_page
 from application.interface.repositories.prizes import IPrizeRepository
 from domain.enums.prize import PrizeStatus
+from domain.project_rules import STORE_PAGE_SIZE
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

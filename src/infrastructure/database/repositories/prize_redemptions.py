@@ -1,16 +1,21 @@
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from sqlmodel import col
 
 from application.common.dto.prize_redemption import CreatePrizeRedemptionParams, PrizeRedemptionRecord
+from application.common.exceptions import PrizeRedemptionIdempotencyConflict
+from application.common.redemption_code import generate_redemption_code, normalize_redemption_code
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from domain.enums.prize import PrizeRedemptionStatus
 from infrastructure.database.models.prize_redemptions import PrizeRedemption
 from infrastructure.database.models.prizes import Prize
 from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
+
+_MAX_REDEMPTION_CODE_INSERT_ATTEMPTS = 3
 
 
 class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository):
@@ -40,6 +45,30 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
             for_update=False,
         )
 
+    async def get_by_redemption_code(
+        self,
+        *,
+        redemption_code: str,
+    ) -> PrizeRedemptionRecord | None:
+        normalized_code = normalize_redemption_code(redemption_code)
+        if not normalized_code:
+            return None
+
+        result = await self._session.execute(
+            select(PrizeRedemption).where(col(PrizeRedemption.redemption_code) == normalized_code),
+        )
+        redemption = result.scalar_one_or_none()
+        if redemption is None:
+            return None
+
+        prize_name = await self._get_prize_name(prizes_id=redemption.prizes_id)
+        user = await self._session.get(User, redemption.users_id)
+        return self._to_record(
+            redemption=redemption,
+            prize_name=prize_name,
+            vk_user_id=user.vk_user_id if user is not None else None,
+        )
+
     async def get_for_update(
         self,
         *,
@@ -54,19 +83,41 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         self,
         params: CreatePrizeRedemptionParams,
     ) -> PrizeRedemptionRecord:
-        redemption = PrizeRedemption(
-            users_id=params.users_id,
-            prizes_id=params.prizes_id,
-            transactions_id=params.transactions_id,
-            receive_type=params.receive_type,
-            redemption_code=params.redemption_code,
-            idempotency_key=params.idempotency_key,
-            points_spent=params.points_spent,
-            comment=params.comment,
-            prize_redemption_status=PrizeRedemptionStatus.RESERVED,
-        )
-        self._session.add(redemption)
-        await self._session.flush()
+        redemption_code = params.redemption_code
+        redemption: PrizeRedemption | None = None
+
+        for attempt in range(_MAX_REDEMPTION_CODE_INSERT_ATTEMPTS):
+            try:
+                async with self._session.begin_nested():
+                    redemption = PrizeRedemption(
+                        users_id=params.users_id,
+                        prizes_id=params.prizes_id,
+                        transactions_id=params.transactions_id,
+                        receive_type=params.receive_type,
+                        redemption_code=redemption_code,
+                        idempotency_key=params.idempotency_key,
+                        points_spent=params.points_spent,
+                        comment=params.comment,
+                        prize_redemption_status=PrizeRedemptionStatus.RESERVED,
+                    )
+                    self._session.add(redemption)
+                    await self._session.flush()
+            except IntegrityError:
+                existing = await self.get_by_idempotency_key(
+                    idempotency_key=params.idempotency_key,
+                )
+                if existing is not None:
+                    raise PrizeRedemptionIdempotencyConflict(existing=existing) from None
+                if attempt + 1 >= _MAX_REDEMPTION_CODE_INSERT_ATTEMPTS:
+                    raise
+                redemption_code = generate_redemption_code()
+                continue
+            else:
+                break
+
+        if redemption is None:
+            raise RuntimeError("Не удалось создать заявку на приз")
+
         prize_name = await self._get_prize_name(prizes_id=params.prizes_id)
         return self._to_record(redemption=redemption, prize_name=prize_name)
 
@@ -121,6 +172,21 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
             )
             for redemption, prize_name, vk_user_id in result.all()
         )
+
+    async def count_for_fulfillment(
+        self,
+        *,
+        status: PrizeRedemptionStatus | None,
+        prizes_id: int | None,
+    ) -> int:
+        query = select(func.count()).select_from(PrizeRedemption)
+        if status is not None:
+            query = query.where(col(PrizeRedemption.prize_redemption_status) == status)
+        if prizes_id is not None:
+            query = query.where(col(PrizeRedemption.prizes_id) == prizes_id)
+
+        result = await self._session.execute(query)
+        return int(result.scalar_one())
 
     async def mark_issued(
         self,

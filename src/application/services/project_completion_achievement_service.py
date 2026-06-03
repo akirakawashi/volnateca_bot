@@ -6,13 +6,12 @@ from application.services.award_achievement_service import (
     AwardAchievementOutcomeStatus,
     AwardAchievementService,
 )
-
-PROJECT_COMPLETION_ACHIEVEMENT_CODE = "project_completion_12_weeks"
-PROJECT_COMPLETION_REQUIRED_WEEK_COUNT = 12
-PROJECT_COMPLETION_REQUIRED_WEEK_KEYS = tuple(
-    f"week_{week_number:02d}" for week_number in range(1, PROJECT_COMPLETION_REQUIRED_WEEK_COUNT + 1)
+from domain.project_rules import (
+    PROJECT_COMPLETION_ACHIEVEMENT_CODE,
+    PROJECT_COMPLETION_REQUIRED_WEEK_COUNT,
+    PROJECT_COMPLETION_REQUIRED_WEEK_KEYS,
+    WEEK_COMPLETION_ACHIEVEMENT_CODE,
 )
-WEEK_COMPLETION_ACHIEVEMENT_CODE = "week_completion"
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

@@ -1,5 +1,6 @@
 from application.base_interactor import Interactor
-from application.admin.dto.quiz import CreateQuizCommand, CreatedQuizDTO
+from application.admin.command.quiz import CreateQuizCommand
+from application.admin.dto.quiz import CreatedQuizDTO
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
 from application.interface.uow import IUnitOfWork
 

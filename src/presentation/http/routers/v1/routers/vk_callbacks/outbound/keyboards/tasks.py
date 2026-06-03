@@ -35,7 +35,7 @@ def build_task_info_keyboard(
         buttons.append(
             [
                 payload_button(
-                    label="Получить промокод",
+                    label="Ввести промокод",
                     color="positive",
                     payload={"action": "custom_promo_start", "tasks_id": task.tasks_id},
                 ),
@@ -131,7 +131,7 @@ def build_tasks_carousel_template(
                 "action": {"type": "open_photo"},
                 "buttons": [
                     payload_button(
-                        label="Получить" if task.task_type == TaskType.CUSTOM else "Подробнее",
+                        label="Ввести" if task.task_type == TaskType.CUSTOM else "Подробнее",
                         color="positive" if task.task_type == TaskType.CUSTOM else "primary",
                         payload=button_payload,
                     ),

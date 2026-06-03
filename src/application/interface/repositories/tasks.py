@@ -54,6 +54,14 @@ class ITaskRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_subscription_task(
+        self,
+        code: str,
+        external_id: str,
+    ) -> TaskSummary | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def create_like_task_if_not_exists(
         self,
         code: str,

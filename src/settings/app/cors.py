@@ -2,14 +2,14 @@ from pydantic_settings import SettingsConfigDict
 
 from settings.base import Settings
 
-DEFAULT_CORS_METHODS = ("GET", "POST", "PUT", "DELETE", "OPTIONS")
-DEFAULT_CORS_HEADERS = ("Authorization", "Content-Type", "X-Admin-Token")
+DEFAULT_CORS_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+DEFAULT_CORS_HEADERS = ("Authorization", "Content-Type")
 
 
 class CorsSettings(Settings):
     model_config = SettingsConfigDict(env_prefix="CORS_")
 
-    ALLOW_CREDENTIALS: bool = False
+    ALLOW_CREDENTIALS: bool = True
     ORIGINS: str = ""
 
     @property

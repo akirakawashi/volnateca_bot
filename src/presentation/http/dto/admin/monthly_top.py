@@ -2,12 +2,16 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from application.command.award_monthly_top import MonthlyTopAward, MonthlyTopAwardStatus
+from application.command.award_monthly_top import (
+    MONTHLY_TOP_DEFAULT_LIMIT,
+    MonthlyTopAward,
+    MonthlyTopAwardStatus,
+)
 
 
 class AwardMonthlyTopRequestSchema(BaseModel):
     month: str = Field(..., description="YYYY-MM")
-    limit: int = Field(default=10, ge=1)
+    limit: int = Field(default=MONTHLY_TOP_DEFAULT_LIMIT, ge=1)
 
 
 class MonthlyTopAwardResponseSchema(BaseModel):

@@ -2,13 +2,13 @@ from dataclasses import dataclass
 
 from application.base_interactor import Interactor
 from application.common.dto.task import (
-    TASKS_PAGE_SIZE,
     QuizTaskSummary,
     TaskPaginationDTO,
     VKUserAvailableTaskDTO,
 )
 from application.common.helpers import normalize_page
 from application.interface.repositories.tasks import ITaskRepository
+from domain.project_rules import TASKS_PAGE_SIZE
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

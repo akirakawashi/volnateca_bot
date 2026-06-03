@@ -167,7 +167,23 @@ async def handle_registration_callback(
 
     existing_user = await user_repository.get_by_vk_user_id(vk_user_id=vk_user_id)
     if existing_user is not None:
-        if action in (CONSENT_ACCEPT_ACTION, CONSENT_DECLINE_ACTION):
+        if action == CONSENT_ACCEPT_ACTION:
+            registration_context = await register_with_referral_context_interactor(
+                command_data=RegisterVKUserWithReferralContextCommand(
+                    event_id=data.event_id,
+                    vk_user_id=vk_user_id,
+                    first_name=data.get_first_name(),
+                    last_name=data.get_last_name(),
+                    retry_referral_for_existing_user=True,
+                ),
+            )
+            await send_referral_notifications(
+                data=data,
+                referral_result=registration_context.referral_result,
+                message_client=message_client,
+            )
+            return vk_ok_response()
+        if action == CONSENT_DECLINE_ACTION:
             return vk_ok_response()
         result = RegisterVKUserAndCheckSubscriptionDTO(
             registration=existing_user,

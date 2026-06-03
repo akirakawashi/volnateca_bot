@@ -4,8 +4,11 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col
 
-from application.admin.dto.prize import CreatePrizeCommand, PrizeAdminDTO
+from application.admin.command.prize import CreatePrizeCommand, UpdatePrizeCommand
+from application.admin.dto.prize import PrizeAdminDTO
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
+from domain.enums.prize import PrizeStatus
+from domain.services.prize_status_sync import apply_sold_out_status_from_quantities
 from infrastructure.database.models.prizes import Prize
 from infrastructure.database.repositories.base import SQLAlchemyRepository
 
@@ -47,6 +50,59 @@ class PrizeAdminRepository(SQLAlchemyRepository, IPrizeAdminRepository):
                 continue
 
         raise RuntimeError("Не удалось сгенерировать уникальный код приза")
+
+    async def update_prize(self, command: UpdatePrizeCommand) -> PrizeAdminDTO | None:
+        result = await self._session.execute(
+            select(Prize).where(col(Prize.prizes_id) == command.prizes_id).with_for_update(),
+        )
+        prize = result.scalar_one_or_none()
+        if prize is None:
+            return None
+
+        if "prize_name" in command.fields:
+            if command.prize_name is None:
+                raise ValueError("prize_name не может быть пустым")
+            prize.prize_name = command.prize_name
+        if "description" in command.fields:
+            prize.description = command.description
+        if "image_attachment" in command.fields:
+            prize.image_attachment = command.image_attachment
+        if "status" in command.fields:
+            if command.status is None:
+                raise ValueError("status обязателен")
+            prize.status = command.status
+        if "cost_points" in command.fields:
+            if command.cost_points is None:
+                raise ValueError("cost_points обязателен")
+            prize.cost_points = command.cost_points
+        if "quantity_total" in command.fields:
+            if command.quantity_total is None:
+                raise ValueError("quantity_total обязателен")
+            if command.quantity_total < prize.quantity_claimed:
+                raise ValueError(
+                    "quantity_total не может быть меньше уже зарезервированного количества "
+                    f"({prize.quantity_claimed})",
+                )
+            prize.quantity_total = command.quantity_total
+        if "required_level" in command.fields:
+            prize.required_level = command.required_level
+        if "sort_order" in command.fields:
+            if command.sort_order is None:
+                raise ValueError("sort_order обязателен")
+            prize.sort_order = command.sort_order
+        if "is_active" in command.fields:
+            if command.is_active is None:
+                raise ValueError("is_active обязателен")
+            prize.is_active = command.is_active
+
+        if prize.status == PrizeStatus.AVAILABLE and prize.quantity_claimed >= prize.quantity_total:
+            raise ValueError(
+                "Нельзя сделать приз доступным: увеличьте количество больше уже занятого",
+            )
+
+        apply_sold_out_status_from_quantities(prize=prize)
+        await self._session.flush()
+        return self._to_prize_admin_dto(prize=prize)
 
     @staticmethod
     def _generate_prize_code() -> str:

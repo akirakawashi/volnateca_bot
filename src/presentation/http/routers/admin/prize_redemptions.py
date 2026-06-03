@@ -5,8 +5,12 @@ from fastapi import APIRouter, HTTPException, status
 from application.admin.command.prize_redemption import (
     CancelPrizeRedemptionHandler,
     FulfillPrizeRedemptionHandler,
+    GetPrizeRedemptionByCodeCommand,
+    GetPrizeRedemptionByCodeHandler,
     GetPrizeRedemptionCommand,
     GetPrizeRedemptionHandler,
+    GetPrizeRedemptionQueueCountCommand,
+    GetPrizeRedemptionQueueCountHandler,
     ListPrizeRedemptionsHandler,
 )
 from application.services.cancel_redemption_service import CancelRedemptionOutcomeStatus
@@ -16,7 +20,9 @@ from presentation.http.dto.admin.prize_redemption import (
     CancelPrizeRedemptionRequestSchema,
     FulfillPrizeRedemptionRequestSchema,
     ListPrizeRedemptionsQuerySchema,
+    PrizeRedemptionQueueCountResponseSchema,
     PrizeRedemptionResponseSchema,
+    PrizeRedemptionsPageResponseSchema,
 )
 
 prize_redemptions_admin_router = APIRouter(route_class=DishkaRoute)
@@ -25,7 +31,7 @@ prize_redemptions_admin_router = APIRouter(route_class=DishkaRoute)
 @prize_redemptions_admin_router.get(
     path="/prize-redemptions",
     name="Список заявок на призы",
-    response_model=list[PrizeRedemptionResponseSchema],
+    response_model=PrizeRedemptionsPageResponseSchema,
     status_code=status.HTTP_200_OK,
 )
 async def list_prize_redemptions(
@@ -33,7 +39,7 @@ async def list_prize_redemptions(
     status: PrizeRedemptionStatus | None = None,
     prizes_id: int | None = None,
     page: int = 1,
-) -> list[PrizeRedemptionResponseSchema]:
+) -> PrizeRedemptionsPageResponseSchema:
     result = await handler(
         ListPrizeRedemptionsQuerySchema(
             status=status,
@@ -41,7 +47,36 @@ async def list_prize_redemptions(
             page=page,
         ).to_command(),
     )
-    return [PrizeRedemptionResponseSchema.from_dto(item) for item in result]
+    return PrizeRedemptionsPageResponseSchema.from_page_dto(result)
+
+
+@prize_redemptions_admin_router.get(
+    path="/prize-redemptions/queue-count",
+    name="Количество заявок в очереди выдачи",
+    response_model=PrizeRedemptionQueueCountResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def get_prize_redemption_queue_count(
+    handler: FromDishka[GetPrizeRedemptionQueueCountHandler],
+) -> PrizeRedemptionQueueCountResponseSchema:
+    count = await handler(GetPrizeRedemptionQueueCountCommand())
+    return PrizeRedemptionQueueCountResponseSchema(count=count)
+
+
+@prize_redemptions_admin_router.get(
+    path="/prize-redemptions/by-code/{redemption_code}",
+    name="Заявка на приз по коду выдачи",
+    response_model=PrizeRedemptionResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def get_prize_redemption_by_code(
+    redemption_code: str,
+    handler: FromDishka[GetPrizeRedemptionByCodeHandler],
+) -> PrizeRedemptionResponseSchema:
+    result = await handler(GetPrizeRedemptionByCodeCommand(redemption_code=redemption_code))
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Заявка не найдена")
+    return PrizeRedemptionResponseSchema.from_dto(result)
 
 
 @prize_redemptions_admin_router.get(

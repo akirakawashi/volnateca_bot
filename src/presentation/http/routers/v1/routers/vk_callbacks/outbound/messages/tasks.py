@@ -1,10 +1,9 @@
 from application.common.dto.task import TaskPaginationDTO, VKUserAvailableTaskDTO
+from domain.project_rules import MENYAYKA_SALE_URL
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.template import (
     VKMessageText,
     build_template_message,
 )
-
-MENYAYKA_URL = "https://volnamobile.ru/sale/"
 
 
 def build_task_accrual_message(
@@ -88,12 +87,16 @@ def build_custom_promo_task_start_message(
         "custom_promo_task_start",
         task_name=task_name,
         points=points,
-        menyayka_url=MENYAYKA_URL,
+        menyayka_url=MENYAYKA_SALE_URL,
     )
 
 
 def build_custom_promo_invalid_code_message() -> VKMessageText:
     return build_template_message("custom_promo_invalid_code")
+
+
+def build_custom_promo_already_completed_message() -> VKMessageText:
+    return build_template_message("custom_promo_already_completed")
 
 
 def build_custom_promo_canceled_message() -> VKMessageText:

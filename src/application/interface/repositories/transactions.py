@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 
-from application.common.dto.transaction import TransactionRecord
+from application.common.dto.transaction import TransactionListRecord, TransactionRecord
 from domain.enums.transaction import TransactionSource, TransactionType
 
 
@@ -34,6 +34,16 @@ class ITransactionRepository(ABC):
         balance_after: int,
         description: str | None,
     ) -> TransactionRecord:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_by_users_id(
+        self,
+        *,
+        users_id: int,
+        limit: int,
+        offset: int,
+    ) -> tuple[TransactionListRecord, ...]:
         raise NotImplementedError
 
     @abstractmethod

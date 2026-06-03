@@ -1,13 +1,24 @@
+from dataclasses import dataclass
+
+from application.admin.dto.wall_post import PostedToWallDTO
 from application.base_interactor import Interactor
-from application.admin.dto.wall_post import PostToWallCommand, PostedToWallDTO
 from application.common.dto.vk import VKWallPostDTO
 from application.interface.clients import IVKWallClient
 from application.interface.repositories.tasks import ITaskRepository
 from application.interface.uow import IUnitOfWork
 from domain.enums.task import TaskRepeatPolicy
+from domain.project_rules import TASK_DESCRIPTION_MAX_LENGTH
 from settings.vk import VKSettings
 
-_MAX_DESCRIPTION_LEN = 500
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class PostToWallCommand:
+    message: str
+    like_points: int
+    repost_points: int
+    comment_points: int  # 0 — задание на комментарий не создаётся
+    week_number: int | None
+    attachments: tuple[str, ...] | None = None
 
 
 class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
@@ -37,7 +48,9 @@ class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
         vk_post = VKWallPostDTO(owner_id=-group_id, post_id=post_id)
         external_id = vk_post.external_id
 
-        description = (f"Создано из поста {external_id}.\n\n{command_data.message}")[:_MAX_DESCRIPTION_LEN]
+        description = (f"Создано из поста {external_id}.\n\n{command_data.message}")[
+            :TASK_DESCRIPTION_MAX_LENGTH
+        ]
 
         like_result = await self.task_repository.create_like_task_if_not_exists(
             code=f"vk_like_wall_{group_id}_{post_id}",
@@ -104,3 +117,9 @@ class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
         if cmd.week_number is not None:
             return f"Оставить комментарий к посту недели {cmd.week_number}"
         return "Оставить комментарий к посту"
+
+
+__all__ = [
+    "PostToWallCommand",
+    "PostToWallHandler",
+]

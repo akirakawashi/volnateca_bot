@@ -2,19 +2,22 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from application.admin.admin_rules import ADMIN_MAX_PAGE
 from application.admin.command.prize_redemption import (
     CancelPrizeRedemptionCommand,
     FulfillPrizeRedemptionCommand,
     ListPrizeRedemptionsCommand,
 )
+from application.admin.dto.pagination import AdminListPageDTO
 from application.admin.dto.prize_redemption import PrizeRedemptionAdminDTO
+from presentation.http.dto.admin.pagination import AdminListPageResponseSchema
 from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus
 
 
 class ListPrizeRedemptionsQuerySchema(BaseModel):
     status: PrizeRedemptionStatus | None = None
     prizes_id: int | None = Field(default=None, ge=1)
-    page: int = Field(default=1, ge=1)
+    page: int = Field(default=1, ge=1, le=ADMIN_MAX_PAGE)
 
     def to_command(self) -> ListPrizeRedemptionsCommand:
         return ListPrizeRedemptionsCommand(
@@ -42,6 +45,10 @@ class FulfillPrizeRedemptionRequestSchema(BaseModel):
             prize_redemptions_id=prize_redemptions_id,
             comment=self.comment,
         )
+
+
+class PrizeRedemptionQueueCountResponseSchema(BaseModel):
+    count: int = Field(ge=0)
 
 
 class PrizeRedemptionResponseSchema(BaseModel):
@@ -84,9 +91,27 @@ class PrizeRedemptionResponseSchema(BaseModel):
         )
 
 
+class PrizeRedemptionsPageResponseSchema(AdminListPageResponseSchema):
+    items: list[PrizeRedemptionResponseSchema]
+
+    @classmethod
+    def from_page_dto(
+        cls,
+        page: AdminListPageDTO[PrizeRedemptionAdminDTO],
+    ) -> "PrizeRedemptionsPageResponseSchema":
+        return cls(
+            page=page.page,
+            page_size=page.page_size,
+            has_more=page.has_more,
+            items=[PrizeRedemptionResponseSchema.from_dto(item) for item in page.items],
+        )
+
+
 __all__ = [
     "CancelPrizeRedemptionRequestSchema",
     "FulfillPrizeRedemptionRequestSchema",
     "ListPrizeRedemptionsQuerySchema",
+    "PrizeRedemptionQueueCountResponseSchema",
     "PrizeRedemptionResponseSchema",
+    "PrizeRedemptionsPageResponseSchema",
 ]

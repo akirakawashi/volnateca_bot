@@ -3,10 +3,11 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlmodel import col
 
-from application.common.dto.task_completion import TaskCompletionRecord
+from application.common.dto.task_completion import TaskCompletionListRecord, TaskCompletionRecord
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from domain.enums.task import TaskCompletionStatus
 from infrastructure.database.models.task_completions import TaskCompletion
+from infrastructure.database.models.tasks import Task
 from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
 
@@ -91,6 +92,38 @@ class TaskCompletionRepository(SQLAlchemyRepository, ITaskCompletionRepository):
 
         await self._session.flush()
         return self._to_record(completion=completion)
+
+    async def list_by_users_id(
+        self,
+        *,
+        users_id: int,
+        limit: int,
+        offset: int,
+    ) -> tuple[TaskCompletionListRecord, ...]:
+        result = await self._session.execute(
+            select(TaskCompletion, Task.task_name)
+            .join(Task, col(Task.tasks_id) == col(TaskCompletion.tasks_id))
+            .where(col(TaskCompletion.users_id) == users_id)
+            .order_by(col(TaskCompletion.checked_at).desc(), col(TaskCompletion.task_completions_id).desc())
+            .limit(max(1, limit))
+            .offset(max(0, offset)),
+        )
+        return tuple(
+            TaskCompletionListRecord(
+                task_completions_id=completion.task_completions_id,  # type: ignore[arg-type]
+                users_id=completion.users_id,
+                tasks_id=completion.tasks_id,
+                task_name=task_name,
+                completion_key=completion.completion_key,
+                transactions_id=completion.transactions_id,
+                task_completion_status=completion.task_completion_status,
+                points_awarded=completion.points_awarded,
+                rejected_reason=completion.rejected_reason,
+                checked_at=completion.checked_at,
+            )
+            for completion, task_name in result.all()
+            if completion.task_completions_id is not None
+        )
 
     async def is_completed_by_vk_user(
         self,

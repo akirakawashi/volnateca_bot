@@ -10,7 +10,6 @@ from domain.enums.prize import (
 )
 from domain.enums.task import (
     TaskCompletionStatus,
-    TaskPromoCodeStatus,
     TaskPromoCodeWaitStatus,
     TaskRepeatPolicy,
     TaskType,
@@ -28,7 +27,6 @@ __all__ = [
     "PrizeStatus",
     "PrizeType",
     "TaskCompletionStatus",
-    "TaskPromoCodeStatus",
     "TaskPromoCodeWaitStatus",
     "TaskRepeatPolicy",
     "TaskType",

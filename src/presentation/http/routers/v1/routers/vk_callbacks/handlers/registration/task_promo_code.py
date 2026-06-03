@@ -22,6 +22,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards import
     build_task_promo_code_wait_keyboard,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
+    build_custom_promo_already_completed_message,
     build_custom_promo_canceled_message,
     build_custom_promo_invalid_code_message,
     build_custom_promo_task_start_message,
@@ -90,6 +91,14 @@ async def handle_task_promo_code_text(
         )
         return True
 
+    if handled.status == TaskPromoCodeFlowStatus.ALREADY_COMPLETED:
+        await _send_task_promo_already_completed_message(
+            data=data,
+            result=result,
+            message_client=message_client,
+        )
+        return True
+
     if handled.completion is not None:
         await _send_task_promo_completion_messages(
             data=data,
@@ -136,9 +145,26 @@ async def _send_task_promo_invalid_code_message(
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
         message=build_custom_promo_invalid_code_message(),
-        keyboard=build_main_menu_keyboard(),
+        keyboard=build_task_promo_code_wait_keyboard(),
         message_client=message_client,
         log_message="Неверный промокод задания VK",
+    )
+
+
+async def _send_task_promo_already_completed_message(
+    *,
+    data: VKCallbackPayload,
+    result: RegisterVKUserAndCheckSubscriptionDTO,
+    message_client: IVKMessageClient,
+) -> None:
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=result.registration.vk_user_id,
+        users_id=result.registration.users_id,
+        message=build_custom_promo_already_completed_message(),
+        keyboard=build_main_menu_keyboard(),
+        message_client=message_client,
+        log_message="Повторный промокод задания VK",
     )
 
 
