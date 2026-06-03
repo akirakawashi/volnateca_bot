@@ -3,7 +3,11 @@ from dataclasses import dataclass
 from application.base_interactor import Interactor
 from application.common.exceptions import PrizeRedemptionIdempotencyConflict
 from application.interface.uow import IUnitOfWork
-from application.services.redeem_prize_service import RedeemPrizeOutcome, RedeemPrizeService
+from application.services.redeem_prize_service import (
+    RedeemPrizeOutcome,
+    RedeemPrizeOutcomeStatus,
+    RedeemPrizeService,
+)
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -33,6 +37,13 @@ class RedeemPrizeHandler(Interactor[RedeemPrizeCommand, RedeemPrizeOutcome]):
             )
         except PrizeRedemptionIdempotencyConflict as conflict:
             await self._uow.rollback()
+            if conflict.existing.users_id != conflict.users_id:
+                return RedeemPrizeOutcome(
+                    status=RedeemPrizeOutcomeStatus.IDEMPOTENCY_CONFLICT,
+                    vk_user_id=command_data.vk_user_id,
+                    users_id=conflict.users_id,
+                    prizes_id=command_data.prizes_id,
+                )
             return RedeemPrizeService.idempotent_replay_outcome(
                 vk_user_id=command_data.vk_user_id,
                 existing=conflict.existing,

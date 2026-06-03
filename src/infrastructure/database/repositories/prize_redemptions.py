@@ -16,6 +16,7 @@ from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
 
 _MAX_REDEMPTION_CODE_INSERT_ATTEMPTS = 3
+_GLOBAL_IDEMPOTENCY_KEY_INDEX = "ix_prize_redemptions_idempotency_key"
 
 
 class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository):
@@ -25,9 +26,29 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         idempotency_key: str,
     ) -> PrizeRedemptionRecord | None:
         result = await self._session.execute(
-            select(PrizeRedemption, Prize.prize_name)
+            select(PrizeRedemption, col(Prize.prize_name))
             .join(Prize, col(Prize.prizes_id) == col(PrizeRedemption.prizes_id))
             .where(col(PrizeRedemption.idempotency_key) == idempotency_key),
+        )
+        row = result.one_or_none()
+        if row is None:
+            return None
+        redemption, prize_name = row
+        return self._to_record(redemption=redemption, prize_name=prize_name)
+
+    async def get_by_idempotency_key_for_user(
+        self,
+        *,
+        users_id: int,
+        idempotency_key: str,
+    ) -> PrizeRedemptionRecord | None:
+        result = await self._session.execute(
+            select(PrizeRedemption, col(Prize.prize_name))
+            .join(Prize, col(Prize.prizes_id) == col(PrizeRedemption.prizes_id))
+            .where(
+                col(PrizeRedemption.users_id) == users_id,
+                col(PrizeRedemption.idempotency_key) == idempotency_key,
+            ),
         )
         row = result.one_or_none()
         if row is None:
@@ -102,12 +123,20 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
                     )
                     self._session.add(redemption)
                     await self._session.flush()
-            except IntegrityError:
-                existing = await self.get_by_idempotency_key(
+            except IntegrityError as exc:
+                existing = await self.get_by_idempotency_key_for_user(
+                    users_id=params.users_id,
                     idempotency_key=params.idempotency_key,
                 )
+                if existing is None and _is_global_idempotency_key_conflict(exc):
+                    existing = await self.get_by_idempotency_key(
+                        idempotency_key=params.idempotency_key,
+                    )
                 if existing is not None:
-                    raise PrizeRedemptionIdempotencyConflict(existing=existing) from None
+                    raise PrizeRedemptionIdempotencyConflict(
+                        users_id=params.users_id,
+                        existing=existing,
+                    ) from None
                 if attempt + 1 >= _MAX_REDEMPTION_CODE_INSERT_ATTEMPTS:
                     raise
                 redemption_code = generate_redemption_code()
@@ -296,6 +325,16 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
             prize_name=prize_name,
             vk_user_id=vk_user_id,
         )
+
+
+def _is_global_idempotency_key_conflict(exc: IntegrityError) -> bool:
+    current: object | None = exc.orig
+    while current is not None:
+        constraint_name = getattr(current, "constraint_name", None)
+        if constraint_name == _GLOBAL_IDEMPOTENCY_KEY_INDEX:
+            return True
+        current = getattr(current, "orig", None)
+    return False
 
 
 __all__ = ["PrizeRedemptionRepository"]

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Index, Text, func
+from sqlalchemy import CheckConstraint, DateTime, Enum as SAEnum, Index, Text, UniqueConstraint, func
 from sqlmodel import Column, Field, Relationship
 
 from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus
@@ -38,6 +38,11 @@ class PrizeRedemption(BaseModel, table=True):
             "ix_prize_redemptions_status_created_at",
             "prize_redemption_status",
             "created_at",
+        ),
+        UniqueConstraint(
+            "users_id",
+            "idempotency_key",
+            name="uq_prize_redemptions_users_id_idempotency_key",
         ),
     )
 
@@ -97,8 +102,6 @@ class PrizeRedemption(BaseModel, table=True):
     )
     idempotency_key: str = Field(
         nullable=False,
-        unique=True,
-        index=True,
         description="Ключ идемпотентности покупки из VK",
     )
     points_spent: int = Field(

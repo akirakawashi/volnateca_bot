@@ -20,6 +20,7 @@ from domain.services.wallet import WalletService
 class RedeemPrizeOutcomeStatus(str, Enum):
     COMPLETED = "completed"
     IDEMPOTENT_REPLAY = "idempotent_replay"
+    IDEMPOTENCY_CONFLICT = "idempotency_conflict"
     USER_NOT_REGISTERED = "user_not_registered"
     PRIZE_NOT_FOUND = "prize_not_found"
     PRIZE_NOT_AVAILABLE = "prize_not_available"
@@ -65,13 +66,6 @@ class RedeemPrizeService:
         idempotency_key: str,
         user_comment: str | None = None,
     ) -> RedeemPrizeOutcome:
-        replay = await self._idempotent_replay_if_exists(
-            vk_user_id=vk_user_id,
-            idempotency_key=idempotency_key,
-        )
-        if replay is not None:
-            return replay
-
         snapshot = await self._users.get_balance_snapshot_for_update(vk_user_id=vk_user_id)
         if snapshot is None:
             return RedeemPrizeOutcome(
@@ -82,6 +76,7 @@ class RedeemPrizeService:
 
         replay = await self._idempotent_replay_if_exists(
             vk_user_id=vk_user_id,
+            users_id=snapshot.users_id,
             idempotency_key=idempotency_key,
         )
         if replay is not None:
@@ -188,9 +183,11 @@ class RedeemPrizeService:
         self,
         *,
         vk_user_id: int,
+        users_id: int,
         idempotency_key: str,
     ) -> RedeemPrizeOutcome | None:
-        existing = await self._prize_redemptions.get_by_idempotency_key(
+        existing = await self._prize_redemptions.get_by_idempotency_key_for_user(
+            users_id=users_id,
             idempotency_key=idempotency_key,
         )
         if existing is None:

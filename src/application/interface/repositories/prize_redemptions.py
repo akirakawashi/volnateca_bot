@@ -15,6 +15,15 @@ class IPrizeRedemptionRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_by_idempotency_key_for_user(
+        self,
+        *,
+        users_id: int,
+        idempotency_key: str,
+    ) -> PrizeRedemptionRecord | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_by_id(
         self,
         *,

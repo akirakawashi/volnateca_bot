@@ -7,6 +7,7 @@ from application.common.dto.prize_redemption import PrizeRedemptionRecord
 class PrizeRedemptionIdempotencyConflict(Exception):
     """Параллельный redeem с тем же idempotency_key уже закоммитил заявку."""
 
+    users_id: int
     existing: PrizeRedemptionRecord
 
 

@@ -127,6 +127,8 @@ def build_store_redeem_outcome_message(
         return VKMessageText(text=f"💫 Не хватает баллов. Баланс: {balance_points} ✦")
     if outcome.status == RedeemPrizeOutcomeStatus.LEVEL_LOCKED:
         return VKMessageText(text="🔒 Приз доступен с более высоким уровнем участника.")
+    if outcome.status == RedeemPrizeOutcomeStatus.IDEMPOTENCY_CONFLICT:
+        return VKMessageText(text="Не удалось подтвердить покупку. Открой приз в магазине и попробуй снова.")
     if outcome.status == RedeemPrizeOutcomeStatus.PRIZE_NOT_FOUND:
         return build_store_prize_not_found_message()
     return VKMessageText(text="Приз сейчас недоступен для покупки.")
