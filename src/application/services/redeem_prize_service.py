@@ -225,7 +225,7 @@ class RedeemPrizeService:
         balance_points: int,
         current_level: int,
     ) -> RedeemPrizeOutcomeStatus | None:
-        if not prize.is_active or prize.status == PrizeStatus.HIDDEN:
+        if prize.status == PrizeStatus.HIDDEN:
             return RedeemPrizeOutcomeStatus.PRIZE_NOT_AVAILABLE
         if prize.prize_type not in STORE_ALLOWED_PRIZE_TYPES:
             return RedeemPrizeOutcomeStatus.PRIZE_NOT_AVAILABLE

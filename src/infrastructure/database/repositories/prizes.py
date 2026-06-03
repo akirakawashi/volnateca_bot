@@ -24,7 +24,6 @@ class PrizeRepository(SQLAlchemyRepository, IPrizeRepository):
         result = await self._session.execute(
             select(Prize)
             .where(
-                col(Prize.is_active).is_(True),
                 col(Prize.status) != PrizeStatus.HIDDEN,
                 col(Prize.prize_type).in_(prize_types),
             )
@@ -50,7 +49,6 @@ class PrizeRepository(SQLAlchemyRepository, IPrizeRepository):
             select(func.count())
             .select_from(Prize)
             .where(
-                col(Prize.is_active).is_(True),
                 col(Prize.status) != PrizeStatus.HIDDEN,
                 col(Prize.prize_type).in_(prize_types),
             ),
@@ -65,7 +63,6 @@ class PrizeRepository(SQLAlchemyRepository, IPrizeRepository):
         result = await self._session.execute(
             select(Prize).where(
                 col(Prize.prizes_id) == prizes_id,
-                col(Prize.is_active).is_(True),
                 col(Prize.status) != PrizeStatus.HIDDEN,
                 col(Prize.prize_type).in_(STORE_ALLOWED_PRIZE_TYPES),
             ),
