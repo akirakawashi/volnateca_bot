@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from datetime import datetime
 
-from domain.enums.task import TaskPromoCodeStatus, TaskPromoCodeWaitStatus
+from domain.enums.task import TaskPromoCodeWaitStatus
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -9,9 +8,6 @@ class TaskPromoCodeRecord:
     task_promo_codes_id: int
     tasks_id: int
     promo_code: str
-    promo_code_status: TaskPromoCodeStatus
-    users_id: int | None
-    activated_at: datetime | None
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -20,14 +16,6 @@ class TaskPromoCodeWaitRecord:
     users_id: int
     tasks_id: int
     wait_status: TaskPromoCodeWaitStatus
-
-
-@dataclass(slots=True, frozen=True, kw_only=True)
-class TaskPromoCodeStatsDTO:
-    tasks_id: int
-    total_count: int
-    available_count: int
-    used_count: int
 
 
 def normalize_task_promo_code(value: str) -> str:

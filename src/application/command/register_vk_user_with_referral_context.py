@@ -19,6 +19,7 @@ class RegisterVKUserWithReferralContextCommand:
     first_name: str | None = None
     last_name: str | None = None
     raw_ref: str | None = None
+    retry_referral_for_existing_user: bool = False
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -59,11 +60,13 @@ class RegisterVKUserWithReferralContextHandler(
         )
 
         referral_result = None
-        raw_ref = await self._resolve_raw_ref(
-            vk_user_id=command_data.vk_user_id,
-            raw_ref=command_data.raw_ref,
-        )
-        if registration_result.registration.created:
+        if registration_result.registration.created or command_data.retry_referral_for_existing_user:
+            # Для existing-user retry доверяем только ref, сохраненному до согласия:
+            # свежий payload не должен привязывать старый аккаунт к новой ссылке.
+            raw_ref = await self._resolve_raw_ref(
+                vk_user_id=command_data.vk_user_id,
+                raw_ref=command_data.raw_ref if registration_result.registration.created else None,
+            )
             inviter_vk_user_id = parse_vk_user_id(raw_ref)
             if inviter_vk_user_id is not None:
                 referral_result = await self._process_referral_interactor(

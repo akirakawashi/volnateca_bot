@@ -18,7 +18,7 @@ class CreateTaskPromoCodeTaskCommand:
     starts_at: datetime | None
     ends_at: datetime | None
     repeat_policy: TaskRepeatPolicy
-    promo_codes: tuple[str, ...]
+    promo_code: str
 
 
 class CreateTaskPromoCodeTaskHandler(
@@ -36,7 +36,9 @@ class CreateTaskPromoCodeTaskHandler(
         self,
         command_data: CreateTaskPromoCodeTaskCommand,
     ) -> CreatedTaskPromoCodeTaskDTO:
-        result = await self.repository.create_task_with_codes(command=command_data)
+        if command_data.repeat_policy != TaskRepeatPolicy.ONCE:
+            raise ValueError("Промокодное задание можно создать только с repeat_policy=once")
+        result = await self.repository.create_task_with_code(command=command_data)
         await self.uow.commit()
         return result
 

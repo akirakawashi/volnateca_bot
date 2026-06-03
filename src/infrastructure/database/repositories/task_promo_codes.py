@@ -1,95 +1,65 @@
-from datetime import datetime
-
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlmodel import col
 
 from application.common.dto.task_promo_code import (
     TaskPromoCodeRecord,
-    TaskPromoCodeStatsDTO,
     normalize_task_promo_code,
 )
 from application.interface.repositories.task_promo_codes import ITaskPromoCodeRepository
-from domain.enums.task import TaskPromoCodeStatus
 from infrastructure.database.models.task_promo_codes import TaskPromoCode
 from infrastructure.database.repositories.base import SQLAlchemyRepository
 
 
 class TaskPromoCodeRepository(SQLAlchemyRepository, ITaskPromoCodeRepository):
-    async def get_available_code_for_update(
+    async def get_by_task_for_update(
+        self,
+        *,
+        tasks_id: int,
+    ) -> TaskPromoCodeRecord | None:
+        code = await self._get_by_task(tasks_id=tasks_id, lock=True)
+        if code is None:
+            return None
+        return self._to_record(code=code)
+
+    async def get_by_task(
+        self,
+        *,
+        tasks_id: int,
+    ) -> TaskPromoCodeRecord | None:
+        code = await self._get_by_task(tasks_id=tasks_id, lock=False)
+        if code is None:
+            return None
+        return self._to_record(code=code)
+
+    async def create_for_task(
         self,
         *,
         tasks_id: int,
         promo_code: str,
-    ) -> TaskPromoCodeRecord | None:
+    ) -> TaskPromoCodeRecord:
         normalized_code = normalize_task_promo_code(promo_code)
         if not normalized_code:
-            return None
+            raise ValueError("Промокод задания не может быть пустым")
 
-        result = await self._session.execute(
-            select(TaskPromoCode)
-            .where(
-                col(TaskPromoCode.tasks_id) == tasks_id,
-                col(TaskPromoCode.promo_code) == normalized_code,
-                col(TaskPromoCode.promo_code_status) == TaskPromoCodeStatus.AVAILABLE,
-            )
-            .with_for_update(),
+        code = TaskPromoCode(
+            tasks_id=tasks_id,
+            promo_code=normalized_code,
         )
-        code = result.scalar_one_or_none()
-        if code is None:
-            return None
-
-        return self._to_record(code=code)
-
-    async def mark_code_used(
-        self,
-        *,
-        task_promo_codes_id: int,
-        users_id: int,
-        activated_at: datetime,
-    ) -> TaskPromoCodeRecord:
-        result = await self._session.execute(
-            select(TaskPromoCode)
-            .where(
-                col(TaskPromoCode.task_promo_codes_id) == task_promo_codes_id,
-                col(TaskPromoCode.promo_code_status) == TaskPromoCodeStatus.AVAILABLE,
-            )
-            .with_for_update(),
-        )
-        code = result.scalar_one_or_none()
-        if code is None:
-            raise RuntimeError(
-                f"Промокод task_promo_codes_id={task_promo_codes_id} недоступен для активации",
-            )
-
-        code.promo_code_status = TaskPromoCodeStatus.USED
-        code.users_id = users_id
-        code.activated_at = activated_at
+        self._session.add(code)
         await self._session.flush()
         return self._to_record(code=code)
 
-    async def get_stats(
+    async def _get_by_task(
         self,
         *,
         tasks_id: int,
-    ) -> TaskPromoCodeStatsDTO:
-        result = await self._session.execute(
-            select(
-                func.count(col(TaskPromoCode.task_promo_codes_id)),
-                func.count(col(TaskPromoCode.task_promo_codes_id)).filter(
-                    col(TaskPromoCode.promo_code_status) == TaskPromoCodeStatus.AVAILABLE,
-                ),
-                func.count(col(TaskPromoCode.task_promo_codes_id)).filter(
-                    col(TaskPromoCode.promo_code_status) == TaskPromoCodeStatus.USED,
-                ),
-            ).where(col(TaskPromoCode.tasks_id) == tasks_id),
-        )
-        total_count, available_count, used_count = result.one()
-        return TaskPromoCodeStatsDTO(
-            tasks_id=tasks_id,
-            total_count=int(total_count),
-            available_count=int(available_count),
-            used_count=int(used_count),
-        )
+        lock: bool,
+    ) -> TaskPromoCode | None:
+        statement = select(TaskPromoCode).where(col(TaskPromoCode.tasks_id) == tasks_id)
+        if lock:
+            statement = statement.with_for_update()
+        result = await self._session.execute(statement)
+        return result.scalar_one_or_none()
 
     @staticmethod
     def _to_record(*, code: TaskPromoCode) -> TaskPromoCodeRecord:
@@ -100,7 +70,4 @@ class TaskPromoCodeRepository(SQLAlchemyRepository, ITaskPromoCodeRepository):
             task_promo_codes_id=code.task_promo_codes_id,
             tasks_id=code.tasks_id,
             promo_code=code.promo_code,
-            promo_code_status=code.promo_code_status,
-            users_id=code.users_id,
-            activated_at=code.activated_at,
         )

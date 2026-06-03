@@ -6,7 +6,7 @@ class CreatedTaskPromoCodeTaskDTO:
     tasks_id: int
     code: str
     task_name: str
-    promo_codes_total: int
+    promo_code: str
 
 
 __all__ = [

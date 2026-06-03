@@ -13,7 +13,7 @@ task_promo_code_admin_router = APIRouter(route_class=DishkaRoute)
 
 @task_promo_code_admin_router.post(
     path="/task-promo-code-tasks",
-    name="Создать задание с промокодами",
+    name="Создать задание с промокодом",
     response_model=CreatedTaskPromoCodeTaskResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )

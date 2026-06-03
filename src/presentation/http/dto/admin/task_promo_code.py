@@ -18,7 +18,7 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
     starts_at: datetime | None = None
     ends_at: datetime | None = None
     repeat_policy: TaskRepeatPolicy = TaskRepeatPolicy.ONCE
-    promo_codes: list[str] = Field(min_length=1)
+    promo_code: str = Field(min_length=1)
 
     @field_validator("code", "task_name", mode="before")
     @classmethod
@@ -35,15 +35,12 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
             return stripped or None
         return value
 
-    @field_validator("promo_codes", mode="after")
+    @field_validator("promo_code", mode="after")
     @classmethod
-    def normalize_promo_codes(cls, value: list[str]) -> list[str]:
-        normalized = [normalize_task_promo_code(item) for item in value]
-        normalized = [item for item in normalized if item]
+    def normalize_promo_code(cls, value: str) -> str:
+        normalized = normalize_task_promo_code(value)
         if not normalized:
-            raise ValueError("promo_codes должен содержать хотя бы один непустой код")
-        if len(set(normalized)) != len(normalized):
-            raise ValueError("promo_codes содержит дубликаты")
+            raise ValueError("promo_code должен быть непустым")
         return normalized
 
     @model_validator(mode="after")
@@ -51,6 +48,8 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
         if self.starts_at is not None and self.ends_at is not None:
             if self.starts_at >= self.ends_at:
                 raise ValueError("starts_at должно быть раньше ends_at")
+        if self.repeat_policy != TaskRepeatPolicy.ONCE:
+            raise ValueError("Промокодное задание можно создать только с repeat_policy=once")
         return self
 
     def to_command(self) -> CreateTaskPromoCodeTaskCommand:
@@ -63,7 +62,7 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
             starts_at=self.starts_at,
             ends_at=self.ends_at,
             repeat_policy=self.repeat_policy,
-            promo_codes=tuple(self.promo_codes),
+            promo_code=self.promo_code,
         )
 
 
@@ -71,7 +70,7 @@ class CreatedTaskPromoCodeTaskResponseSchema(BaseModel):
     tasks_id: int
     code: str
     task_name: str
-    promo_codes_total: int
+    promo_code: str
 
     @classmethod
     def from_dto(cls, dto: CreatedTaskPromoCodeTaskDTO) -> "CreatedTaskPromoCodeTaskResponseSchema":
@@ -79,5 +78,5 @@ class CreatedTaskPromoCodeTaskResponseSchema(BaseModel):
             tasks_id=dto.tasks_id,
             code=dto.code,
             task_name=dto.task_name,
-            promo_codes_total=dto.promo_codes_total,
+            promo_code=dto.promo_code,
         )

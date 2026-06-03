@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class ITaskPromoCodeAdminRepository(ABC):
     @abstractmethod
-    async def create_task_with_codes(
+    async def create_task_with_code(
         self,
         command: CreateTaskPromoCodeTaskCommand,
     ) -> CreatedTaskPromoCodeTaskDTO:

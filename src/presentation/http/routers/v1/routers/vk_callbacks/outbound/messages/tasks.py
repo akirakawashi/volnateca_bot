@@ -95,5 +95,9 @@ def build_custom_promo_invalid_code_message() -> VKMessageText:
     return build_template_message("custom_promo_invalid_code")
 
 
+def build_custom_promo_already_completed_message() -> VKMessageText:
+    return build_template_message("custom_promo_already_completed")
+
+
 def build_custom_promo_canceled_message() -> VKMessageText:
     return build_template_message("custom_promo_canceled")

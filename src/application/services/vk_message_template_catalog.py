@@ -150,7 +150,16 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         description="Неверный промокод для задания Меняйки",
         default_template=(
             "Код неверный.\n\n"
-            "Задание осталось активным. Открой 🎯 Задания и попробуй ещё раз."
+            "Проверь ввод и пришли промокод ещё раз или нажми «Выйти»."
+        ),
+    ),
+
+    "custom_promo_already_completed": MessageTemplateDefinition(
+        code="custom_promo_already_completed",
+        description="Промокодное задание уже засчитано",
+        default_template=(
+            "Этот промокод уже засчитан.\n\n"
+            "Открой 🎯 Задания, чтобы выбрать другое задание."
         ),
     ),
 

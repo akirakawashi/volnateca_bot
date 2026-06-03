@@ -1,7 +1,8 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import or_, select, update
+from sqlalchemy import exists, or_, select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import col
 
 from application.common.dto.task import (
@@ -20,6 +21,7 @@ from application.interface.repositories.tasks import ITaskRepository
 from application.services.task_completion_key import build_task_completion_key
 from domain.enums.task import TaskCompletionStatus, TaskRepeatPolicy, TaskType
 from infrastructure.database.models.task_completions import TaskCompletion
+from infrastructure.database.models.task_promo_codes import TaskPromoCode
 from infrastructure.database.models.tasks import Task
 from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
@@ -353,6 +355,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             .where(
                 col(Task.is_active).is_(True),
                 col(Task.task_type) != TaskType.QUIZ,
+                self._has_required_related_data(),
                 or_(col(Task.starts_at).is_(None), col(Task.starts_at) <= now),
                 or_(col(Task.ends_at).is_(None), col(Task.ends_at) > now),
             )
@@ -371,6 +374,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
                 col(Task.is_active).is_(True),
                 col(Task.task_type) != TaskType.VK_SUBSCRIBE,
                 col(Task.week_number) == week_number,
+                self._has_required_related_data(),
             )
             .order_by(col(Task.tasks_id)),
         )
@@ -548,6 +552,13 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             checked_at=checked_at,
         )
         return (task.tasks_id, completion_key) in completed_keys
+
+    @staticmethod
+    def _has_required_related_data() -> ColumnElement[bool]:
+        return or_(
+            col(Task.task_type) != TaskType.CUSTOM,
+            exists().where(col(TaskPromoCode.tasks_id) == col(Task.tasks_id)),
+        )
 
     @staticmethod
     def _to_user_available_task_dto(task: Task) -> VKUserAvailableTaskDTO:
