@@ -5,7 +5,7 @@ from sqlalchemy import Date, cast, func, select
 from sqlmodel import col
 
 from application.admin.interface.repositories.stats import IStatsAdminRepository
-from domain.enums.transaction import TransactionType
+from domain.enums.transaction import TransactionSource, TransactionType
 from infrastructure.database.models.transactions import Transaction
 from infrastructure.database.models.users import User
 from infrastructure.database.repositories.base import SQLAlchemyRepository
@@ -115,6 +115,36 @@ class StatsAdminRepository(SQLAlchemyRepository, IStatsAdminRepository):
                 continue
             values_by_day[row.day] = int(row.accrual_points)
         return values_by_day
+
+    async def sum_accrual_points_by_source(
+        self,
+        *,
+        from_date: date,
+        to_date: date,
+        project_timezone: ZoneInfo,
+    ) -> dict[TransactionSource, int]:
+        range_start = datetime.combine(from_date, time.min, tzinfo=project_timezone)
+        range_end = datetime.combine(to_date + timedelta(days=1), time.min, tzinfo=project_timezone)
+
+        result = await self._session.execute(
+            select(
+                col(Transaction.transaction_source),
+                func.coalesce(func.sum(col(Transaction.amount)), 0).label("accrual_points"),
+            )
+            .where(
+                col(Transaction.transaction_type) == TransactionType.ACCRUAL,
+                col(Transaction.created_at) >= range_start,
+                col(Transaction.created_at) < range_end,
+            )
+            .group_by(col(Transaction.transaction_source)),
+        )
+
+        values_by_source: dict[TransactionSource, int] = {}
+        for row in result.all():
+            if row.transaction_source is None:
+                continue
+            values_by_source[row.transaction_source] = int(row.accrual_points)
+        return values_by_source
 
 
 __all__ = ["StatsAdminRepository"]

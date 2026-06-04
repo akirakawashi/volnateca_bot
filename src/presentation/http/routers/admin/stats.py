@@ -5,11 +5,13 @@ from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, HTTPException, Query, status
 
 from application.admin.command.stats import (
+    GetAccrualSourcesStatsHandler,
     GetDailyAccrualPointsStatsHandler,
     GetDailyActivityStatsHandler,
     GetDailyNewUsersStatsHandler,
 )
 from presentation.http.dto.admin.stats import (
+    AccrualSourcesStatsResponseSchema,
     DailyAccrualPointsStatsResponseSchema,
     DailyActivityStatsQuerySchema,
     DailyActivityStatsResponseSchema,
@@ -77,6 +79,26 @@ async def get_daily_accrual_points_stats(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return DailyAccrualPointsStatsResponseSchema.from_dto(result)
+
+
+@stats_admin_router.get(
+    path="/stats/accrual-sources",
+    name="Источники начислений",
+    response_model=AccrualSourcesStatsResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def get_accrual_sources_stats(
+    handler: FromDishka[GetAccrualSourcesStatsHandler],
+    from_date: date | None = Query(default=None, alias="from"),
+    to_date: date | None = Query(default=None, alias="to"),
+    days: int | None = Query(default=None, ge=1, le=90),
+) -> AccrualSourcesStatsResponseSchema:
+    query = DailyActivityStatsQuerySchema(from_date=from_date, to_date=to_date, days=days)
+    try:
+        result = await handler(query.to_accrual_sources_command())
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return AccrualSourcesStatsResponseSchema.from_dto(result)
 
 
 __all__ = ["stats_admin_router"]

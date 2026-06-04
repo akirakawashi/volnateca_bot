@@ -32,7 +32,24 @@ class DailyAccrualPointsStatsDTO:
     points: tuple[DailyStatPointDTO, ...]
 
 
+@dataclass(slots=True, frozen=True, kw_only=True)
+class AccrualSourceSegmentDTO:
+    source: str
+    value: int
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class AccrualSourcesStatsDTO:
+    timezone: str
+    from_date: date
+    to_date: date
+    total: int
+    segments: tuple[AccrualSourceSegmentDTO, ...]
+
+
 __all__ = [
+    "AccrualSourceSegmentDTO",
+    "AccrualSourcesStatsDTO",
     "DailyAccrualPointsStatsDTO",
     "DailyActivityStatsDTO",
     "DailyNewUsersStatsDTO",

@@ -2,7 +2,11 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from domain.enums.transaction import TransactionSource
+
 from application.admin.dto.stats import (
+    AccrualSourceSegmentDTO,
+    AccrualSourcesStatsDTO,
     DailyAccrualPointsStatsDTO,
     DailyActivityStatsDTO,
     DailyNewUsersStatsDTO,
@@ -36,6 +40,11 @@ class GetDailyNewUsersStatsCommand(DailyStatsRangeCommand):
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class GetDailyAccrualPointsStatsCommand(DailyStatsRangeCommand):
+    pass
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class GetAccrualSourcesStatsCommand(DailyStatsRangeCommand):
     pass
 
 
@@ -156,8 +165,53 @@ class GetDailyAccrualPointsStatsHandler(
         )
 
 
+class GetAccrualSourcesStatsHandler(
+    Interactor[GetAccrualSourcesStatsCommand, AccrualSourcesStatsDTO],
+):
+    def __init__(
+        self,
+        stats_repository: IStatsAdminRepository,
+        project_timezone: ZoneInfo,
+    ) -> None:
+        self._stats = stats_repository
+        self._project_timezone = project_timezone
+
+    async def __call__(
+        self,
+        command_data: GetAccrualSourcesStatsCommand,
+    ) -> AccrualSourcesStatsDTO:
+        from_date, to_date = _resolve_stats_date_range(
+            command_data,
+            project_timezone=self._project_timezone,
+        )
+        values_by_source = await self._stats.sum_accrual_points_by_source(
+            from_date=from_date,
+            to_date=to_date,
+            project_timezone=self._project_timezone,
+        )
+        segments = tuple(
+            AccrualSourceSegmentDTO(
+                source=source.value,
+                value=values_by_source.get(source, 0),
+            )
+            for source in TransactionSource
+            if values_by_source.get(source, 0) > 0
+        )
+        segments = tuple(sorted(segments, key=lambda segment: segment.value, reverse=True))
+        total = sum(segment.value for segment in segments)
+        return AccrualSourcesStatsDTO(
+            timezone=str(self._project_timezone),
+            from_date=from_date,
+            to_date=to_date,
+            total=total,
+            segments=segments,
+        )
+
+
 __all__ = [
     "DailyStatsRangeCommand",
+    "GetAccrualSourcesStatsCommand",
+    "GetAccrualSourcesStatsHandler",
     "GetDailyAccrualPointsStatsCommand",
     "GetDailyAccrualPointsStatsHandler",
     "GetDailyActivityStatsCommand",

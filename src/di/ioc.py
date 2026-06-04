@@ -29,6 +29,7 @@ from application.admin.interface.repositories.stats import IStatsAdminRepository
 from application.admin.interface.repositories.user import IUserAdminRepository
 from application.admin.command.list_prizes import ListPrizesHandler
 from application.admin.command.stats import (
+    GetAccrualSourcesStatsHandler,
     GetDailyAccrualPointsStatsHandler,
     GetDailyActivityStatsHandler,
     GetDailyNewUsersStatsHandler,
@@ -555,6 +556,17 @@ class InteractorProvider(Provider):
         app_settings: AppSettings,
     ) -> GetDailyAccrualPointsStatsHandler:
         return GetDailyAccrualPointsStatsHandler(
+            stats_repository=stats_admin_repository,
+            project_timezone=app_settings.project_timezone,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_accrual_sources_stats_handler(
+        self,
+        stats_admin_repository: IStatsAdminRepository,
+        app_settings: AppSettings,
+    ) -> GetAccrualSourcesStatsHandler:
+        return GetAccrualSourcesStatsHandler(
             stats_repository=stats_admin_repository,
             project_timezone=app_settings.project_timezone,
         )
