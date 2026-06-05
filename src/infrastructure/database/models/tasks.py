@@ -49,6 +49,10 @@ class Task(BaseModel, table=True):
         sa_column=Column(Text),
         description="Подробное описание условий выполнения задания для пользователя",
     )
+    image_attachment: str | None = Field(
+        default=None,
+        description="VK attachment изображения задания, отправляемого пользователю; NULL если картинки нет",
+    )
     task_type: TaskType = Field(
         sa_column=Column(
             SAEnum(TaskType, name="task_type", values_callable=enum_values),

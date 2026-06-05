@@ -17,6 +17,7 @@ class CreateTaskPromoCodeTaskCommand:
     starts_at: datetime | None
     ends_at: datetime | None
     promo_code: str
+    image_attachment: str | None
 
 
 class CreateTaskPromoCodeTaskHandler(

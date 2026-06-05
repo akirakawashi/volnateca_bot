@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from application.admin.command.task_promo_code import CreateTaskPromoCodeTaskCommand
 from application.admin.dto.task_promo_code import CreatedTaskPromoCodeTaskDTO
 from application.common.dto.task_promo_code import normalize_task_promo_code
+from utils.vk_attachments import normalize_vk_photo_attachment
 
 
 class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
@@ -17,6 +18,7 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
     starts_at: datetime | None = None
     ends_at: datetime | None = None
     promo_code: str = Field(min_length=1)
+    image_attachment: str | None = None
 
     @field_validator("code", "task_name", mode="before")
     @classmethod
@@ -41,6 +43,18 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
             raise ValueError("promo_code должен быть непустым")
         return normalized
 
+    @field_validator("image_attachment", mode="before")
+    @classmethod
+    def validate_image_attachment(cls, value: object) -> str | None:
+        if value is None or value == "":
+            return None
+        if not isinstance(value, str):
+            return None
+        normalized = normalize_vk_photo_attachment(value)
+        if normalized is None:
+            raise ValueError("image_attachment должен быть в формате photo-123_456")
+        return normalized
+
     @model_validator(mode="after")
     def validate_dates(self) -> "CreateTaskPromoCodeTaskRequestSchema":
         if self.starts_at is not None and self.ends_at is not None:
@@ -58,6 +72,7 @@ class CreateTaskPromoCodeTaskRequestSchema(BaseModel):
             starts_at=self.starts_at,
             ends_at=self.ends_at,
             promo_code=self.promo_code,
+            image_attachment=self.image_attachment,
         )
 
 

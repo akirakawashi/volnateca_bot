@@ -261,7 +261,7 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         code="referral_link",
         description="Сообщение с реферальной ссылкой",
         default_template=(
-            "🤝 Рефералка\n\n"
+            "🤝 Пригласить друга\n\n"
             "Пригласи друзей в Волнатеку и получай бонусы:\n\n"
             "• +30 ✦ за каждого друга\n"
             "• +100 ✦ за 3 друзей\n"

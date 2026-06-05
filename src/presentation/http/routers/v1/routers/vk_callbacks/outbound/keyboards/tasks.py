@@ -110,7 +110,9 @@ def build_tasks_carousel_template(
 
     elements: list[dict[str, object]] = []
     for task in tasks:
-        photo_id = to_vk_carousel_photo_id(task_images_settings.get_image(task.task_type))
+        photo_id = to_vk_carousel_photo_id(
+            task.image_attachment or task_images_settings.get_image(task.task_type)
+        )
         if photo_id is None:
             return None
 

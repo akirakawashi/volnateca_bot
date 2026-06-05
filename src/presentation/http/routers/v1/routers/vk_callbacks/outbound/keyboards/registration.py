@@ -40,6 +40,6 @@ def build_main_menu_rows() -> list[list[dict[str, object]]]:
         ],
         [
             payload_button(label="🎁 Магазин", color="secondary", payload={"action": "shop"}),
-            payload_button(label="🤝 Рефералка", color="secondary", payload={"action": "referral"}),
+            payload_button(label="🤝 Пригласить друга", color="secondary", payload={"action": "referral"}),
         ],
     ]

@@ -573,6 +573,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             points=task.points,
             repeat_policy=task.repeat_policy,
             week_number=TaskRepository._task_week_number(task=task),
+            image_attachment=task.image_attachment,
         )
 
     @staticmethod

@@ -51,6 +51,7 @@ class VKUserAvailableTaskDTO:
     points: int
     repeat_policy: TaskRepeatPolicy
     week_number: int | None
+    image_attachment: str | None = None
 
     @property
     def action_url(self) -> str | None:

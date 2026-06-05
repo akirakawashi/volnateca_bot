@@ -31,6 +31,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import 
 )
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
 from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
+from utils.vk_attachments import normalize_vk_photo_attachment
 
 
 async def handle_task_promo_code_start(
@@ -61,6 +62,7 @@ async def handle_task_promo_code_start(
             points=started.points,
         ),
         keyboard=build_task_promo_code_wait_keyboard(),
+        attachment=normalize_vk_photo_attachment(started.image_attachment),
         message_client=message_client,
         log_message="Старт задания с промокодом VK",
     )

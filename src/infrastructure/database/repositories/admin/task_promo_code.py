@@ -17,6 +17,7 @@ class TaskPromoCodeAdminRepository(SQLAlchemyRepository, ITaskPromoCodeAdminRepo
             code=command.code,
             task_name=command.task_name,
             description=command.description,
+            image_attachment=command.image_attachment,
             task_type=TaskType.CUSTOM,
             points=command.points,
             week_number=command.week_number,
