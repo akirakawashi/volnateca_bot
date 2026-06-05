@@ -14,7 +14,7 @@ def build_consent_keyboard(*, ref_key: str | None = None) -> VKKeyboard:
         "one_time": True,
         "buttons": [
             [
-                payload_button(label="Да", color="positive", payload=accept_payload),
+                payload_button(label="Ознакомлен", color="positive", payload=accept_payload),
                 payload_button(
                     label="Нет",
                     color="negative",
