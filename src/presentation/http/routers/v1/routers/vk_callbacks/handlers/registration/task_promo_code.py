@@ -59,6 +59,7 @@ async def handle_task_promo_code_start(
         users_id=result.registration.users_id,
         message=build_custom_promo_task_start_message(
             task_name=started.task_name,
+            task_description=started.description,
             points=started.points,
         ),
         keyboard=build_task_promo_code_wait_keyboard(),

@@ -568,6 +568,7 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
         return VKUserAvailableTaskDTO(
             tasks_id=task.tasks_id,
             task_name=task.task_name,
+            description=task.description,
             task_type=task.task_type,
             external_id=task.external_id,
             points=task.points,

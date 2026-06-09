@@ -1,8 +1,11 @@
 from application.common.dto.task import TaskPaginationDTO, VKUserAvailableTaskDTO
-from domain.project_rules import MENYAYKA_SALE_URL
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.template import (
     VKMessageText,
     build_template_message,
+)
+
+DEFAULT_CUSTOM_PROMO_TASK_TEXT = (
+    "Выполни условия партнёрского задания и отправь найденный промокод сюда."
 )
 
 
@@ -81,13 +84,15 @@ def build_task_info_message(*, task: VKUserAvailableTaskDTO) -> VKMessageText:
 def build_custom_promo_task_start_message(
     *,
     task_name: str,
+    task_description: str | None,
     points: int,
 ) -> VKMessageText:
+    task_text = task_description.strip() if task_description is not None else ""
     return build_template_message(
-        "custom_promo_task_start",
+        "partner_promo_task_start",
         task_name=task_name,
         points=points,
-        menyayka_url=MENYAYKA_SALE_URL,
+        task_text=task_text or DEFAULT_CUSTOM_PROMO_TASK_TEXT,
     )
 
 

@@ -145,22 +145,20 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         variables=("task_name", "points", "action_url_block"),
     ),
 
-    "custom_promo_task_start": MessageTemplateDefinition(
-        code="custom_promo_task_start",
-        description="Старт задания с промокодом от Меняйки",
+    "partner_promo_task_start": MessageTemplateDefinition(
+        code="partner_promo_task_start",
+        description="Старт партнёрского задания с промокодом",
         default_template=(
             "{task_name}\n"
             "+{points} ✦\n\n"
-            "Перейди в Меняйку, обменяй ГБ на промокод партнёра и пришли сюда промокод для бота.\n\n"
-            "{menyayka_url}\n\n"
-            "Жду промокод"
+            "{task_text}"
         ),
-        variables=("task_name", "points", "menyayka_url"),
+        variables=("task_name", "points", "task_text"),
     ),
 
     "custom_promo_invalid_code": MessageTemplateDefinition(
         code="custom_promo_invalid_code",
-        description="Неверный промокод для задания Меняйки",
+        description="Неверный промокод для партнёрского задания",
         default_template=(
             "Код неверный.\n\n"
             "Проверь ввод и пришли промокод ещё раз или нажми «Выйти»."
@@ -178,7 +176,7 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
 
     "custom_promo_canceled": MessageTemplateDefinition(
         code="custom_promo_canceled",
-        description="Выход из ожидания промокода для задания Меняйки",
+        description="Выход из ожидания промокода для партнёрского задания",
         default_template="Вышли из задания. Его можно открыть снова в 🎯 Заданиях.",
     ),
 

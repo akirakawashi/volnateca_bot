@@ -46,6 +46,7 @@ class TaskSummary:
 class VKUserAvailableTaskDTO:
     tasks_id: int
     task_name: str
+    description: str | None
     task_type: TaskType
     external_id: str | None
     points: int

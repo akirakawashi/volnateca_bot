@@ -58,6 +58,7 @@ class TaskPromoCodeFlowDTO:
     users_id: int | None = None
     tasks_id: int | None = None
     task_name: str | None = None
+    description: str | None = None
     points: int | None = None
     image_attachment: str | None = None
     completion: TaskCompletionResult | None = None
@@ -116,6 +117,7 @@ class StartTaskPromoCodeHandler(
             users_id=user.users_id,
             tasks_id=task.tasks_id,
             task_name=task.task_name,
+            description=task.description,
             points=task.points,
             image_attachment=task.image_attachment,
         )

@@ -78,12 +78,6 @@ POLL_TASK_HASHTAG_PATTERN = r"(?<!\w)#volnateca\b"
 TASK_DESCRIPTION_MAX_LENGTH = 500
 
 
-# ===== Partner links =====
-
-# Страница партнера, куда бот отправляет пользователя за промокодом Меняйки.
-MENYAYKA_SALE_URL = "https://volnamobile.ru/sale/"
-
-
 # ===== Bot pagination =====
 
 # Сколько заданий показывается на одной странице карусели заданий.
@@ -135,7 +129,6 @@ PROJECT_COMPLETION_REQUIRED_WEEK_KEYS = tuple(
 __all__ = [
     "AchievementCode",
     "AchievementKey",
-    "MENYAYKA_SALE_URL",
     "MONTHLY_TOP_ACHIEVEMENT_CODE",
     "MONTHLY_TOP_DEFAULT_LIMIT",
     "POLL_TASK_HASHTAG_PATTERN",
