@@ -48,9 +48,14 @@ from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
 from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.admin.command.create_quiz import CreateQuizHandler
+from application.admin.command.quiz import ListQuizzesHandler, UpdateQuizQuestionImageHandler
 from application.admin.command.post_to_wall import PostToWallHandler
 from application.admin.command.truncate_db import TruncateDBHandler  # TODO DEV: удалить перед релизом.
-from application.admin.command.task_promo_code import CreateTaskPromoCodeTaskHandler
+from application.admin.command.task_promo_code import (
+    CreateTaskPromoCodeTaskHandler,
+    ListTaskPromoCodeTasksHandler,
+    UpdateTaskPromoCodeTaskHandler,
+)
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
@@ -441,6 +446,24 @@ class InteractorProvider(Provider):
         )
 
     @provide(scope=Scope.REQUEST)
+    def get_list_quizzes_handler(
+        self,
+        quiz_admin_repository: IQuizAdminRepository,
+    ) -> ListQuizzesHandler:
+        return ListQuizzesHandler(quiz_admin_repository=quiz_admin_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_update_quiz_question_image_handler(
+        self,
+        quiz_admin_repository: IQuizAdminRepository,
+        uow: IUnitOfWork,
+    ) -> UpdateQuizQuestionImageHandler:
+        return UpdateQuizQuestionImageHandler(
+            quiz_admin_repository=quiz_admin_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
     def get_list_prizes_handler(
         self,
         prize_admin_repository: IPrizeAdminRepository,
@@ -633,6 +656,24 @@ class InteractorProvider(Provider):
         uow: IUnitOfWork,
     ) -> CreateTaskPromoCodeTaskHandler:
         return CreateTaskPromoCodeTaskHandler(
+            repository=task_promo_code_admin_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def get_list_task_promo_code_tasks_handler(
+        self,
+        task_promo_code_admin_repository: ITaskPromoCodeAdminRepository,
+    ) -> ListTaskPromoCodeTasksHandler:
+        return ListTaskPromoCodeTasksHandler(repository=task_promo_code_admin_repository)
+
+    @provide(scope=Scope.REQUEST)
+    def get_update_task_promo_code_task_handler(
+        self,
+        task_promo_code_admin_repository: ITaskPromoCodeAdminRepository,
+        uow: IUnitOfWork,
+    ) -> UpdateTaskPromoCodeTaskHandler:
+        return UpdateTaskPromoCodeTaskHandler(
             repository=task_promo_code_admin_repository,
             uow=uow,
         )

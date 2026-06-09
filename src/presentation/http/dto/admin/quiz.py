@@ -7,8 +7,9 @@ from application.admin.command.quiz import (
     CreateQuizCommand,
     CreateQuizOptionDTO,
     CreateQuizQuestionDTO,
+    UpdateQuizQuestionImageCommand,
 )
-from application.admin.dto.quiz import CreatedQuizDTO
+from application.admin.dto.quiz import CreatedQuizDTO, QuizAdminDTO
 from utils.vk_attachments import normalize_vk_photo_attachment
 
 
@@ -95,6 +96,28 @@ class CreateQuizRequestSchema(BaseModel):
         )
 
 
+class UpdateQuizQuestionImageRequestSchema(BaseModel):
+    image_attachment: str | None = None
+
+    @field_validator("image_attachment", mode="before")
+    @classmethod
+    def validate_image_attachment(cls, value: object) -> str | None:
+        if value is None or value == "":
+            return None
+        if not isinstance(value, str):
+            raise ValueError("image_attachment должен быть в формате photo-123_456")
+        normalized = normalize_vk_photo_attachment(value)
+        if normalized is None:
+            raise ValueError("image_attachment должен быть в формате photo-123_456")
+        return normalized
+
+    def to_command(self, *, quiz_questions_id: int) -> UpdateQuizQuestionImageCommand:
+        return UpdateQuizQuestionImageCommand(
+            quiz_questions_id=quiz_questions_id,
+            image_attachment=self.image_attachment,
+        )
+
+
 # ── Response ──────────────────────────────────────────────────────────────────
 
 
@@ -140,5 +163,40 @@ class CreatedQuizResponseSchema(BaseModel):
                     ],
                 )
                 for q in dto.questions
+            ],
+        )
+
+
+class QuizQuestionImageAdminResponseSchema(BaseModel):
+    quiz_questions_id: int
+    question_text: str
+    image_attachment: str | None
+
+
+class QuizAdminResponseSchema(BaseModel):
+    tasks_id: int
+    code: str
+    task_name: str
+    starts_at: datetime | None
+    ends_at: datetime | None
+    can_edit: bool
+    questions: list[QuizQuestionImageAdminResponseSchema]
+
+    @classmethod
+    def from_dto(cls, dto: QuizAdminDTO) -> "QuizAdminResponseSchema":
+        return cls(
+            tasks_id=dto.tasks_id,
+            code=dto.code,
+            task_name=dto.task_name,
+            starts_at=dto.starts_at,
+            ends_at=dto.ends_at,
+            can_edit=dto.can_edit,
+            questions=[
+                QuizQuestionImageAdminResponseSchema(
+                    quiz_questions_id=question.quiz_questions_id,
+                    question_text=question.question_text,
+                    image_attachment=question.image_attachment,
+                )
+                for question in dto.questions
             ],
         )
