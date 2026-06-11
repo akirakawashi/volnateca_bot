@@ -1,7 +1,7 @@
 """add prize promo codes
 
 Revision ID: f15c9a7d2b81
-Revises: 3b64a9157361
+Revises: 7d94d7331d64
 Create Date: 2026-06-11 00:00:00.000000
 """
 
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 revision: str = "f15c9a7d2b81"
-down_revision: str | Sequence[str] | None = "3b64a9157361"
+down_revision: str | Sequence[str] | None = "7d94d7331d64"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
