@@ -15,7 +15,3 @@ class SeedDevScenarioRequest(BaseModel):
 
 class SeedDevScenarioResponse(BaseModel):
     messages: list[str]
-
-
-class SeedStorePrizesResponse(BaseModel):
-    messages: list[str]

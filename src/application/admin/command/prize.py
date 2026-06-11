@@ -21,6 +21,7 @@ class CreatePrizeCommand:
     required_level: int | None
     sort_order: int
     is_active: bool
+    promo_codes: tuple[str, ...] = ()
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

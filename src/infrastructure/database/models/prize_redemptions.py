@@ -8,6 +8,7 @@ from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus
 from infrastructure.database.base import BaseModel, enum_values
 
 if TYPE_CHECKING:
+    from infrastructure.database.models.prize_promo_codes import PrizePromoCode
     from infrastructure.database.models.prizes import Prize
     from infrastructure.database.models.transactions import Transaction
     from infrastructure.database.models.users import User
@@ -149,3 +150,4 @@ class PrizeRedemption(BaseModel, table=True):
     refund_transaction: Optional["Transaction"] = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[PrizeRedemption.refund_transactions_id]"},
     )
+    promo_code: Optional["PrizePromoCode"] = Relationship(back_populates="redemption")

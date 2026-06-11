@@ -5,8 +5,11 @@ from fastapi import APIRouter, HTTPException, status
 from application.admin.command.create_prize import CreatePrizeHandler
 from application.admin.command.list_prizes import ListPrizesHandler
 from application.admin.command.update_prize import UpdatePrizeHandler
+from application.admin.command.prize_promo_code import AddPrizePromoCodesHandler
 from application.admin.command.prize import ListPrizesCommand
 from presentation.http.dto.admin.prize import (
+    AddPrizePromoCodesRequestSchema,
+    AddPrizePromoCodesResponseSchema,
     CreatePrizeRequestSchema,
     PrizeResponseSchema,
     UpdatePrizeRequestSchema,
@@ -63,3 +66,31 @@ async def update_prize(
     if result is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Приз не найден")
     return PrizeResponseSchema.from_dto(result)
+
+
+@prizes_admin_router.post(
+    path="/prizes/{prizes_id}/promo-codes",
+    name="Добавить промокоды к партнёрскому призу",
+    response_model=AddPrizePromoCodesResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_prize_promo_codes(
+    prizes_id: int,
+    data: AddPrizePromoCodesRequestSchema,
+    handler: FromDishka[AddPrizePromoCodesHandler],
+) -> AddPrizePromoCodesResponseSchema:
+    try:
+        result = await handler(data.to_command(prizes_id=prizes_id))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Приз не найден")
+    return AddPrizePromoCodesResponseSchema(
+        prizes_id=result.prizes_id,
+        created=result.created,
+        duplicates=result.duplicates,
+        total_codes=result.total_codes,
+        available_codes=result.available_codes,
+        assigned_codes=result.assigned_codes,
+        void_codes=result.void_codes,
+    )

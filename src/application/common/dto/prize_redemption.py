@@ -45,6 +45,7 @@ class PrizeRedemptionRecord:
     created_at: datetime
     prize_name: str | None = None
     vk_user_id: int | None = None
+    promo_code: str | None = None
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -57,6 +58,8 @@ class CreatePrizeRedemptionParams:
     idempotency_key: str
     points_spent: int
     comment: str | None = None
+    prize_redemption_status: PrizeRedemptionStatus = PrizeRedemptionStatus.RESERVED
+    issued_at: datetime | None = None
 
 
 __all__ = [

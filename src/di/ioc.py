@@ -3,10 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.admin.command.broadcast import GetBroadcastStatusHandler, StartBroadcastHandler
 
-# TODO DEV: удалить импорты SeedDevScenarioHandler, SeedStorePrizesHandler, TruncateDBHandler перед релизом.
+# TODO DEV: удалить импорты SeedDevScenarioHandler, TruncateDBHandler перед релизом.
 from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
-from application.admin.command.seed_store_prizes import SeedStorePrizesHandler
 from application.admin.command.create_prize import CreatePrizeHandler
+from application.admin.command.prize_promo_code import AddPrizePromoCodesHandler
 from application.admin.command.update_prize import UpdatePrizeHandler
 from application.admin.command.prize_redemption import (
     CancelPrizeRedemptionHandler,
@@ -79,6 +79,7 @@ from application.command.task_promo_code import (
 from application.interface.clients import IVKUserClient, IVKWallClient
 from application.interface.services import IVKMessageTemplateService
 from application.interface.repositories.achievements import IAchievementRepository
+from application.interface.repositories.prize_promo_codes import IPrizePromoCodeRepository
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
@@ -493,6 +494,17 @@ class InteractorProvider(Provider):
         )
 
     @provide(scope=Scope.REQUEST)
+    def get_add_prize_promo_codes_handler(
+        self,
+        prize_promo_code_repository: IPrizePromoCodeRepository,
+        uow: IUnitOfWork,
+    ) -> AddPrizePromoCodesHandler:
+        return AddPrizePromoCodesHandler(
+            prize_promo_code_repository=prize_promo_code_repository,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
     def get_list_prize_redemptions_handler(
         self,
         prize_redemption_repository: IPrizeRedemptionRepository,
@@ -711,11 +723,3 @@ class InteractorProvider(Provider):
         from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 
         return SeedDevScenarioHandler(session=session, vk_settings=vk_settings)
-
-    # TODO DEV: удалить get_seed_store_prizes_handler перед релизом.
-    @provide(scope=Scope.REQUEST)
-    def get_seed_store_prizes_handler(
-        self,
-        session: AsyncSession,
-    ) -> SeedStorePrizesHandler:
-        return SeedStorePrizesHandler(session=session)

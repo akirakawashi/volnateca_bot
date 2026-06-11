@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.message_templates import IMessageTemplateRepository
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
+from application.interface.repositories.prize_promo_codes import IPrizePromoCodeRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.admin.interface.db_manager import IDBManager  # TODO DEV: удалить перед релизом.
@@ -23,6 +24,7 @@ from application.interface.repositories.users import IUserRepository
 from infrastructure.database.repositories.achievements import AchievementRepository
 from infrastructure.database.repositories.message_templates import MessageTemplateRepository
 from infrastructure.database.repositories.prize_redemptions import PrizeRedemptionRepository
+from infrastructure.database.repositories.prize_promo_codes import PrizePromoCodeRepository
 from infrastructure.database.repositories.prizes import PrizeRepository
 from infrastructure.database.repositories.quiz import QuizRepository
 from infrastructure.database.db_manager import DBManager  # TODO DEV: удалить перед релизом.
@@ -104,6 +106,13 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> PrizeRepository:
         return PrizeRepository(session=session)
+
+    @provide(scope=Scope.REQUEST, provides=IPrizePromoCodeRepository)
+    def get_prize_promo_code_repository(
+        self,
+        session: AsyncSession,
+    ) -> PrizePromoCodeRepository:
+        return PrizePromoCodeRepository(session=session)
 
     @provide(scope=Scope.REQUEST, provides=IPrizeRedemptionRepository)
     def get_prize_redemption_repository(

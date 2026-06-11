@@ -194,6 +194,7 @@ def to_prize_redemption_admin_dto(record: PrizeRedemptionRecord) -> PrizeRedempt
         canceled_at=record.canceled_at,
         cancel_reason=record.cancel_reason,
         created_at=record.created_at,
+        promo_code=record.promo_code,
     )
 
 

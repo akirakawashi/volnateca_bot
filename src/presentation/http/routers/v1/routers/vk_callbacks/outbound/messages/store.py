@@ -93,13 +93,18 @@ def build_store_claim_confirm_message(*, card: StorePrizeCardDTO) -> VKMessageTe
         return build_store_prize_not_found_message()
 
     balance_after = card.balance_points - prize.cost_points
+    result_text = (
+        "Промокод будет отправлен сразу после покупки."
+        if prize.prize_type == PrizeType.PARTNER
+        else "Заявка на самовывоз будет создана сразу."
+    )
     return VKMessageText(
         text=(
             f"🎁 {prize.prize_name}\n\n"
             f"Списать {prize.cost_points} ✦?\n"
             f"Баланс после покупки: {balance_after} ✦\n"
             f"Остаток приза: {prize.quantity_remaining} из {prize.quantity_total}\n\n"
-            "Подтверди покупку — заявка на самовывоз будет создана сразу."
+            f"Подтверди покупку — {result_text}"
         ),
     )
 
@@ -113,6 +118,16 @@ def build_store_redeem_outcome_message(
         RedeemPrizeOutcomeStatus.COMPLETED,
         RedeemPrizeOutcomeStatus.IDEMPOTENT_REPLAY,
     ):
+        if outcome.promo_code:
+            return VKMessageText(
+                text=(
+                    f"🎁 {outcome.prize_name or 'Приз'}\n\n"
+                    f"Промокод: {outcome.promo_code}\n"
+                    f"Списано: {outcome.points_spent} ✦\n"
+                    f"Баланс: {outcome.balance_points if outcome.balance_points is not None else balance_points} ✦\n\n"
+                    "Промокод сохранён в разделе «Мои призы»."
+                ),
+            )
         return build_template_message(
             "store_pickup_success",
             prize_name=outcome.prize_name or "Приз",
@@ -142,9 +157,11 @@ def build_store_my_redemptions_message(*, listing: ListUserRedemptionsDTO) -> VK
 
     lines = ["📦 Мои призы", ""]
     for item in listing.redemptions:
+        code_label = "Промокод" if item.promo_code else "Код"
+        code_value = item.promo_code or item.redemption_code
         lines.append(
             f"• {item.prize_name} — {_format_redemption_status(item.prize_redemption_status)}\n"
-            f"  Код: {item.redemption_code}",
+            f"  {code_label}: {code_value}",
         )
     return VKMessageText(text="\n".join(lines))
 

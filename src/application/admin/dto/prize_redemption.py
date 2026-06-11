@@ -22,6 +22,7 @@ class PrizeRedemptionAdminDTO:
     canceled_at: datetime | None
     cancel_reason: str | None
     created_at: datetime
+    promo_code: str | None
 
 
 __all__ = ["PrizeRedemptionAdminDTO"]

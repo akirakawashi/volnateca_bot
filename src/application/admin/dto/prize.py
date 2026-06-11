@@ -19,6 +19,10 @@ class PrizeAdminDTO:
     required_level: int | None
     sort_order: int
     is_active: bool
+    promo_codes_total: int | None = None
+    promo_codes_available: int | None = None
+    promo_codes_assigned: int | None = None
+    promo_codes_void: int | None = None
 
 
 __all__ = [

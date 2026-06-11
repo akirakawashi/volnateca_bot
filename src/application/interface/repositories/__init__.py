@@ -1,5 +1,6 @@
 from application.interface.repositories.achievements import AchievementRecord, IAchievementRepository
 from application.interface.repositories.message_templates import IMessageTemplateRepository
+from application.interface.repositories.prize_promo_codes import IPrizePromoCodeRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
 from application.interface.repositories.referral_intents import IReferralIntentRepository
@@ -15,6 +16,7 @@ __all__ = [
     "AchievementRecord",
     "IAchievementRepository",
     "IMessageTemplateRepository",
+    "IPrizePromoCodeRepository",
     "IPrizeRepository",
     "IQuizRepository",
     "IReferralIntentRepository",

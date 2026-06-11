@@ -8,8 +8,8 @@ ADMIN_ALLOWED_PRIZE_TYPES = (
     PrizeType.SUPER_PRIZE,
 )
 
-# Способы получения, доступные при создании приза из админки.
-ADMIN_ALLOWED_RECEIVE_TYPES = (PrizeReceiveType.PICKUP,)
+# Способы получения назначаются по типу приза: partner -> promo_code, остальные -> pickup.
+ADMIN_ALLOWED_RECEIVE_TYPES = (PrizeReceiveType.PICKUP, PrizeReceiveType.PROMO_CODE)
 
 # Сколько пользователей рассылка забирает из БД за одну пачку.
 ADMIN_BROADCAST_BATCH_SIZE = 500

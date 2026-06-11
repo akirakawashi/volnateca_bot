@@ -68,6 +68,7 @@ class PrizeRedemptionResponseSchema(BaseModel):
     canceled_at: datetime | None
     cancel_reason: str | None
     created_at: datetime
+    promo_code: str | None
 
     @classmethod
     def from_dto(cls, dto: PrizeRedemptionAdminDTO) -> "PrizeRedemptionResponseSchema":
@@ -88,6 +89,7 @@ class PrizeRedemptionResponseSchema(BaseModel):
             canceled_at=dto.canceled_at,
             cancel_reason=dto.cancel_reason,
             created_at=dto.created_at,
+            promo_code=dto.promo_code,
         )
 
 

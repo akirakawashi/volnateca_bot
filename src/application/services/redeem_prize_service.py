@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import Enum
 
+from application.common.dto.prize_promo_code import PrizePromoCodeRecord
 from application.common.dto.prize_redemption import (
     CreatePrizeRedemptionParams,
     PrizeLockedSnapshot,
@@ -8,11 +10,12 @@ from application.common.dto.prize_redemption import (
 )
 from application.common.dto.store import STORE_ALLOWED_PRIZE_TYPES
 from application.common.redemption_code import generate_redemption_code
+from application.interface.repositories.prize_promo_codes import IPrizePromoCodeRepository
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
-from domain.enums.prize import PrizeStatus
+from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus, PrizeStatus, PrizeType
 from domain.enums.transaction import TransactionSource, TransactionType
 from domain.services.wallet import WalletService
 
@@ -41,6 +44,7 @@ class RedeemPrizeOutcome:
     points_spent: int = 0
     balance_points: int | None = None
     transactions_id: int | None = None
+    promo_code: str | None = None
 
 
 class RedeemPrizeService:
@@ -51,11 +55,13 @@ class RedeemPrizeService:
         users: IUserRepository,
         prizes: IPrizeRepository,
         prize_redemptions: IPrizeRedemptionRepository,
+        prize_promo_codes: IPrizePromoCodeRepository,
         transactions: ITransactionRepository,
     ) -> None:
         self._users = users
         self._prizes = prizes
         self._prize_redemptions = prize_redemptions
+        self._prize_promo_codes = prize_promo_codes
         self._transactions = transactions
 
     async def redeem(
@@ -123,6 +129,17 @@ class RedeemPrizeService:
                 balance_points=snapshot.balance_points,
             )
 
+        promo_code = await self._lock_partner_promo_code_if_needed(prize=prize)
+        if prize.prize_type == PrizeType.PARTNER and promo_code is None:
+            return RedeemPrizeOutcome(
+                status=RedeemPrizeOutcomeStatus.SOLD_OUT,
+                vk_user_id=vk_user_id,
+                users_id=snapshot.users_id,
+                prizes_id=prizes_id,
+                prize_name=prize.prize_name,
+                balance_points=snapshot.balance_points,
+            )
+
         if not await self._prizes.try_increment_claimed(prizes_id=prizes_id):
             return RedeemPrizeOutcome(
                 status=RedeemPrizeOutcomeStatus.SOLD_OUT,
@@ -145,19 +162,38 @@ class RedeemPrizeService:
             description=f"Списание за приз: {prize.prize_name}",
         )
 
+        issued_at = datetime.now(tz=UTC) if promo_code is not None else None
         redemption_code = generate_redemption_code()
         redemption = await self._prize_redemptions.create(
             CreatePrizeRedemptionParams(
                 users_id=snapshot.users_id,
                 prizes_id=prizes_id,
                 transactions_id=transaction.transactions_id,
-                receive_type=prize.receive_type,
+                receive_type=(
+                    PrizeReceiveType.PROMO_CODE
+                    if promo_code is not None
+                    else prize.receive_type
+                ),
                 redemption_code=redemption_code,
                 idempotency_key=idempotency_key,
                 points_spent=spend.amount,
                 comment=user_comment,
+                prize_redemption_status=(
+                    PrizeRedemptionStatus.ISSUED
+                    if promo_code is not None
+                    else PrizeRedemptionStatus.RESERVED
+                ),
+                issued_at=issued_at,
             ),
         )
+        assigned_promo_code = None
+        if promo_code is not None and issued_at is not None:
+            assigned_promo_code = await self._prize_promo_codes.assign_to_redemption(
+                prize_promo_codes_id=promo_code.prize_promo_codes_id,
+                prize_redemptions_id=redemption.prize_redemptions_id,
+                users_id=snapshot.users_id,
+                assigned_at=issued_at,
+            )
 
         await self._users.apply_spend(
             users_id=snapshot.users_id,
@@ -177,6 +213,7 @@ class RedeemPrizeService:
             points_spent=spend.amount,
             balance_points=spend.balance_after,
             transactions_id=transaction.transactions_id,
+            promo_code=assigned_promo_code.promo_code if assigned_promo_code is not None else None,
         )
 
     async def _idempotent_replay_if_exists(
@@ -213,7 +250,17 @@ class RedeemPrizeService:
             redemption_code=existing.redemption_code,
             points_spent=existing.points_spent,
             transactions_id=existing.transactions_id,
+            promo_code=existing.promo_code,
         )
+
+    async def _lock_partner_promo_code_if_needed(
+        self,
+        *,
+        prize: PrizeLockedSnapshot,
+    ) -> PrizePromoCodeRecord | None:
+        if prize.prize_type != PrizeType.PARTNER:
+            return None
+        return await self._prize_promo_codes.get_available_for_update(prizes_id=prize.prizes_id)
 
     @staticmethod
     def _check_availability(

@@ -10,6 +10,7 @@ from application.common.exceptions import PrizeRedemptionIdempotencyConflict
 from application.common.redemption_code import generate_redemption_code, normalize_redemption_code
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from domain.enums.prize import PrizeRedemptionStatus
+from infrastructure.database.models.prize_promo_codes import PrizePromoCode
 from infrastructure.database.models.prize_redemptions import PrizeRedemption
 from infrastructure.database.models.prizes import Prize
 from infrastructure.database.models.users import User
@@ -26,15 +27,19 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         idempotency_key: str,
     ) -> PrizeRedemptionRecord | None:
         result = await self._session.execute(
-            select(PrizeRedemption, col(Prize.prize_name))
+            select(PrizeRedemption, col(Prize.prize_name), col(PrizePromoCode.promo_code))
             .join(Prize, col(Prize.prizes_id) == col(PrizeRedemption.prizes_id))
+            .outerjoin(
+                PrizePromoCode,
+                col(PrizePromoCode.prize_redemptions_id) == col(PrizeRedemption.prize_redemptions_id),
+            )
             .where(col(PrizeRedemption.idempotency_key) == idempotency_key),
         )
         row = result.one_or_none()
         if row is None:
             return None
-        redemption, prize_name = row
-        return self._to_record(redemption=redemption, prize_name=prize_name)
+        redemption, prize_name, promo_code = row
+        return self._to_record(redemption=redemption, prize_name=prize_name, promo_code=promo_code)
 
     async def get_by_idempotency_key_for_user(
         self,
@@ -43,8 +48,12 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         idempotency_key: str,
     ) -> PrizeRedemptionRecord | None:
         result = await self._session.execute(
-            select(PrizeRedemption, col(Prize.prize_name))
+            select(PrizeRedemption, col(Prize.prize_name), col(PrizePromoCode.promo_code))
             .join(Prize, col(Prize.prizes_id) == col(PrizeRedemption.prizes_id))
+            .outerjoin(
+                PrizePromoCode,
+                col(PrizePromoCode.prize_redemptions_id) == col(PrizeRedemption.prize_redemptions_id),
+            )
             .where(
                 col(PrizeRedemption.users_id) == users_id,
                 col(PrizeRedemption.idempotency_key) == idempotency_key,
@@ -53,8 +62,8 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         row = result.one_or_none()
         if row is None:
             return None
-        redemption, prize_name = row
-        return self._to_record(redemption=redemption, prize_name=prize_name)
+        redemption, prize_name, promo_code = row
+        return self._to_record(redemption=redemption, prize_name=prize_name, promo_code=promo_code)
 
     async def get_by_id(
         self,
@@ -76,11 +85,17 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
             return None
 
         result = await self._session.execute(
-            select(PrizeRedemption).where(col(PrizeRedemption.redemption_code) == normalized_code),
+            select(PrizeRedemption, col(PrizePromoCode.promo_code))
+            .outerjoin(
+                PrizePromoCode,
+                col(PrizePromoCode.prize_redemptions_id) == col(PrizeRedemption.prize_redemptions_id),
+            )
+            .where(col(PrizeRedemption.redemption_code) == normalized_code),
         )
-        redemption = result.scalar_one_or_none()
-        if redemption is None:
+        row = result.one_or_none()
+        if row is None:
             return None
+        redemption, promo_code = row
 
         prize_name = await self._get_prize_name(prizes_id=redemption.prizes_id)
         user = await self._session.get(User, redemption.users_id)
@@ -88,6 +103,7 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
             redemption=redemption,
             prize_name=prize_name,
             vk_user_id=user.vk_user_id if user is not None else None,
+            promo_code=promo_code,
         )
 
     async def get_for_update(
@@ -119,7 +135,8 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
                         idempotency_key=params.idempotency_key,
                         points_spent=params.points_spent,
                         comment=params.comment,
-                        prize_redemption_status=PrizeRedemptionStatus.RESERVED,
+                        issued_at=params.issued_at,
+                        prize_redemption_status=params.prize_redemption_status,
                     )
                     self._session.add(redemption)
                     await self._session.flush()
@@ -158,16 +175,20 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         offset: int,
     ) -> tuple[PrizeRedemptionRecord, ...]:
         result = await self._session.execute(
-            select(PrizeRedemption, Prize.prize_name)
+            select(PrizeRedemption, Prize.prize_name, PrizePromoCode.promo_code)
             .join(Prize, col(Prize.prizes_id) == col(PrizeRedemption.prizes_id))
+            .outerjoin(
+                PrizePromoCode,
+                col(PrizePromoCode.prize_redemptions_id) == col(PrizeRedemption.prize_redemptions_id),
+            )
             .where(col(PrizeRedemption.users_id) == users_id)
             .order_by(col(PrizeRedemption.created_at).desc())
             .limit(max(1, limit))
             .offset(max(0, offset)),
         )
         return tuple(
-            self._to_record(redemption=redemption, prize_name=prize_name)
-            for redemption, prize_name in result.all()
+            self._to_record(redemption=redemption, prize_name=prize_name, promo_code=promo_code)
+            for redemption, prize_name, promo_code in result.all()
         )
 
     async def list_for_fulfillment(
@@ -180,9 +201,13 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
     ) -> tuple[PrizeRedemptionRecord, ...]:
         user_alias = aliased(User)
         query = (
-            select(PrizeRedemption, Prize.prize_name, user_alias.vk_user_id)
+            select(PrizeRedemption, Prize.prize_name, user_alias.vk_user_id, PrizePromoCode.promo_code)
             .join(Prize, col(Prize.prizes_id) == col(PrizeRedemption.prizes_id))
             .join(user_alias, col(user_alias.users_id) == col(PrizeRedemption.users_id))
+            .outerjoin(
+                PrizePromoCode,
+                col(PrizePromoCode.prize_redemptions_id) == col(PrizeRedemption.prize_redemptions_id),
+            )
             .order_by(col(PrizeRedemption.created_at).desc())
             .limit(max(1, limit))
             .offset(max(0, offset))
@@ -198,8 +223,9 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
                 redemption=redemption,
                 prize_name=prize_name,
                 vk_user_id=vk_user_id,
+                promo_code=promo_code,
             )
-            for redemption, prize_name, vk_user_id in result.all()
+            for redemption, prize_name, vk_user_id, promo_code in result.all()
         )
 
     async def count_for_fulfillment(
@@ -260,6 +286,11 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
             select(PrizeRedemption, Prize.prize_name, User.vk_user_id)
             .join(Prize, col(Prize.prizes_id) == col(PrizeRedemption.prizes_id))
             .join(User, col(User.users_id) == col(PrizeRedemption.users_id))
+            .outerjoin(
+                PrizePromoCode,
+                col(PrizePromoCode.prize_redemptions_id) == col(PrizeRedemption.prize_redemptions_id),
+            )
+            .add_columns(PrizePromoCode.promo_code)
             .where(col(PrizeRedemption.prize_redemptions_id) == prize_redemptions_id)
         )
         if for_update:
@@ -269,11 +300,12 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         row = result.one_or_none()
         if row is None:
             return None
-        redemption, prize_name, vk_user_id = row
+        redemption, prize_name, vk_user_id, promo_code = row
         return self._to_record(
             redemption=redemption,
             prize_name=prize_name,
             vk_user_id=vk_user_id,
+            promo_code=promo_code,
         )
 
     async def _get_entity_for_update(self, *, prize_redemptions_id: int) -> PrizeRedemption:
@@ -300,6 +332,7 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
         redemption: PrizeRedemption,
         prize_name: str | None,
         vk_user_id: int | None = None,
+        promo_code: str | None = None,
     ) -> PrizeRedemptionRecord:
         if redemption.prize_redemptions_id is None:
             raise RuntimeError("Первичный ключ заявки на приз не был сгенерирован")
@@ -324,6 +357,7 @@ class PrizeRedemptionRepository(SQLAlchemyRepository, IPrizeRedemptionRepository
             created_at=redemption.created_at,
             prize_name=prize_name,
             vk_user_id=vk_user_id,
+            promo_code=promo_code,
         )
 
 

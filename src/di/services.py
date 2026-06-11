@@ -6,6 +6,7 @@ from application.admin.services import BroadcastManager
 from application.interface.clients import IVKMessageClient
 from application.interface.repositories.achievements import IAchievementRepository
 from application.interface.repositories.message_templates import IMessageTemplateRepository
+from application.interface.repositories.prize_promo_codes import IPrizePromoCodeRepository
 from application.interface.repositories.task_completions import ITaskCompletionRepository
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from application.interface.repositories.prizes import IPrizeRepository
@@ -113,12 +114,14 @@ class ServicesProvider(Provider):
         users: IUserRepository,
         prizes: IPrizeRepository,
         prize_redemptions: IPrizeRedemptionRepository,
+        prize_promo_codes: IPrizePromoCodeRepository,
         transactions: ITransactionRepository,
     ) -> RedeemPrizeService:
         return RedeemPrizeService(
             users=users,
             prizes=prizes,
             prize_redemptions=prize_redemptions,
+            prize_promo_codes=prize_promo_codes,
             transactions=transactions,
         )
 
