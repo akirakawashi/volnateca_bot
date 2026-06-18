@@ -7,11 +7,11 @@ from settings.base import Settings
 class TaskTypeImagesSettings(Settings):
     model_config = SettingsConfigDict(env_prefix="VK_")
 
-    TASK_IMAGE_VK_SUBSCRIBE: str | None = "photo-213947338_457239022" # нужна картинка для подпискин на группу
-    TASK_IMAGE_VK_LIKE: str | None = "photo147820319_457263584"
-    TASK_IMAGE_VK_COMMENT: str | None = "photo147820319_457263583"
-    TASK_IMAGE_VK_POLL: str | None = "photo147820319_457263590"
-    TASK_IMAGE_CUSTOM: str | None = "photo-213947338_457239022" # нужны картинка для кастомных задач (общая если нет других)
+    TASK_IMAGE_VK_SUBSCRIBE: str | None = "photo-238388485_456239105"
+    TASK_IMAGE_VK_LIKE: str | None = "photo-238388485_456239108"
+    TASK_IMAGE_VK_COMMENT: str | None = "photo-238388485_456239107"
+    TASK_IMAGE_VK_POLL: str | None = "photo-238388485_456239106"
+    TASK_IMAGE_CUSTOM: str | None = "photo-238388485_456239086" # нужны картинка для кастомных задач (общая если нет других)
 
     def get_image(self, task_type: TaskType) -> str | None:
         return {
