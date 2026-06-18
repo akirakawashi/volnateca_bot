@@ -6,7 +6,6 @@ from application.common.dto.task import (
     TaskSummary,
     VKCommentTaskCreationDTO,
     VKLikeTaskCreationDTO,
-    VKRepostTaskCreationDTO,
     VKUserAvailableTaskDTO,
 )
 from domain.enums.task import TaskRepeatPolicy
@@ -19,27 +18,6 @@ class ITaskRepository(ABC):
     (начисление баллов, фиксация выполнения, обновление баланса) находится
     в AwardTaskService и других репозиториях.
     """
-
-    @abstractmethod
-    async def create_repost_task_if_not_exists(
-        self,
-        code: str,
-        task_name: str,
-        description: str,
-        external_id: str,
-        points: int,
-        week_number: int | None,
-        repeat_policy: TaskRepeatPolicy,
-        event_id: str | None,
-    ) -> VKRepostTaskCreationDTO:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_active_repost_task_by_external_ids(
-        self,
-        external_ids: tuple[str, ...],
-    ) -> TaskSummary | None:
-        raise NotImplementedError
 
     @abstractmethod
     async def get_or_create_subscription_task(

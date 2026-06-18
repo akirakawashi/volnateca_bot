@@ -16,9 +16,6 @@ from presentation.http.routers.v1.routers.vk_callbacks.protocol.extractors impor
     extract_message_text,
     extract_poll_user_id,
     extract_ref_key,
-    extract_repost_author_user_id,
-    extract_repost_external_id,
-    extract_reposted_wall_post_external_ids,
     extract_vk_user_id,
     extract_voted_poll,
     extract_voted_poll_external_ids,
@@ -26,7 +23,6 @@ from presentation.http.routers.v1.routers.vk_callbacks.protocol.extractors impor
     extract_wall_post_poll,
     extract_wall_post_poll_question,
     extract_wall_post_text,
-    is_repost_published_on_author_wall,
     parse_button_payload,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.protocol.event_objects import (
@@ -35,7 +31,6 @@ from presentation.http.routers.v1.routers.vk_callbacks.protocol.event_objects im
     VKLikeObjectSchema,
     VKMessageObjectSchema,
     VKPollVoteObjectSchema,
-    VKRepostObjectSchema,
     VKUserObjectSchema,
     VKWallPostObjectSchema,
 )
@@ -80,9 +75,6 @@ class VKCallbackPayload:
     def is_poll_vote_event(self) -> bool:
         return self.type in VKEventGroups.POLL
 
-    def is_repost(self) -> bool:
-        return self.type in VKEventGroups.REPOST
-
     def is_subscription_event(self) -> bool:
         return self.type in VKEventGroups.SUBSCRIPTION
 
@@ -122,19 +114,9 @@ class VKCallbackPayload:
             return self.get_like_user_id()
         if self.is_poll_vote_event():
             return self.get_poll_user_id()
-        if self.is_repost():
-            return self.get_repost_user_id()
         if self.is_comment_event():
             return self.get_comment_user_id()
         return self.get_vk_user_id()
-
-    def get_repost_user_id(self) -> int | None:
-        """Возвращает автора репоста только для репоста на собственной стене."""
-
-        repost_object = self.get_repost_object()
-        if not is_repost_published_on_author_wall(repost_object=repost_object):
-            return None
-        return extract_repost_author_user_id(repost_object=repost_object)
 
     def get_vk_user_id(self) -> int | None:
         """Достаёт user_id из message/user object с учётом разных форматов VK."""
@@ -191,14 +173,6 @@ class VKCallbackPayload:
     def get_liked_post_external_ids(self) -> tuple[str, ...]:
         return extract_liked_post_external_ids(like_object=self.get_like_object())
 
-    def get_repost_external_id(self) -> str | None:
-        return extract_repost_external_id(wall_post_object=self.get_wall_post_object())
-
-    def get_reposted_wall_post_external_ids(self) -> tuple[str, ...]:
-        """Возвращает все варианты external_id исходных постов из copy_history."""
-
-        return extract_reposted_wall_post_external_ids(repost_object=self.get_repost_object())
-
     def get_wall_post(self) -> VKWallPostDTO | None:
         return extract_wall_post(wall_post_object=self.get_wall_post_object())
 
@@ -233,11 +207,6 @@ class VKCallbackPayload:
         if not self.is_poll_vote_event():
             return None
         return self._parse_event_object(schema=VKPollVoteObjectSchema)
-
-    def get_repost_object(self) -> VKRepostObjectSchema | None:
-        if not self.is_repost():
-            return None
-        return self._parse_event_object(schema=VKRepostObjectSchema)
 
     def get_wall_post_object(self) -> VKWallPostObjectSchema | None:
         return self._parse_event_object(schema=VKWallPostObjectSchema)

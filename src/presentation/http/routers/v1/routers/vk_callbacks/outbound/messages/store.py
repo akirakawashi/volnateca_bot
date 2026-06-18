@@ -17,7 +17,7 @@ def build_store_root_message(*, balance_points: int) -> VKMessageText:
     return VKMessageText(
         text=(
             "🎁 Магазин призов\n\n"
-            f"💫 Баланс: {balance_points} ✦\n\n"
+            f"Баланс: {balance_points} ✦\n\n"
             "Выбери раздел каталога или открой «Мои призы»."
         ),
     )
@@ -26,7 +26,7 @@ def build_store_root_message(*, balance_points: int) -> VKMessageText:
 def build_store_catalog_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
     header = (
         f"🎁 Магазин · {catalog.section.label}\n\n"
-        f"💫 Баланс: {catalog.balance_points} ✦\n"
+        f"Баланс: {catalog.balance_points} ✦\n"
         f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}"
     )
     if not catalog.prizes:
@@ -139,7 +139,7 @@ def build_store_redeem_outcome_message(
     if outcome.status == RedeemPrizeOutcomeStatus.SOLD_OUT:
         return VKMessageText(text="🔴 Этот приз уже разобрали. Попробуй другой из каталога.")
     if outcome.status == RedeemPrizeOutcomeStatus.INSUFFICIENT_BALANCE:
-        return VKMessageText(text=f"💫 Не хватает баллов. Баланс: {balance_points} ✦")
+        return VKMessageText(text=f"Не хватает баллов. Баланс: {balance_points} ✦")
     if outcome.status == RedeemPrizeOutcomeStatus.LEVEL_LOCKED:
         return VKMessageText(text="🔒 Приз доступен с более высоким уровнем участника.")
     if outcome.status == RedeemPrizeOutcomeStatus.IDEMPOTENCY_CONFLICT:
@@ -202,7 +202,7 @@ def _format_prize_type(prize_type: PrizeType) -> str:
     if prize_type == PrizeType.MERCH:
         return "Мерч"
     if prize_type == PrizeType.PARTNER:
-        return "Партнёрский приз"
+        return "Твой подарок"
     if prize_type == PrizeType.SUPER_PRIZE:
         return "Суперприз"
     return "Приз"

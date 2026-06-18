@@ -6,7 +6,6 @@ class PostedToWallDTO:
     post_id: int
     external_id: str
     like_tasks_id: int | None
-    repost_tasks_id: int | None
     comment_tasks_id: int | None
 
 

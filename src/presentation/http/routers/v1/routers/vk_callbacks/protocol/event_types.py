@@ -10,7 +10,6 @@ class VKEventType(StrEnum):
     MESSAGE_NEW = "message_new"
     POLL_VOTE_NEW = "poll_vote_new"
     WALL_POST_NEW = "wall_post_new"
-    WALL_REPOST = "wall_repost"
     WALL_REPLY_NEW = "wall_reply_new"
 
 
@@ -20,5 +19,4 @@ class VKEventGroups:
     POLL = frozenset((VKEventType.POLL_VOTE_NEW,))
     POST_CREATE = frozenset((VKEventType.WALL_POST_NEW,))
     REGISTRATION = frozenset((VKEventType.MESSAGE_NEW, VKEventType.MESSAGE_ALLOW))
-    REPOST = frozenset((VKEventType.WALL_REPOST,))
     SUBSCRIPTION = frozenset((VKEventType.GROUP_JOIN,))

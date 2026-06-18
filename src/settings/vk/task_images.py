@@ -9,7 +9,6 @@ class TaskTypeImagesSettings(Settings):
 
     TASK_IMAGE_VK_SUBSCRIBE: str | None = "photo-213947338_457239022" # нужна картинка для подпискин на группу
     TASK_IMAGE_VK_LIKE: str | None = "photo147820319_457263584"
-    TASK_IMAGE_VK_REPOST: str | None = "photo147820319_457263585"
     TASK_IMAGE_VK_COMMENT: str | None = "photo147820319_457263583"
     TASK_IMAGE_VK_POLL: str | None = "photo147820319_457263590"
     TASK_IMAGE_CUSTOM: str | None = "photo-213947338_457239022" # нужны картинка для кастомных задач (общая если нет других)
@@ -18,7 +17,6 @@ class TaskTypeImagesSettings(Settings):
         return {
             TaskType.VK_SUBSCRIBE: self.TASK_IMAGE_VK_SUBSCRIBE,
             TaskType.VK_LIKE: self.TASK_IMAGE_VK_LIKE,
-            TaskType.VK_REPOST: self.TASK_IMAGE_VK_REPOST,
             TaskType.VK_COMMENT: self.TASK_IMAGE_VK_COMMENT,
             TaskType.VK_POLL: self.TASK_IMAGE_VK_POLL,
             TaskType.CUSTOM: self.TASK_IMAGE_CUSTOM,

@@ -5,7 +5,6 @@ from application.command.capture_vk_referral_intent import CaptureVKReferralInte
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
-from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
@@ -33,7 +32,6 @@ class PresentationProvider(Provider):
         self,
         vk_settings: VKSettings,
         task_images_settings: TaskTypeImagesSettings,
-        complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler,
         complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler,
         complete_vk_like_task_interactor: CompleteVKLikeTaskHandler,
         complete_vk_comment_task_interactor: CompleteVKCommentTaskHandler,
@@ -59,7 +57,6 @@ class PresentationProvider(Provider):
         return VKCallbackDispatcher(
             vk_settings=vk_settings,
             task_images_settings=task_images_settings,
-            complete_vk_repost_task_interactor=complete_vk_repost_task_interactor,
             complete_vk_subscription_task_interactor=complete_vk_subscription_task_interactor,
             complete_vk_like_task_interactor=complete_vk_like_task_interactor,
             complete_vk_comment_task_interactor=complete_vk_comment_task_interactor,

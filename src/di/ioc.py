@@ -45,7 +45,6 @@ from application.command.capture_vk_referral_intent import CaptureVKReferralInte
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
-from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.admin.command.create_quiz import CreateQuizHandler
 from application.admin.command.quiz import ListQuizzesHandler, UpdateQuizQuestionImageHandler
@@ -190,19 +189,6 @@ class InteractorProvider(Provider):
             register_vk_user_interactor=register_vk_user_interactor,
             process_referral_interactor=process_referral_interactor,
             referral_intent_repository=referral_intent_repository,
-        )
-
-    @provide(scope=Scope.REQUEST)
-    def get_complete_vk_repost_task_handler(
-        self,
-        task_repository: ITaskRepository,
-        award_service: AwardTaskService,
-        uow: IUnitOfWork,
-    ) -> CompleteVKRepostTaskHandler:
-        return CompleteVKRepostTaskHandler(
-            task_repository=task_repository,
-            award_service=award_service,
-            uow=uow,
         )
 
     @provide(scope=Scope.REQUEST)

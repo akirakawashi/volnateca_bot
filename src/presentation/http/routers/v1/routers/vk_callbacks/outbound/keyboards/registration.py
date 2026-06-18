@@ -35,7 +35,7 @@ def build_main_menu_keyboard() -> VKKeyboard:
 def build_main_menu_rows() -> list[list[dict[str, object]]]:
     return [
         [
-            payload_button(label="💫 Баланс", color="primary", payload={"action": "balance"}),
+            payload_button(label="Баланс", color="primary", payload={"action": "balance"}),
             payload_button(label="🎯 Задания", color="primary", payload={"action": "tasks"}),
         ],
         [

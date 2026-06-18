@@ -94,10 +94,7 @@ class TaskCompletion(BaseModel, table=True):
     evidence_external_id: str | None = Field(
         default=None,
         index=True,
-        description=(
-            "ID внешнего объекта, подтверждающего выполнение. "
-            "Для VK-репоста это ID записи-репоста на стене пользователя вида wall123_456."
-        ),
+        description="ID внешнего объекта, подтверждающего выполнение.",
     )
     rejected_reason: str | None = Field(
         default=None,

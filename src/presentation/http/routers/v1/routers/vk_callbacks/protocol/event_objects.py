@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
-from presentation.http.dto.request import VKCallbackMessageSchema, VKCallbackWallPostSchema
+from presentation.http.dto.request import VKCallbackMessageSchema
 
 
 __all__ = [
@@ -11,7 +11,6 @@ __all__ = [
     "VKLikeObjectSchema",
     "VKMessageObjectSchema",
     "VKPollVoteObjectSchema",
-    "VKRepostObjectSchema",
     "VKUserObjectSchema",
     "VKWallPostAttachmentSchema",
     "VKWallPostObjectSchema",
@@ -59,11 +58,6 @@ class VKWallPostObjectSchema(VKCallbackEventObjectSchema):
     owner_id: int
     text: str | None = None
     attachments: list[object] = Field(default_factory=list)
-
-
-class VKRepostObjectSchema(VKWallPostObjectSchema):
-    from_id: int
-    copy_history: list[VKCallbackWallPostSchema] = Field(default_factory=list)
 
 
 class VKMessageObjectSchema(VKCallbackEventObjectSchema):

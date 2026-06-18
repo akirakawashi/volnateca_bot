@@ -8,7 +8,6 @@ from application.command.capture_vk_referral_intent import CaptureVKReferralInte
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
-from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
@@ -34,7 +33,6 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_like_callback,
     handle_poll_vote_callback,
     handle_registration_callback,
-    handle_repost_callback,
     handle_subscription_callback,
     handle_wall_post_callback,
 )
@@ -53,7 +51,6 @@ class VKCallbackDispatcher:
 
     vk_settings: VKSettings
     task_images_settings: TaskTypeImagesSettings
-    complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
     complete_vk_comment_task_interactor: CompleteVKCommentTaskHandler
@@ -105,14 +102,6 @@ class VKCallbackDispatcher:
                 return await handle_poll_vote_callback(
                     data=payload,
                     interactor_complete=self.complete_vk_poll_task_interactor,
-                    message_client=self.vk_message_client,
-                )
-
-            if payload.is_repost():
-                return await handle_repost_callback(
-                    data=payload,
-                    interactor=self.complete_vk_repost_task_interactor,
-                    interactor_like=self.complete_vk_like_task_interactor,
                     message_client=self.vk_message_client,
                 )
 
