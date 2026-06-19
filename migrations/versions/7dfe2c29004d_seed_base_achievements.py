@@ -1,7 +1,7 @@
 """Seed base achievements
 
 Revision ID: 7dfe2c29004d
-Revises: a11c6b7e3f34
+Revises: 8962228ee7ba
 Create Date: 2026-05-27 07:26:34.514719
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 revision: str = "7dfe2c29004d"
-down_revision: str | Sequence[str] | None = "a11c6b7e3f34"
+down_revision: str | Sequence[str] | None = "8962228ee7ba"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

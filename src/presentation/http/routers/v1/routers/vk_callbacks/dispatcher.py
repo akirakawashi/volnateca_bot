@@ -39,6 +39,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import bind_vk_message_template_service
 from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 from settings.vk import TaskTypeImagesSettings, VKSettings
+from settings.vk.support_links import BOT_SUPPORT_LINK, SUPPORT_LINK
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -140,6 +141,8 @@ class VKCallbackDispatcher:
                     task_images_settings=self.task_images_settings,
                     message_client=self.vk_message_client,
                     user_repository=self.user_repository,
+                    support_link=SUPPORT_LINK,
+                    bot_support_link=BOT_SUPPORT_LINK,
                 )
 
             return handle_ignored_callback(data=payload)

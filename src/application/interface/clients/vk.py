@@ -32,6 +32,7 @@ class IVKMessageClient(ABC):
         keyboard: dict[str, object] | None = None,
         attachment: str | None = None,
         template: dict[str, object] | None = None,
+        dont_parse_links: bool = False,
     ) -> bool:
         """Возвращает True только когда VK подтвердил отправку сообщения."""
 

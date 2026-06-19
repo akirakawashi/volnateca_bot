@@ -20,14 +20,17 @@ from application.command.register_vk_user_and_check_subscription import (
 from application.interface.clients import IVKMessageClient
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.actions import (
     BALANCE_ACTION,
+    BOT_SUPPORT_ACTION,
     CUSTOM_PROMO_EXIT_ACTION,
     CUSTOM_PROMO_START_ACTION,
     REFERRAL_ACTION,
     SHOP_ACTION,
+    SUPPORT_ACTION,
     TASKS_ACTION,
     TASKS_PAGE_ACTION,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.balance import handle_balance
+from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.bot_support import handle_bot_support
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.payload_parsing import (
     parse_payload_str,
     parse_positive_int,
@@ -41,6 +44,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.qui
     handle_start_quiz,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.referral import handle_referral
+from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.support import handle_support
 from presentation.http.routers.v1.routers.vk_callbacks.handlers.registration.store import (
     handle_store_catalog,
     handle_store_claim,
@@ -81,6 +85,8 @@ async def handle_registered_user_message(
     get_task_promo_code_wait_interactor: GetTaskPromoCodeWaitHandler,
     group_id: int,
     task_images_settings: TaskTypeImagesSettings,
+    support_link: str,
+    bot_support_link: str,
 ) -> bool:
     """Обрабатывает только payload-кнопки зарегистрированного пользователя."""
 
@@ -153,6 +159,22 @@ async def handle_registered_user_message(
                 result=result,
                 group_id=group_id,
                 message_client=message_client,
+            )
+            return True
+        if action == SUPPORT_ACTION:
+            await handle_support(
+                data=data,
+                result=result,
+                message_client=message_client,
+                support_link=support_link,
+            )
+            return True
+        if action == BOT_SUPPORT_ACTION:
+            await handle_bot_support(
+                data=data,
+                result=result,
+                message_client=message_client,
+                bot_support_link=bot_support_link,
             )
             return True
         if action == CUSTOM_PROMO_START_ACTION:

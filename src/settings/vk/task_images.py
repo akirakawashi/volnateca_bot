@@ -21,3 +21,5 @@ class TaskTypeImagesSettings(Settings):
             TaskType.VK_POLL: self.TASK_IMAGE_VK_POLL,
             TaskType.CUSTOM: self.TASK_IMAGE_CUSTOM,
         }.get(task_type)
+
+# TODO еще проверка на ссылки

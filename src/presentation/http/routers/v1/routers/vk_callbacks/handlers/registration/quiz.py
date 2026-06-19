@@ -97,6 +97,7 @@ async def handle_start_quiz(
         message_client=message_client,
         log_message="Вопрос квиза VK",
         attachment=question.image_attachment,
+        dont_parse_links=True,
     )
 
 
@@ -234,6 +235,7 @@ async def handle_quiz_answer(
             message_client=message_client,
             log_message="Следующий вопрос квиза VK",
             attachment=next_q.image_attachment,
+            dont_parse_links=True,
         )
         return
 
