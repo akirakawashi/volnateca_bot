@@ -11,7 +11,7 @@ class TaskTypeImagesSettings(Settings):
     TASK_IMAGE_VK_LIKE: str | None = "photo-238388485_456239108"
     TASK_IMAGE_VK_COMMENT: str | None = "photo-238388485_456239107"
     TASK_IMAGE_VK_POLL: str | None = "photo-238388485_456239106"
-    TASK_IMAGE_CUSTOM: str | None = "photo-238388485_456239086" # нужны картинка для кастомных задач (общая если нет других)
+    TASK_IMAGE_CUSTOM: str | None = "photo-238388485_456239049"
 
     def get_image(self, task_type: TaskType) -> str | None:
         return {
