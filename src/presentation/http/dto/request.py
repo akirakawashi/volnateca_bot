@@ -15,13 +15,6 @@ class VKCallbackMessageSchema(BaseModel):
     )
 
 
-class VKCallbackWallPostSchema(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, extra="allow")
-
-    post_id: int | None = Field(default=None, alias="id", description="ID записи на стене VK")
-    owner_id: int | None = Field(default=None, description="ID владельца стены VK")
-
-
 class VKCallbackObjectSchema(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
@@ -40,11 +33,6 @@ class VKCallbackObjectSchema(BaseModel):
     object_type: str | None = Field(default=None, description="Тип объекта лайка: post, comment и т.д.")
     first_name: str | None = Field(default=None, description="Имя пользователя VK")
     last_name: str | None = Field(default=None, description="Фамилия пользователя VK")
-    copy_history: list[VKCallbackWallPostSchema] = Field(
-        default_factory=list,
-        description="История копируемых записей для события wall_repost",
-    )
-
 
 class VKCallbackSchema(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="allow")

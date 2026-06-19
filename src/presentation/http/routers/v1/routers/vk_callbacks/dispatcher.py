@@ -8,7 +8,6 @@ from application.command.capture_vk_referral_intent import CaptureVKReferralInte
 from application.command.complete_vk_comment_task import CompleteVKCommentTaskHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
-from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_quiz_first_question import GetQuizFirstQuestionHandler
@@ -34,13 +33,13 @@ from presentation.http.routers.v1.routers.vk_callbacks.handlers import (
     handle_like_callback,
     handle_poll_vote_callback,
     handle_registration_callback,
-    handle_repost_callback,
     handle_subscription_callback,
     handle_wall_post_callback,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import bind_vk_message_template_service
 from presentation.http.routers.v1.routers.vk_callbacks.protocol.payload import VKCallbackPayload
 from settings.vk import TaskTypeImagesSettings, VKSettings
+from settings.vk.support_links import BOT_SUPPORT_LINK, SUPPORT_LINK
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -53,7 +52,6 @@ class VKCallbackDispatcher:
 
     vk_settings: VKSettings
     task_images_settings: TaskTypeImagesSettings
-    complete_vk_repost_task_interactor: CompleteVKRepostTaskHandler
     complete_vk_subscription_task_interactor: CompleteVKSubscriptionTaskHandler
     complete_vk_like_task_interactor: CompleteVKLikeTaskHandler
     complete_vk_comment_task_interactor: CompleteVKCommentTaskHandler
@@ -108,14 +106,6 @@ class VKCallbackDispatcher:
                     message_client=self.vk_message_client,
                 )
 
-            if payload.is_repost():
-                return await handle_repost_callback(
-                    data=payload,
-                    interactor=self.complete_vk_repost_task_interactor,
-                    interactor_like=self.complete_vk_like_task_interactor,
-                    message_client=self.vk_message_client,
-                )
-
             if payload.is_subscription_event():
                 return await handle_subscription_callback(
                     data=payload,
@@ -151,6 +141,8 @@ class VKCallbackDispatcher:
                     task_images_settings=self.task_images_settings,
                     message_client=self.vk_message_client,
                     user_repository=self.user_repository,
+                    support_link=SUPPORT_LINK,
+                    bot_support_link=BOT_SUPPORT_LINK,
                 )
 
             return handle_ignored_callback(data=payload)

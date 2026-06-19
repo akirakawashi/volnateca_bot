@@ -201,6 +201,7 @@ class VKAPIClient(IVKUserClient, IVKMessageClient, IVKWallClient):
         keyboard: dict[str, object] | None = None,
         attachment: str | None = None,
         template: dict[str, object] | None = None,
+        dont_parse_links: bool = False,
     ) -> bool:
         """Отправляет сообщение VK и возвращает факт успешного ответа API."""
 
@@ -222,6 +223,8 @@ class VKAPIClient(IVKUserClient, IVKMessageClient, IVKWallClient):
             params["attachment"] = attachment
         if template is not None:
             params["template"] = json.dumps(template, ensure_ascii=False)
+        if dont_parse_links:
+            params["dont_parse_links"] = "1"
 
         response_data = await self._request(method=VK_MESSAGES_SEND_METHOD, params=params)
         if response_data is None:

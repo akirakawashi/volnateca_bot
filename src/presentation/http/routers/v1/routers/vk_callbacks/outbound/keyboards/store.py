@@ -47,7 +47,7 @@ def build_store_catalog_keyboard(
                 [
                     payload_button(
                         label=truncate_button_label(
-                            f"{_store_state_icon(prize.user_state)} {prize.prize_name} · {prize.cost_points} ✦",
+                            f"{_store_state_icon(prize.user_state)} {prize.prize_name} · {prize.cost_points} ✦".strip(),
                         ),
                         color="secondary",
                         payload={
@@ -344,7 +344,7 @@ def _store_state_icon(state: StorePrizeUserState) -> str:
     if state == StorePrizeUserState.AVAILABLE:
         return "✅"
     if state == StorePrizeUserState.INSUFFICIENT_BALANCE:
-        return "💫"
+        return ""
     if state == StorePrizeUserState.LEVEL_LOCKED:
         return "🔒"
     return "⏳"

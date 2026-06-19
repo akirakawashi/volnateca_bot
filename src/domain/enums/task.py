@@ -6,7 +6,6 @@ class TaskType(str, Enum):
 
     VK_SUBSCRIBE = "vk_subscribe"  # Подписка на группу ВКонтакте
     VK_LIKE = "vk_like"  # Лайк поста ВКонтакте
-    VK_REPOST = "vk_repost"  # Репост поста ВКонтакте
     VK_COMMENT = "vk_comment"  # Комментарий под постом ВКонтакте
     VK_POLL = "vk_poll"  # Участие в опросе ВКонтакте
     QUIZ = "quiz"

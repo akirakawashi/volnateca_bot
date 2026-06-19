@@ -1,8 +1,8 @@
 """init
 
-Revision ID: a11c6b7e3f34
+Revision ID: 8962228ee7ba
 Revises: 
-Create Date: 2026-06-03 10:35:12.089143
+Create Date: 2026-06-18 20:54:28.243668
 """
 
 from collections.abc import Sequence
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 
-revision: str = 'a11c6b7e3f34'
+revision: str = '8962228ee7ba'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -78,7 +78,8 @@ def upgrade() -> None:
     sa.Column('code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('task_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('task_type', sa.Enum('vk_subscribe', 'vk_like', 'vk_repost', 'vk_comment', 'vk_poll', 'quiz', 'custom', name='task_type'), nullable=False),
+    sa.Column('image_attachment', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('task_type', sa.Enum('vk_subscribe', 'vk_like', 'vk_comment', 'vk_poll', 'quiz', 'custom', name='task_type'), nullable=False),
     sa.Column('points', sa.Integer(), nullable=False),
     sa.Column('week_number', sa.Integer(), nullable=True),
     sa.Column('external_id', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -216,9 +217,9 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['users_id'], ['users.users_id'], name=op.f('fk_prize_redemptions_users_id_users')),
     sa.PrimaryKeyConstraint('prize_redemptions_id', name=op.f('pk_prize_redemptions')),
     sa.UniqueConstraint('refund_transactions_id', name=op.f('uq_prize_redemptions_refund_transactions_id')),
-    sa.UniqueConstraint('transactions_id', name=op.f('uq_prize_redemptions_transactions_id'))
+    sa.UniqueConstraint('transactions_id', name=op.f('uq_prize_redemptions_transactions_id')),
+    sa.UniqueConstraint('users_id', 'idempotency_key', name='uq_prize_redemptions_users_id_idempotency_key')
     )
-    op.create_index(op.f('ix_prize_redemptions_idempotency_key'), 'prize_redemptions', ['idempotency_key'], unique=True)
     op.create_index(op.f('ix_prize_redemptions_prizes_id'), 'prize_redemptions', ['prizes_id'], unique=False)
     op.create_index('ix_prize_redemptions_prizes_id_status', 'prize_redemptions', ['prizes_id', 'prize_redemption_status'], unique=False)
     op.create_index(op.f('ix_prize_redemptions_redemption_code'), 'prize_redemptions', ['redemption_code'], unique=True)
@@ -299,6 +300,26 @@ def upgrade() -> None:
     op.create_index(op.f('ix_user_achievements_achievement_key'), 'user_achievements', ['achievement_key'], unique=False)
     op.create_index(op.f('ix_user_achievements_achievements_id'), 'user_achievements', ['achievements_id'], unique=False)
     op.create_index(op.f('ix_user_achievements_users_id'), 'user_achievements', ['users_id'], unique=False)
+    op.create_table('prize_promo_codes',
+    sa.Column('prize_promo_codes_id', sa.Integer(), nullable=False),
+    sa.Column('prizes_id', sa.Integer(), nullable=False),
+    sa.Column('promo_code', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('status', sa.Enum('available', 'assigned', 'void', name='prize_promo_code_status'), nullable=False),
+    sa.Column('prize_redemptions_id', sa.Integer(), nullable=True),
+    sa.Column('assigned_to_users_id', sa.Integer(), nullable=True),
+    sa.Column('assigned_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['assigned_to_users_id'], ['users.users_id'], name=op.f('fk_prize_promo_codes_assigned_to_users_id_users')),
+    sa.ForeignKeyConstraint(['prize_redemptions_id'], ['prize_redemptions.prize_redemptions_id'], name=op.f('fk_prize_promo_codes_prize_redemptions_id_prize_redemptions')),
+    sa.ForeignKeyConstraint(['prizes_id'], ['prizes.prizes_id'], name=op.f('fk_prize_promo_codes_prizes_id_prizes')),
+    sa.PrimaryKeyConstraint('prize_promo_codes_id', name=op.f('pk_prize_promo_codes')),
+    sa.UniqueConstraint('prize_redemptions_id', name='uq_prize_promo_codes_prize_redemptions_id'),
+    sa.UniqueConstraint('prizes_id', 'promo_code', name='uq_prize_promo_codes_prizes_id_promo_code')
+    )
+    op.create_index(op.f('ix_prize_promo_codes_assigned_to_users_id'), 'prize_promo_codes', ['assigned_to_users_id'], unique=False)
+    op.create_index(op.f('ix_prize_promo_codes_prizes_id'), 'prize_promo_codes', ['prizes_id'], unique=False)
+    op.create_index('ix_prize_promo_codes_prizes_id_status', 'prize_promo_codes', ['prizes_id', 'status'], unique=False)
     op.create_table('quiz_answers',
     sa.Column('quiz_answers_id', sa.Integer(), nullable=False),
     sa.Column('users_id', sa.Integer(), nullable=False),
@@ -327,6 +348,10 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_quiz_answers_quiz_questions_id'), table_name='quiz_answers')
     op.drop_index(op.f('ix_quiz_answers_quiz_question_options_id'), table_name='quiz_answers')
     op.drop_table('quiz_answers')
+    op.drop_index('ix_prize_promo_codes_prizes_id_status', table_name='prize_promo_codes')
+    op.drop_index(op.f('ix_prize_promo_codes_prizes_id'), table_name='prize_promo_codes')
+    op.drop_index(op.f('ix_prize_promo_codes_assigned_to_users_id'), table_name='prize_promo_codes')
+    op.drop_table('prize_promo_codes')
     op.drop_index(op.f('ix_user_achievements_users_id'), table_name='user_achievements')
     op.drop_index(op.f('ix_user_achievements_achievements_id'), table_name='user_achievements')
     op.drop_index(op.f('ix_user_achievements_achievement_key'), table_name='user_achievements')
@@ -349,7 +374,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_prize_redemptions_redemption_code'), table_name='prize_redemptions')
     op.drop_index('ix_prize_redemptions_prizes_id_status', table_name='prize_redemptions')
     op.drop_index(op.f('ix_prize_redemptions_prizes_id'), table_name='prize_redemptions')
-    op.drop_index(op.f('ix_prize_redemptions_idempotency_key'), table_name='prize_redemptions')
     op.drop_table('prize_redemptions')
     op.drop_index(op.f('ix_transactions_users_id'), table_name='transactions')
     op.drop_index('ix_transactions_transaction_type_created_at_users_id', table_name='transactions')

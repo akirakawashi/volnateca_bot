@@ -13,8 +13,6 @@ from application.common.dto.task import (
     VKCommentTaskCreationStatus,
     VKLikeTaskCreationDTO,
     VKLikeTaskCreationStatus,
-    VKRepostTaskCreationDTO,
-    VKRepostTaskCreationStatus,
     VKUserAvailableTaskDTO,
 )
 from application.interface.repositories.tasks import ITaskRepository
@@ -33,50 +31,6 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
     Содержит только чтение и запись строк таблицы tasks. Никаких операций
     над балансом пользователя или фактами выполнения здесь нет.
     """
-
-    async def create_repost_task_if_not_exists(
-        self,
-        code: str,
-        task_name: str,
-        description: str,
-        external_id: str,
-        points: int,
-        week_number: int | None,
-        repeat_policy: TaskRepeatPolicy,
-        event_id: str | None,
-    ) -> VKRepostTaskCreationDTO:
-        task, created = await self._create_task_if_not_exists(
-            code=code,
-            task_name=task_name,
-            description=description,
-            task_type=TaskType.VK_REPOST,
-            points=points,
-            week_number=week_number,
-            external_id=external_id,
-            repeat_policy=repeat_policy,
-        )
-        status = (
-            VKRepostTaskCreationStatus.CREATED
-            if created
-            else VKRepostTaskCreationStatus.ALREADY_EXISTS
-        )
-        return self._to_repost_task_creation_dto(
-            status=status,
-            task=task,
-            event_id=event_id,
-        )
-
-    async def get_active_repost_task_by_external_ids(
-        self,
-        external_ids: tuple[str, ...],
-    ) -> TaskSummary | None:
-        task = await self._get_active_task_by_external_ids(
-            external_ids=external_ids,
-            task_type=TaskType.VK_REPOST,
-        )
-        if task is None:
-            return None
-        return self._to_task_summary(task=task)
 
     async def get_or_create_subscription_task(
         self,
@@ -608,25 +562,6 @@ class TaskRepository(SQLAlchemyRepository, ITaskRepository):
             repeat_policy=task.repeat_policy,
             week_number=task.week_number,
             completion_key=completion_key,
-        )
-
-    @staticmethod
-    def _to_repost_task_creation_dto(
-        status: VKRepostTaskCreationStatus,
-        task: Task,
-        event_id: str | None,
-    ) -> VKRepostTaskCreationDTO:
-        if task.tasks_id is None:
-            raise RuntimeError("Первичный ключ задания не был сгенерирован")
-
-        return VKRepostTaskCreationDTO(
-            status=status,
-            event_id=event_id,
-            tasks_id=task.tasks_id,
-            code=task.code,
-            external_id=task.external_id,
-            points=task.points,
-            week_number=task.week_number,
         )
 
     @staticmethod

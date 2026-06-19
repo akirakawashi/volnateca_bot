@@ -4,13 +4,11 @@ from typing import Any
 from pydantic import ValidationError
 
 from application.common.dto.vk import VKPollDTO, VKWallPostDTO
-from presentation.http.dto.request import VKCallbackWallPostSchema
 from presentation.http.routers.v1.routers.vk_callbacks.protocol.event_objects import (
     VKCommentObjectSchema,
     VKLikeObjectSchema,
     VKMessageObjectSchema,
     VKPollVoteObjectSchema,
-    VKRepostObjectSchema,
     VKUserObjectSchema,
     VKWallPostAttachmentSchema,
     VKWallPostObjectSchema,
@@ -28,19 +26,6 @@ def extract_comment_user_id(*, comment_object: VKCommentObjectSchema | None) -> 
 
 def extract_poll_user_id(*, poll_vote_object: VKPollVoteObjectSchema | None) -> int | None:
     return normalize_vk_user_id(raw_user_id=poll_vote_object.user_id if poll_vote_object else None)
-
-
-def extract_repost_author_user_id(*, repost_object: VKRepostObjectSchema | None) -> int | None:
-    return normalize_vk_user_id(raw_user_id=repost_object.from_id if repost_object else None)
-
-
-def is_repost_published_on_author_wall(*, repost_object: VKRepostObjectSchema | None) -> bool:
-    if repost_object is None:
-        return False
-
-    from_id = extract_repost_author_user_id(repost_object=repost_object)
-    wall_owner_id = normalize_vk_user_id(raw_user_id=repost_object.owner_id)
-    return from_id is not None and wall_owner_id is not None and from_id == wall_owner_id
 
 
 def extract_vk_user_id(
@@ -158,26 +143,6 @@ def extract_liked_post_external_ids(
     return post.external_id_variants
 
 
-def extract_repost_external_id(*, wall_post_object: VKWallPostObjectSchema | None) -> str | None:
-    post = extract_wall_post(wall_post_object=wall_post_object)
-    return post.external_id if post is not None else None
-
-
-def extract_reposted_wall_post_external_ids(
-    *,
-    repost_object: VKRepostObjectSchema | None,
-) -> tuple[str, ...]:
-    if repost_object is None:
-        return ()
-
-    external_ids: set[str] = set()
-    for copied_post in repost_object.copy_history:
-        post = _to_wall_post_dto(copied_post=copied_post)
-        if post is not None:
-            external_ids.update(post.external_id_variants)
-    return tuple(sorted(external_ids))
-
-
 def extract_wall_post(*, wall_post_object: VKWallPostObjectSchema | None) -> VKWallPostDTO | None:
     if wall_post_object is None:
         return None
@@ -256,9 +221,3 @@ def _find_wall_post_poll_attachment(
         return attachment.poll
 
     return None
-
-
-def _to_wall_post_dto(copied_post: VKCallbackWallPostSchema) -> VKWallPostDTO | None:
-    if copied_post.owner_id is None or copied_post.post_id is None:
-        return None
-    return VKWallPostDTO(owner_id=copied_post.owner_id, post_id=copied_post.post_id)

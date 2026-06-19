@@ -25,7 +25,6 @@ from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.registr
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.rewards import (
     build_comment_reward_message,
     build_like_reward_message,
-    build_repost_reward_message,
     build_subscription_reward_message,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.store import (
@@ -76,7 +75,6 @@ __all__ = [
     "build_referral_link_message",
     "build_referral_milestone_message",
     "build_registration_welcome_message",
-    "build_repost_reward_message",
     "build_store_catalog_message",
     "build_store_catalog_carousel_message",
     "build_store_catalog_navigation_message",

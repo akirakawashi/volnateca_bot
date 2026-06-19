@@ -81,14 +81,14 @@ DEV_USER_VK_IDS = {
     *range(900_001_200, 900_001_209),
 }
 
-WEEK_REPOST_CODE = "dev_week12_repost_seeded"
 WEEK_LIKE_CODE = "dev_week12_like_to_finish"
+WEEK_COMMENT_CODE = "dev_week12_comment_seeded"
 WEEK_QUIZ_CODE = "dev_week12_quiz_to_finish"
 WEEK_EXTERNAL_ID = "wall-238388485_912001"
 
 DEV_TASK_CODES = (
-    WEEK_REPOST_CODE,
     WEEK_LIKE_CODE,
+    WEEK_COMMENT_CODE,
     WEEK_QUIZ_CODE,
 )
 
@@ -466,11 +466,11 @@ async def answer_completed_quiz(
     await session.flush()
 async def seed_week_completion(session: AsyncSession, *, users: dict[int, User]) -> None:
     now = datetime.now(tz=UTC)
-    repost_task = await create_task(
+    comment_task = await create_task(
         session,
-        code=WEEK_REPOST_CODE,
-        task_name="Dev week 12 repost already completed",
-        task_type=TaskType.VK_REPOST,
+        code=WEEK_COMMENT_CODE,
+        task_name="Dev week 12 comment already completed",
+        task_type=TaskType.VK_COMMENT,
         points=20,
         week_number=12,
         external_id=WEEK_EXTERNAL_ID,
@@ -487,7 +487,7 @@ async def seed_week_completion(session: AsyncSession, *, users: dict[int, User])
     await add_completed_task(
         session,
         user=users[WEEK_COMPLETION_VK_ID],
-        task=repost_task,
+        task=comment_task,
         checked_at=now - timedelta(hours=1),
     )
 

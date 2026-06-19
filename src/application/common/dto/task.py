@@ -95,26 +95,6 @@ class TaskCompletionResult:
     project_completion_level_up: int | None = None
 
 
-class VKRepostTaskCreationStatus(str, Enum):
-    CREATED = "created"
-    ALREADY_EXISTS = "already_exists"
-    IGNORED = "ignored"
-    INVALID_MARKER = "invalid_marker"
-    WRONG_WALL_OWNER = "wrong_wall_owner"
-
-
-@dataclass(slots=True, frozen=True, kw_only=True)
-class VKRepostTaskCreationDTO:
-    status: VKRepostTaskCreationStatus
-    event_id: str | None
-    tasks_id: int | None = None
-    code: str | None = None
-    external_id: str | None = None
-    points: int | None = None
-    week_number: int | None = None
-    reason: str | None = None
-
-
 class VKCommentTaskCreationStatus(str, Enum):
     CREATED = "created"
     ALREADY_EXISTS = "already_exists"

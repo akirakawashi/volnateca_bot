@@ -15,7 +15,7 @@ def build_task_accrual_message(
     points_awarded: int,
     balance_points: int | None,
 ) -> VKMessageText:
-    balance_line = f"\n\n💫 Баланс: {balance_points} ✦" if balance_points is not None else ""
+    balance_line = f"\n\nБаланс: {balance_points} ✦" if balance_points is not None else ""
     return build_template_message(
         "task_accrual",
         task_name=task_name,

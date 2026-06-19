@@ -88,11 +88,11 @@ QUESTIONS_BY_TASK: dict[str, list[dict]] = {
     ],
     "quiz_history_2017": [
         {
-            "question_text": "Сколько дискошаров начисляется за репост поста недели?",
+            "question_text": "Сколько дискошаров начисляется за лайк поста недели?",
             "options": [
-                {"option_text": "10 ✦", "is_correct": False, "sort_order": 1},
+                {"option_text": "10 ✦", "is_correct": True, "sort_order": 1},
                 {"option_text": "15 ✦", "is_correct": False, "sort_order": 2},
-                {"option_text": "20 ✦", "is_correct": True,  "sort_order": 3},
+                {"option_text": "20 ✦", "is_correct": False, "sort_order": 3},
                 {"option_text": "30 ✦", "is_correct": False, "sort_order": 4},
             ],
         },

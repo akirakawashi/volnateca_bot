@@ -84,6 +84,8 @@ async def handle_registration_callback(
     task_images_settings: TaskTypeImagesSettings,
     message_client: IVKMessageClient,
     user_repository: IUserRepository,
+    support_link: str,
+    bot_support_link: str,
 ) -> PlainTextResponse:
     """Обрабатывает первый контакт пользователя и обычные сообщения в бота.
 
@@ -141,6 +143,8 @@ async def handle_registration_callback(
                     get_task_promo_code_wait_interactor=get_task_promo_code_wait_interactor,
                     group_id=group_id,
                     task_images_settings=task_images_settings,
+                    support_link=support_link,
+                    bot_support_link=bot_support_link,
                 )
                 if handled:
                     return vk_ok_response()
@@ -207,6 +211,8 @@ async def handle_registration_callback(
                 get_task_promo_code_wait_interactor=get_task_promo_code_wait_interactor,
                 group_id=group_id,
                 task_images_settings=task_images_settings,
+                support_link=support_link,
+                bot_support_link=bot_support_link,
             )
         return vk_ok_response()
 

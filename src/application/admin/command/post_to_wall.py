@@ -15,7 +15,6 @@ from settings.vk import VKSettings
 class PostToWallCommand:
     message: str
     like_points: int
-    repost_points: int
     comment_points: int  # 0 — задание на комментарий не создаётся
     week_number: int | None
     attachments: tuple[str, ...] | None = None
@@ -54,21 +53,10 @@ class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
 
         like_result = await self.task_repository.create_like_task_if_not_exists(
             code=f"vk_like_wall_{group_id}_{post_id}",
-            task_name=self._like_task_name(command_data),
+            task_name="Поставить лайк посту",
             description=description,
             external_id=external_id,
             points=command_data.like_points,
-            week_number=command_data.week_number,
-            repeat_policy=TaskRepeatPolicy.ONCE,
-            event_id=None,
-        )
-
-        repost_result = await self.task_repository.create_repost_task_if_not_exists(
-            code=f"vk_repost_wall_{group_id}_{post_id}",
-            task_name=self._repost_task_name(command_data),
-            description=description,
-            external_id=external_id,
-            points=command_data.repost_points,
             week_number=command_data.week_number,
             repeat_policy=TaskRepeatPolicy.ONCE,
             event_id=None,
@@ -78,7 +66,7 @@ class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
         if command_data.comment_points > 0:
             comment_result = await self.task_repository.create_comment_task_if_not_exists(
                 code=f"vk_comment_wall_{group_id}_{post_id}",
-                task_name=self._comment_task_name(command_data),
+                task_name="Написать комментарий",
                 description=description,
                 external_id=external_id,
                 points=command_data.comment_points,
@@ -94,29 +82,8 @@ class PostToWallHandler(Interactor[PostToWallCommand, PostedToWallDTO]):
             post_id=post_id,
             external_id=external_id,
             like_tasks_id=like_result.tasks_id,
-            repost_tasks_id=repost_result.tasks_id,
             comment_tasks_id=comment_tasks_id,
         )
-
-    @staticmethod
-    def _like_task_name(cmd: PostToWallCommand) -> str:
-        if cmd.week_number is not None:
-            return f"Поставить лайк посту недели {cmd.week_number}"
-        return "Поставить лайк посту"
-
-    @staticmethod
-    def _repost_task_name(cmd: PostToWallCommand) -> str:
-        if cmd.repost_points >= 60:
-            return "Сделать репост партнёрского поста"
-        if cmd.week_number is not None:
-            return f"Сделать репост поста недели {cmd.week_number}"
-        return "Сделать репост поста"
-
-    @staticmethod
-    def _comment_task_name(cmd: PostToWallCommand) -> str:
-        if cmd.week_number is not None:
-            return f"Оставить комментарий к посту недели {cmd.week_number}"
-        return "Оставить комментарий к посту"
 
 
 __all__ = [

@@ -28,18 +28,6 @@ def build_like_reward_message(
     )
 
 
-def build_repost_reward_message(
-    *,
-    points_awarded: int,
-    balance_points: int,
-) -> VKMessageText:
-    return build_template_message(
-        "repost_reward",
-        points_awarded=points_awarded,
-        balance_points=balance_points,
-    )
-
-
 def build_comment_reward_message(
     *,
     points_awarded: int,

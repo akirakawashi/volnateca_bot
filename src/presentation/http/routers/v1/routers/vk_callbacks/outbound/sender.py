@@ -38,6 +38,7 @@ async def send_vk_user_message(
     keyboard: VKKeyboard | None = None,
     attachment: str | None = None,
     template: VKTemplate | None = None,
+    dont_parse_links: bool = False,
 ) -> bool:
     """Отправляет VK-сообщение и логирует сбой, не ломая обработку callback-а."""
 
@@ -53,6 +54,7 @@ async def send_vk_user_message(
             keyboard=keyboard_to_send,
             attachment=attachment,
             template=template,
+            dont_parse_links=dont_parse_links,
         )
         if not sent:
             logger.error(

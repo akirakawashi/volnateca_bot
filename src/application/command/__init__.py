@@ -2,7 +2,6 @@ from application.command.award_monthly_top import AwardMonthlyTopHandler
 from application.command.capture_vk_referral_intent import CaptureVKReferralIntentHandler
 from application.command.complete_vk_like_task import CompleteVKLikeTaskHandler
 from application.command.complete_vk_poll_task import CompleteVKPollTaskHandler
-from application.command.complete_vk_repost_task import CompleteVKRepostTaskHandler
 from application.command.complete_vk_subscription_task import CompleteVKSubscriptionTaskHandler
 from application.command.ensure_vk_poll_task import EnsureVKPollTaskHandler
 from application.command.get_store_catalog import GetStoreCatalogHandler, GetStorePrizeCardHandler
@@ -28,7 +27,6 @@ __all__ = [
     "CaptureVKReferralIntentHandler",
     "CompleteVKLikeTaskHandler",
     "CompleteVKPollTaskHandler",
-    "CompleteVKRepostTaskHandler",
     "CompleteVKSubscriptionTaskHandler",
     "EnsureVKPollTaskHandler",
     "GetStoreCatalogHandler",
