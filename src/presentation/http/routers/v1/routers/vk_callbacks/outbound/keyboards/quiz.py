@@ -14,8 +14,10 @@ def build_quiz_offer_keyboard(tasks_id: int) -> VKKeyboard:
                     color="positive",
                     payload={"action": "start_quiz", "tasks_id": tasks_id},
                 ),
+            ],
+            [
                 payload_button(
-                    label="❌ Пропустить",
+                    label="❌ Сделаю позже, показать задания",
                     color="secondary",
                     payload={"action": "skip_quiz"},
                 ),

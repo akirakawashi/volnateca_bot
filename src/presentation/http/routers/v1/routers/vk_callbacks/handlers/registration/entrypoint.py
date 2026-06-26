@@ -56,6 +56,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards import
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.sender import send_vk_user_message
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages import (
     build_consent_request_message,
+    build_game_entry_help_message,
     build_main_menu_message,
     build_registration_welcome_message,
     build_subscription_reward_message,
@@ -89,8 +90,8 @@ async def handle_registration_callback(
 ) -> PlainTextResponse:
     """Обрабатывает первый контакт пользователя и обычные сообщения в бота.
 
-    Игра реагирует на payload-кнопки и штатную VK-команду "Начать".
-    Остальной свободный текст не считается игровым действием и молча игнорируется.
+    Игра реагирует на payload-кнопки и стартовые команды.
+    Остальной свободный текст получает подсказку с поддержкой и командой входа.
 
     Уже зарегистрированного пользователя обрабатывает только для message_new,
     чтобы callback-и подписки/разрешения сообщений не дублировали ответы.
@@ -148,7 +149,16 @@ async def handle_registration_callback(
                 )
                 if handled:
                     return vk_ok_response()
+            if not data.is_message_new():
+                return vk_ok_response()
             if not is_default_start_message(data):
+                await _send_game_entry_help_message(
+                    data=data,
+                    vk_user_id=result.registration.vk_user_id,
+                    users_id=result.registration.users_id,
+                    support_link=support_link,
+                    message_client=message_client,
+                )
                 return vk_ok_response()
 
             await _send_main_menu_message(
@@ -158,7 +168,16 @@ async def handle_registration_callback(
             )
             return vk_ok_response()
 
+        if not data.is_message_new():
+            return vk_ok_response()
         if not is_default_start_message(data):
+            await _send_game_entry_help_message(
+                data=data,
+                vk_user_id=vk_user_id,
+                users_id=None,
+                support_link=support_link,
+                message_client=message_client,
+            )
             return vk_ok_response()
 
         await _send_consent_request_message(
@@ -265,6 +284,24 @@ async def _send_consent_request_message(
         keyboard=build_consent_keyboard(ref_key=ref_key),
         message_client=message_client,
         log_message="Сообщение с запросом согласия VK",
+    )
+
+
+async def _send_game_entry_help_message(
+    *,
+    data: VKCallbackPayload,
+    vk_user_id: int,
+    users_id: int | None,
+    support_link: str,
+    message_client: IVKMessageClient,
+) -> None:
+    await send_vk_user_message(
+        data=data,
+        vk_user_id=vk_user_id,
+        users_id=users_id,
+        message=build_game_entry_help_message(support_link=support_link),
+        message_client=message_client,
+        log_message="Подсказка входа в игру VK",
     )
 
 

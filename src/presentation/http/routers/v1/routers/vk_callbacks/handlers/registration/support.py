@@ -20,7 +20,7 @@ async def handle_support(
         data=data,
         vk_user_id=result.registration.vk_user_id,
         users_id=result.registration.users_id,
-        message=VKMessageText(text=f"[{support_link}|Ссылка]"),
+        message=VKMessageText(text=support_link),
         message_client=message_client,
         log_message="Техническая поддержка",
     )

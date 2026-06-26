@@ -23,6 +23,10 @@ def build_main_menu_message() -> VKMessageText:
     return VKMessageText(text="Главное меню")
 
 
+def build_game_entry_help_message(*, support_link: str) -> VKMessageText:
+    return build_template_message("game_entry_help", support_link=support_link)
+
+
 def build_consent_request_message() -> VKMessageText:
     return build_template_message("consent_request")
 

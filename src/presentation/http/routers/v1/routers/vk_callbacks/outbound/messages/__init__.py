@@ -16,6 +16,7 @@ from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.quiz im
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.messages.registration import (
     build_balance_message,
     build_consent_request_message,
+    build_game_entry_help_message,
     build_main_menu_message,
     build_referral_bonus_message,
     build_referral_link_message,
@@ -60,6 +61,7 @@ __all__ = [
     "build_custom_promo_canceled_message",
     "build_custom_promo_invalid_code_message",
     "build_custom_promo_task_start_message",
+    "build_game_entry_help_message",
     "build_level_up_message",
     "build_like_reward_message",
     "build_main_menu_message",

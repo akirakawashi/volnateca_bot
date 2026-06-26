@@ -10,6 +10,19 @@ class MessageTemplateDefinition:
 
 
 MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
+    "game_entry_help": MessageTemplateDefinition(
+        code="game_entry_help",
+        description="Подсказка для входа в игру и обращения в поддержку",
+        default_template=(
+            "Здравствуйте! 👋\n\n"
+            "Если у вас возникли технические вопросы или нужна помощь, пожалуйста, напишите: "
+            "{support_link}\n\n"
+            "Если хотите играть в «Волнатеку», отправьте команду «начать» — "
+            "бот поможет вам присоединиться к игре 🎮"
+        ),
+        variables=("support_link",),
+    ),
+
     "consent_request": MessageTemplateDefinition(
         code="consent_request",
         description="Запрос согласия с условиями конфиденциальности и правилами",
