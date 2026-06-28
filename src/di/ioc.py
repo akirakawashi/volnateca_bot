@@ -1,10 +1,6 @@
 from dishka import Provider, Scope, provide
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.admin.command.broadcast import GetBroadcastStatusHandler, StartBroadcastHandler
-
-# TODO DEV: удалить импорты SeedDevScenarioHandler, TruncateDBHandler перед релизом.
-from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
 from application.admin.command.create_prize import CreatePrizeHandler
 from application.admin.command.prize_promo_code import AddPrizePromoCodesHandler
 from application.admin.command.update_prize import UpdatePrizeHandler
@@ -49,7 +45,6 @@ from application.command.complete_vk_subscription_task import CompleteVKSubscrip
 from application.admin.command.create_quiz import CreateQuizHandler
 from application.admin.command.quiz import ListQuizzesHandler, UpdateQuizQuestionImageHandler
 from application.admin.command.post_to_wall import PostToWallHandler
-from application.admin.command.truncate_db import TruncateDBHandler  # TODO DEV: удалить перед релизом.
 from application.admin.command.task_promo_code import (
     CreateTaskPromoCodeTaskHandler,
     ListTaskPromoCodeTasksHandler,
@@ -82,7 +77,6 @@ from application.interface.repositories.prize_promo_codes import IPrizePromoCode
 from application.interface.repositories.prize_redemptions import IPrizeRedemptionRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
-from application.admin.interface.db_manager import IDBManager  # TODO DEV: удалить перед релизом.
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.quiz import IQuizAdminRepository
 from application.admin.interface.repositories.task_promo_code import ITaskPromoCodeAdminRepository
@@ -690,22 +684,3 @@ class InteractorProvider(Provider):
             uow=uow,
             vk_settings=vk_settings,
         )
-
-    # TODO DEV: удалить get_truncate_db_handler перед релизом.
-    @provide(scope=Scope.REQUEST)
-    def get_truncate_db_handler(
-        self,
-        db_manager: IDBManager,
-    ) -> TruncateDBHandler:
-        return TruncateDBHandler(db_manager=db_manager)
-
-    # TODO DEV: удалить get_seed_dev_scenario_handler перед релизом.
-    @provide(scope=Scope.REQUEST)
-    def get_seed_dev_scenario_handler(
-        self,
-        session: AsyncSession,
-        vk_settings: VKSettings,
-    ) -> "SeedDevScenarioHandler":
-        from application.admin.command.seed_dev_scenario import SeedDevScenarioHandler
-
-        return SeedDevScenarioHandler(session=session, vk_settings=vk_settings)

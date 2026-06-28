@@ -7,7 +7,6 @@ from application.interface.repositories.prize_redemptions import IPrizeRedemptio
 from application.interface.repositories.prize_promo_codes import IPrizePromoCodeRepository
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.quiz import IQuizRepository
-from application.admin.interface.db_manager import IDBManager  # TODO DEV: удалить перед релизом.
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.admin.interface.repositories.stats import IStatsAdminRepository
 from application.admin.interface.repositories.user import IUserAdminRepository
@@ -27,7 +26,6 @@ from infrastructure.database.repositories.prize_redemptions import PrizeRedempti
 from infrastructure.database.repositories.prize_promo_codes import PrizePromoCodeRepository
 from infrastructure.database.repositories.prizes import PrizeRepository
 from infrastructure.database.repositories.quiz import QuizRepository
-from infrastructure.database.db_manager import DBManager  # TODO DEV: удалить перед релизом.
 from infrastructure.database.repositories.admin.prize import PrizeAdminRepository
 from infrastructure.database.repositories.admin.stats import StatsAdminRepository
 from infrastructure.database.repositories.admin.user import UserAdminRepository
@@ -176,11 +174,3 @@ class RepositoriesProvider(Provider):
         session: AsyncSession,
     ) -> TaskPromoCodeAdminRepository:
         return TaskPromoCodeAdminRepository(session=session)
-
-    # TODO DEV: удалить get_db_manager (IDBManager) перед релизом — только для truncate.
-    @provide(scope=Scope.REQUEST, provides=IDBManager)
-    def get_db_manager(
-        self,
-        session: AsyncSession,
-    ) -> DBManager:
-        return DBManager(session=session)

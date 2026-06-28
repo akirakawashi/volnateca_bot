@@ -30,7 +30,6 @@ COPY --from=builder /app/.venv ./.venv
 
 COPY alembic.ini ./
 COPY migrations/ ./migrations/
-COPY dev_scripts/ ./dev_scripts/
 COPY src/ ./src/
 COPY entrypoint.sh ./
 
