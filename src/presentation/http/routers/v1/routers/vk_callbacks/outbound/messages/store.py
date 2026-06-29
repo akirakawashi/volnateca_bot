@@ -18,19 +18,19 @@ def build_store_root_message(*, balance_points: int) -> VKMessageText:
         text=(
             "🎁 Магазин призов\n\n"
             f"Баланс: {balance_points} ✦\n\n"
-            "Выбери раздел каталога или открой «Мои призы»."
+            "Открой каталог призов или раздел «Мои призы»."
         ),
     )
 
 
 def build_store_catalog_message(*, catalog: StoreCatalogDTO) -> VKMessageText:
     header = (
-        f"🎁 Магазин · {catalog.section.label}\n\n"
+        "🎁 Каталог призов\n\n"
         f"Баланс: {catalog.balance_points} ✦\n"
         f"Страница {catalog.pagination.page} из {catalog.pagination.total_pages}"
     )
     if not catalog.prizes:
-        return VKMessageText(text=f"{header}\n\nВ этом разделе пока нет призов.")
+        return VKMessageText(text=f"{header}\n\nВ каталоге пока нет призов.")
 
     start_index = (catalog.pagination.page - 1) * catalog.pagination.page_size
     prize_blocks = [
@@ -152,7 +152,7 @@ def build_store_redeem_outcome_message(
 def build_store_my_redemptions_message(*, listing: ListUserRedemptionsDTO) -> VKMessageText:
     if not listing.redemptions:
         return VKMessageText(
-            text="📦 Мои призы\n\nУ тебя пока нет заявок. Выбери приз в магазине и оформи самовывоз.",
+            text="📦 Мои призы\n\nУ тебя пока нет заявок. Открой каталог призов и выбери подарок.",
         )
 
     lines = ["📦 Мои призы", ""]

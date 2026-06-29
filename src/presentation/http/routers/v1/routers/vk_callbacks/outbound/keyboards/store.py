@@ -2,7 +2,7 @@ from application.common.dto.store import (
     StoreCatalogDTO,
     StorePrizeCardDTO,
     StorePrizeUserState,
-    list_store_sections,
+    StoreSection,
 )
 from presentation.http.routers.v1.routers.vk_callbacks.outbound.keyboards.buttons import (
     VKKeyboard,
@@ -21,7 +21,17 @@ def build_store_root_keyboard() -> VKKeyboard:
     return {
         "one_time": False,
         "buttons": [
-            *_build_store_section_rows(),
+            [
+                payload_button(
+                    label="Посмотреть призы",
+                    color="primary",
+                    payload={
+                        "action": "store_catalog",
+                        "section": StoreSection.ALL.value,
+                        "page": 1,
+                    },
+                ),
+            ],
             [
                 payload_button(
                     label="📦 Мои призы",
@@ -66,15 +76,7 @@ def build_store_catalog_keyboard(
     if navigation_row:
         buttons.append(navigation_row)
 
-    buttons.append(
-        [
-            payload_button(
-                label="Разделы",
-                color="primary",
-                payload={"action": "store_root"},
-            ),
-        ],
-    )
+    buttons.extend(_build_store_catalog_service_rows())
     return {"one_time": False, "buttons": buttons}
 
 
@@ -85,8 +87,7 @@ def build_store_catalog_navigation_keyboard(catalog: StoreCatalogDTO) -> VKKeybo
     if navigation_row:
         buttons.append(navigation_row)
 
-    buttons.extend(_build_store_section_rows())
-    buttons.append(_build_store_exit_row())
+    buttons.extend(_build_store_catalog_service_rows())
     return {"one_time": False, "buttons": buttons}
 
 
@@ -308,25 +309,23 @@ def _build_store_catalog_navigation_row(catalog: StoreCatalogDTO) -> list[dict[s
     return buttons
 
 
-def _build_store_section_rows() -> list[list[dict[str, object]]]:
-    sections = list_store_sections()
+def _build_store_catalog_service_rows() -> list[list[dict[str, object]]]:
     return [
         [
             payload_button(
-                label=section.label,
+                label="📦 Мои призы",
                 color="secondary",
-                payload={"action": "store_catalog", "section": section.value, "page": 1},
+                payload={"action": "store_my_redemptions", "page": 1},
             )
-            for section in sections[:2]
         ],
         [
             payload_button(
-                label=section.label,
-                color="secondary",
-                payload={"action": "store_catalog", "section": section.value, "page": 1},
+                label="В магазин",
+                color="primary",
+                payload={"action": "store_root"},
             )
-            for section in sections[2:]
         ],
+        _build_store_exit_row(label="Главное меню"),
     ]
 
 

@@ -13,12 +13,9 @@ def parse_tasks_page(raw_page: object) -> int:
     return page if page is not None else 1
 
 
-def parse_store_section(raw_section: object) -> StoreSection:
-    if isinstance(raw_section, str):
-        try:
-            return StoreSection(raw_section)
-        except ValueError:
-            return StoreSection.ALL
+def parse_store_section(_raw_section: object) -> StoreSection:
+    # Разделы магазина больше не показываются пользователю. Старые payload
+    # от ранее отправленных кнопок ведём в общий каталог.
     return StoreSection.ALL
 
 

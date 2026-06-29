@@ -197,7 +197,7 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         code="store_catalog_carousel",
         description="Текст над каруселью магазина",
         default_template=(
-            "Раздел: {section_label}\n"
+            "🎁 Каталог призов\n"
             "Доступно призов: {total_items}\n"
             "Баланс: {balance_points} ✦\n"
             "Страница {page} из {total_pages}\n\n"
