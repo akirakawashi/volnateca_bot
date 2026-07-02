@@ -105,7 +105,11 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
     "balance": MessageTemplateDefinition(
         code="balance",
         description="Сообщение с текущим балансом",
-        default_template="Баланс:\n{balance_points} ✦",
+        default_template=(
+            "Баланс:\n{balance_points} ✦\n\n"
+            "Загляни в «Магазин» — возможно, ты уже накопил достаточно баллов, "
+            "чтобы обменять их на классный приз!"
+        ),
         variables=("balance_points",),
     ),
 
