@@ -15,7 +15,7 @@ from application.interface.repositories.prize_redemptions import IPrizeRedemptio
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
-from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus, PrizeStatus, PrizeType
+from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus, PrizeStatus
 from domain.enums.transaction import TransactionSource, TransactionType
 from domain.services.wallet import WalletService
 
@@ -129,8 +129,9 @@ class RedeemPrizeService:
                 balance_points=snapshot.balance_points,
             )
 
-        promo_code = await self._lock_partner_promo_code_if_needed(prize=prize)
-        if prize.prize_type == PrizeType.PARTNER and promo_code is None:
+        needs_promo_code = prize.receive_type == PrizeReceiveType.PROMO_CODE
+        promo_code = await self._lock_prize_promo_code_if_needed(prize=prize)
+        if needs_promo_code and promo_code is None:
             return RedeemPrizeOutcome(
                 status=RedeemPrizeOutcomeStatus.SOLD_OUT,
                 vk_user_id=vk_user_id,
@@ -253,12 +254,12 @@ class RedeemPrizeService:
             promo_code=existing.promo_code,
         )
 
-    async def _lock_partner_promo_code_if_needed(
+    async def _lock_prize_promo_code_if_needed(
         self,
         *,
         prize: PrizeLockedSnapshot,
     ) -> PrizePromoCodeRecord | None:
-        if prize.prize_type != PrizeType.PARTNER:
+        if prize.receive_type != PrizeReceiveType.PROMO_CODE:
             return None
         return await self._prize_promo_codes.get_available_for_update(prizes_id=prize.prizes_id)
 

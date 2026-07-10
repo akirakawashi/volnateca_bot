@@ -63,33 +63,27 @@ class CreatePrizeRequestSchema(BaseModel):
         if value is None:
             return value
         if value not in ADMIN_ALLOWED_RECEIVE_TYPES:
-            raise ValueError("Поддерживаются только receive_type pickup и promo_code")
+            raise ValueError("Поддерживается только receive_type promo_code")
         return value
 
     @model_validator(mode="after")
     def validate_type_specific_fields(self) -> Self:
-        if self.prize_type == PrizeType.PARTNER:
-            promo_codes = normalize_prize_promo_codes(self.promo_codes)
-            if self.status == PrizeStatus.AVAILABLE and not promo_codes:
-                raise ValueError("Для доступного партнёрского приза нужно загрузить хотя бы один промокод")
-            return self
-
-        if self.quantity_total is None:
-            raise ValueError("quantity_total обязателен для мерча и суперпризов")
+        promo_codes = normalize_prize_promo_codes(self.promo_codes)
+        if self.status == PrizeStatus.AVAILABLE and not promo_codes:
+            raise ValueError("Для доступного приза нужно загрузить хотя бы один код")
         return self
 
     def to_command(self) -> CreatePrizeCommand:
         promo_codes = normalize_prize_promo_codes(self.promo_codes)
-        is_partner = self.prize_type == PrizeType.PARTNER
         return CreatePrizeCommand(
             prize_name=self.prize_name,
             description=self.description,
             image_attachment=self.image_attachment,
             prize_type=self.prize_type,
-            receive_type=PrizeReceiveType.PROMO_CODE if is_partner else PrizeReceiveType.PICKUP,
+            receive_type=PrizeReceiveType.PROMO_CODE,
             status=self.status,
             cost_points=self.cost_points,
-            quantity_total=(max(1, len(promo_codes)) if is_partner else self.quantity_total or 1),
+            quantity_total=max(1, len(promo_codes)),
             required_level=self.required_level,
             sort_order=self.sort_order,
             is_active=self.is_active,

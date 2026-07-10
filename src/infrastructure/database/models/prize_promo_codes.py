@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class PrizePromoCode(BaseModel, table=True):
-    """Одноразовый промокод партнёрского приза."""
+    """Одноразовый код приза."""
 
     __tablename__ = "prize_promo_codes"
     __table_args__ = (
@@ -28,9 +28,9 @@ class PrizePromoCode(BaseModel, table=True):
         foreign_key="prizes.prizes_id",
         nullable=False,
         index=True,
-        description="ID партнёрского приза, к которому относится код",
+        description="ID приза, к которому относится код",
     )
-    promo_code: str = Field(nullable=False, description="Нормализованный промокод партнёра")
+    promo_code: str = Field(nullable=False, description="Нормализованный код приза")
     status: PrizePromoCodeStatus = Field(
         default=PrizePromoCodeStatus.AVAILABLE,
         sa_column=Column(

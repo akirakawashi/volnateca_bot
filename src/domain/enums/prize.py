@@ -7,7 +7,7 @@ class PrizeType(str, Enum):
     MERCH = "merch"  # Мерч Волны
     PROMO_CODE = "promo_code"  # Устаревший тип промокода партнёра
     SUPER_PRIZE = "super_prize"  # Штучный суперприз
-    PARTNER = "partner"  # Партнёрский приз с пулом промокодов
+    PARTNER = "partner"  # Партнёрский приз
 
 
 class PrizeReceiveType(str, Enum):
@@ -36,7 +36,7 @@ class PrizeRedemptionStatus(str, Enum):
 
 
 class PrizePromoCodeStatus(str, Enum):
-    """Статус одноразового промокода партнёрского приза."""
+    """Статус одноразового кода приза."""
 
     AVAILABLE = "available"  # Код свободен и может быть выдан покупателю
     ASSIGNED = "assigned"  # Код закреплён за заявкой и пользователем

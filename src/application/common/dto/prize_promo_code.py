@@ -36,7 +36,7 @@ class PrizePromoCodeBulkCreateResult:
 
 
 def normalize_prize_promo_code(value: str) -> str:
-    """Нормализует промокод партнёрского приза для хранения и сравнения."""
+    """Нормализует одноразовый код приза для хранения и сравнения."""
 
     return "".join(value.split()).upper()
 

@@ -8,7 +8,7 @@ from application.admin.command.prize import CreatePrizeCommand, UpdatePrizeComma
 from application.admin.dto.prize import PrizeAdminDTO
 from application.admin.interface.repositories.prize import IPrizeAdminRepository
 from application.common.dto.prize_promo_code import PrizePromoCodeStats
-from domain.enums.prize import PrizePromoCodeStatus, PrizeReceiveType, PrizeStatus, PrizeType
+from domain.enums.prize import PrizePromoCodeStatus, PrizeReceiveType, PrizeStatus
 from domain.services.prize_status_sync import apply_sold_out_status_from_quantities
 from infrastructure.database.models.prize_promo_codes import PrizePromoCode
 from infrastructure.database.models.prizes import Prize
@@ -35,20 +35,15 @@ class PrizeAdminRepository(SQLAlchemyRepository, IPrizeAdminRepository):
         return tuple(items)
 
     async def create_prize(self, command: CreatePrizeCommand) -> PrizeAdminDTO:
-        if command.prize_type == PrizeType.PARTNER:
-            if command.receive_type != PrizeReceiveType.PROMO_CODE:
-                raise ValueError("Партнёрский приз должен иметь receive_type promo_code")
-            if command.status == PrizeStatus.AVAILABLE and not command.promo_codes:
-                raise ValueError("Для доступного партнёрского приза нужно загрузить хотя бы один промокод")
+        if command.receive_type != PrizeReceiveType.PROMO_CODE:
+            raise ValueError("Приз должен иметь receive_type promo_code")
+        if command.status == PrizeStatus.AVAILABLE and not command.promo_codes:
+            raise ValueError("Для доступного приза нужно загрузить хотя бы один код")
 
         for _ in range(5):
             try:
                 async with self._session.begin_nested():
-                    quantity_total = (
-                        max(1, len(command.promo_codes))
-                        if command.prize_type == PrizeType.PARTNER
-                        else command.quantity_total
-                    )
+                    quantity_total = max(1, len(command.promo_codes))
                     prize = Prize(
                         code=self._generate_prize_code(),
                         prize_name=command.prize_name,
@@ -109,16 +104,7 @@ class PrizeAdminRepository(SQLAlchemyRepository, IPrizeAdminRepository):
                 raise ValueError("cost_points обязателен")
             prize.cost_points = command.cost_points
         if "quantity_total" in command.fields:
-            if prize.prize_type == PrizeType.PARTNER:
-                raise ValueError("Количество партнёрского приза считается по загруженным промокодам")
-            if command.quantity_total is None:
-                raise ValueError("quantity_total обязателен")
-            if command.quantity_total < prize.quantity_claimed:
-                raise ValueError(
-                    "quantity_total не может быть меньше уже зарезервированного количества "
-                    f"({prize.quantity_claimed})",
-                )
-            prize.quantity_total = command.quantity_total
+            raise ValueError("Количество приза считается по загруженным кодам")
         if "required_level" in command.fields:
             prize.required_level = command.required_level
         if "sort_order" in command.fields:
@@ -135,12 +121,8 @@ class PrizeAdminRepository(SQLAlchemyRepository, IPrizeAdminRepository):
             if prize.prizes_id is not None
             else None
         )
-        if (
-            prize.prize_type == PrizeType.PARTNER
-            and prize.status == PrizeStatus.AVAILABLE
-            and (promo_stats is None or promo_stats.available_codes <= 0)
-        ):
-            raise ValueError("Нельзя сделать партнёрский приз доступным: загрузите свободные промокоды")
+        if prize.status == PrizeStatus.AVAILABLE and (promo_stats is None or promo_stats.available_codes <= 0):
+            raise ValueError("Нельзя сделать приз доступным: загрузите свободные коды")
 
         if prize.status == PrizeStatus.AVAILABLE and prize.quantity_claimed >= prize.quantity_total:
             raise ValueError(

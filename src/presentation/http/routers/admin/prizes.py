@@ -70,7 +70,7 @@ async def update_prize(
 
 @prizes_admin_router.post(
     path="/prizes/{prizes_id}/promo-codes",
-    name="Добавить промокоды к партнёрскому призу",
+    name="Добавить коды к призу",
     response_model=AddPrizePromoCodesResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )

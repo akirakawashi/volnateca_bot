@@ -11,7 +11,8 @@ from application.common.dto.prize_promo_code import (
     normalize_prize_promo_codes,
 )
 from application.interface.repositories.prize_promo_codes import IPrizePromoCodeRepository
-from domain.enums.prize import PrizePromoCodeStatus, PrizeStatus, PrizeType
+from application.common.dto.store import STORE_ALLOWED_PRIZE_TYPES
+from domain.enums.prize import PrizePromoCodeStatus, PrizeStatus
 from domain.services.prize_status_sync import apply_sold_out_status_from_quantities
 from infrastructure.database.models.prize_promo_codes import PrizePromoCode
 from infrastructure.database.models.prizes import Prize
@@ -94,8 +95,8 @@ class PrizePromoCodeRepository(SQLAlchemyRepository, IPrizePromoCodeRepository):
         prize = result.scalar_one_or_none()
         if prize is None:
             return None
-        if prize.prize_type != PrizeType.PARTNER:
-            raise ValueError("Промокоды можно загрузить только для партнёрского приза")
+        if prize.prize_type not in STORE_ALLOWED_PRIZE_TYPES:
+            raise ValueError("Коды можно загрузить только для приза магазина")
 
         normalized_codes = normalize_prize_promo_codes(promo_codes)
         duplicates = len(promo_codes) - len(normalized_codes)
@@ -118,7 +119,7 @@ class PrizePromoCodeRepository(SQLAlchemyRepository, IPrizePromoCodeRepository):
                 created += 1
 
         stats = await self.get_stats(prizes_id=prizes_id)
-        await self._sync_partner_prize_from_stats(prize=prize, stats=stats)
+        await self._sync_prize_from_code_stats(prize=prize, stats=stats)
         return PrizePromoCodeBulkCreateResult(
             prizes_id=prizes_id,
             created=created,
@@ -143,7 +144,7 @@ class PrizePromoCodeRepository(SQLAlchemyRepository, IPrizePromoCodeRepository):
         result = await self._session.execute(query)
         return int(result.scalar_one())
 
-    async def _sync_partner_prize_from_stats(
+    async def _sync_prize_from_code_stats(
         self,
         *,
         prize: Prize,
