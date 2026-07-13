@@ -114,10 +114,15 @@ def build_store_redeem_outcome_message(
         RedeemPrizeOutcomeStatus.IDEMPOTENT_REPLAY,
     ):
         if outcome.promo_code:
+            code_line = (
+                f"Введи на телефоне: {outcome.promo_code}"
+                if outcome.prize_type == PrizeType.MERCH
+                else f"Код: {outcome.promo_code}"
+            )
             return VKMessageText(
                 text=(
                     f"🎁 {outcome.prize_name or 'Приз'}\n\n"
-                    f"Код: {outcome.promo_code}\n"
+                    f"{code_line}\n"
                     f"Списано: {outcome.points_spent} ✦\n"
                     f"Баланс: {outcome.balance_points if outcome.balance_points is not None else balance_points} ✦\n\n"
                     "Код сохранён в разделе «Мои призы»."
@@ -152,11 +157,15 @@ def build_store_my_redemptions_message(*, listing: ListUserRedemptionsDTO) -> VK
 
     lines = ["📦 Мои призы", ""]
     for item in listing.redemptions:
-        code_label = "Код"
         code_value = item.promo_code or item.redemption_code
+        code_line = (
+            f"Введи на телефоне: {code_value}"
+            if item.prize_type == PrizeType.MERCH and item.promo_code
+            else f"Код: {code_value}"
+        )
         lines.append(
             f"• {item.prize_name} — {_format_redemption_status(item.prize_redemption_status)}\n"
-            f"  {code_label}: {code_value}",
+            f"  {code_line}",
         )
     return VKMessageText(text="\n".join(lines))
 

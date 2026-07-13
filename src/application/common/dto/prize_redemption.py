@@ -44,6 +44,7 @@ class PrizeRedemptionRecord:
     refund_transactions_id: int | None
     created_at: datetime
     prize_name: str | None = None
+    prize_type: PrizeType | None = None
     vk_user_id: int | None = None
     promo_code: str | None = None
 

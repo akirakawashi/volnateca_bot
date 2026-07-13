@@ -15,7 +15,7 @@ from application.interface.repositories.prize_redemptions import IPrizeRedemptio
 from application.interface.repositories.prizes import IPrizeRepository
 from application.interface.repositories.transactions import ITransactionRepository
 from application.interface.repositories.users import IUserRepository
-from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus, PrizeStatus
+from domain.enums.prize import PrizeReceiveType, PrizeRedemptionStatus, PrizeStatus, PrizeType
 from domain.enums.transaction import TransactionSource, TransactionType
 from domain.services.wallet import WalletService
 
@@ -39,6 +39,7 @@ class RedeemPrizeOutcome:
     users_id: int | None = None
     prizes_id: int | None = None
     prize_name: str | None = None
+    prize_type: PrizeType | None = None
     prize_redemptions_id: int | None = None
     redemption_code: str | None = None
     points_spent: int = 0
@@ -209,6 +210,7 @@ class RedeemPrizeService:
             users_id=snapshot.users_id,
             prizes_id=prizes_id,
             prize_name=prize.prize_name,
+            prize_type=prize.prize_type,
             prize_redemptions_id=redemption.prize_redemptions_id,
             redemption_code=redemption.redemption_code,
             points_spent=spend.amount,
@@ -247,6 +249,7 @@ class RedeemPrizeService:
             users_id=existing.users_id,
             prizes_id=existing.prizes_id,
             prize_name=existing.prize_name,
+            prize_type=existing.prize_type,
             prize_redemptions_id=existing.prize_redemptions_id,
             redemption_code=existing.redemption_code,
             points_spent=existing.points_spent,
