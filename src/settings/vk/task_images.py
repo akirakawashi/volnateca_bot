@@ -8,8 +8,8 @@ class TaskTypeImagesSettings(Settings):
     model_config = SettingsConfigDict(env_prefix="VK_")
 
     TASK_IMAGE_VK_SUBSCRIBE: str | None = "photo-238388485_456239105"
-    TASK_IMAGE_VK_LIKE: str | None = "photo-238388485_456239108"
-    TASK_IMAGE_VK_COMMENT: str | None = "photo-238388485_456239107"
+    TASK_IMAGE_VK_LIKE: str | None = "photo-238388485_456239138"
+    TASK_IMAGE_VK_COMMENT: str | None = "photo-238388485_456239137"
     TASK_IMAGE_VK_POLL: str | None = "photo-238388485_456239106"
     TASK_IMAGE_CUSTOM: str | None = "photo-238388485_456239049"
 
