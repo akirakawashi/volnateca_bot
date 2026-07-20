@@ -282,6 +282,7 @@ async def _send_consent_request_message(
         users_id=None,
         message=build_consent_request_message(),
         keyboard=build_consent_keyboard(ref_key=ref_key),
+        dont_parse_links=True,
         message_client=message_client,
         log_message="Сообщение с запросом согласия VK",
     )
