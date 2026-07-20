@@ -28,8 +28,9 @@ MESSAGE_TEMPLATE_DEFINITIONS: dict[str, MessageTemplateDefinition] = {
         description="Запрос согласия с условиями конфиденциальности и правилами",
         default_template=(
             "Привет, добро пожаловать в Волнатеку. "
-            "Чтобы начать игру, ознакомься с условиями конфиденциальности и правилами ☺️\n\n"
-            "[ссылка на оферту]\n\n"
+            "Чтобы начать игру, ознакомься с "
+            "[https://vk.ru/@-239866581-pravila-provedeniya-stimuliruuschego-reklamnogo-meropriyatiy|"
+            "условиями конфиденциальности и правилами] ☺️\n\n"
             "После ознакомления, нажми кнопку «Ознакомлен»."
         ),
     ),
